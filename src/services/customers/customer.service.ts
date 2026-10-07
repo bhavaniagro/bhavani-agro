@@ -8,6 +8,7 @@ import {
     Timestamp,
     updateDoc,
 } from "firebase/firestore";
+
 import { db } from "../../config/firebase";
 import type { Customer } from "../../types/erp";
 
@@ -45,6 +46,7 @@ export async function createCustomer(
     const customerRef = await addDoc(customersCollection, {
         ...customer,
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
     });
 
     return customerRef.id;
@@ -62,7 +64,9 @@ export async function updateCustomer(
     });
 }
 
-export async function deleteCustomer(customerId: string): Promise<void> {
+export async function deleteCustomer(
+    customerId: string
+): Promise<void> {
     const customerRef = doc(db, "customers", customerId);
 
     await deleteDoc(customerRef);

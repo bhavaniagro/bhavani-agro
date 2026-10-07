@@ -57,6 +57,27 @@ import {
   getCustomers,
 } from '../services/customers/customer.service';
 
+import {
+  loadCollection,
+  saveCollection,
+  saveDocument,
+} from '../services/firestore/erpFirestore.service';
+
+import {
+  persistCustomer,
+  persistSalesOrder,
+  persistPurchaseOrder,
+  persistGRN,
+  persistQCInspection,
+  persistProductionOrder,
+  persistProductionBatch,
+  persistFinishedProduct,
+  persistRawMaterial,
+  persistDispatch,
+  persistInvoice,
+  persistPayment,
+  persistExpense,
+} from '../services/firestore/erpPersistence.service';
 
 export type ERPModule =
   | 'Dashboard'
@@ -296,35 +317,37 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Create customer and save it to Firebase Firestore
   // Falls back to local state if the Firebase save fails.
 
+  // Create customer and save it to Firebase Firestore
   const addCustomer = async (
     custData: Omit<
       Customer,
       'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'
     >
   ) => {
-    const newCustomer: Customer = {
+    const customerCode = `CUST-${String(customers.length + 1).padStart(3, '0')}`;
+
+    const customerData = {
       ...custData,
-      id: `cust-${Date.now()}`,
-      code: `CUST-${String(customers.length + 1).padStart(3, '0')}`,
+      code: customerCode,
       totalSales: 0,
       outstandingBalance: 0,
-      createdAt: new Date().toISOString().split('T')[0],
     };
 
     try {
-      const firebaseCustomerId = await createCustomer(newCustomer);
+      // Save customer to Firebase
+      const firebaseCustomerId = await createCustomer(customerData);
 
-      const customerWithFirebaseId: Customer = {
-        ...newCustomer,
+      // Create customer object for the UI
+      const newCustomer: Customer = {
+        ...customerData,
         id: firebaseCustomerId,
+        createdAt: new Date().toISOString().split('T')[0],
       };
 
-      setCustomers((prev) => [customerWithFirebaseId, ...prev]);
+      // Update local React state
+      setCustomers((prev) => [newCustomer, ...prev]);
     } catch (error) {
       console.error('Failed to save customer to Firebase:', error);
-
-      // Keep the existing demo behavior if Firebase save fails
-      setCustomers((prev) => [newCustomer, ...prev]);
     }
   };
 
@@ -343,7 +366,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: isStockAvailable ? 'Ready' : 'Production Required'
     };
 
+    // Update local React state with the newly created sales order
     setSalesOrders(prev => [newOrder, ...prev]);
+
+    // Persist the newly created sales order to Firebase Firestore
+    persistSalesOrder(newOrder).catch((error) => {
+      console.error('Failed to save sales order to Firebase:', error);
+    });
 
     // Update customer total sales
     setCustomers(prev => prev.map(c => c.id === soData.customerId ? { ...c, totalSales: c.totalSales + soData.totalAmount } : c));
@@ -406,6 +435,11 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setProductionOrders(prev => [newPO, ...prev]);
+
+    // Persist the newly created production order to Firebase Firestore
+    persistProductionOrder(newPO).catch((error) => {
+      console.error('Failed to save production order to Firebase:', error);
+    });
     setSalesOrders(prev => prev.map(o => o.id === salesOrderId ? { ...o, productionOrderId: newPO.id } : o));
 
     setAlerts(prev => [{
@@ -470,7 +504,12 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       actualCostPerMT: 4210
     };
 
-    setProductionBatches(prev => [newBatch, ...prev]);
+    setProductionBatches(prev => [newBatch, ...prev])
+
+    // Persist the newly created production batch to Firebase Firestore
+    persistProductionBatch(newBatch).catch((error) => {
+      console.error('Failed to save production batch to Firebase:', error);
+    });
 
     // Create QC inspection record
     const newQC: QCInspection = {
@@ -497,6 +536,11 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setQCInspections(prev => [newQC, ...prev]);
 
+    // Persist the newly created QC inspection to Firebase Firestore
+    persistQCInspection(newQC).catch((error) => {
+      console.error('Failed to save QC inspection to Firebase:', error);
+    });
+
     setProductionOrders(prev => prev.map(p => p.id === poId ? {
       ...p,
       status: 'QC',
@@ -522,11 +566,41 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (batch) {
         setProductionBatches(prev => prev.map(b => b.id === batch.id ? { ...b, qcStatus: 'Approved' } : b));
 
+        // Persist QC-approved production batch to Firebase Firestore
+        const updatedBatch = {
+          ...batch,
+          qcStatus: 'Approved' as const,
+        };
+
+        setProductionBatches(prev =>
+          prev.map(b => b.id === batch.id ? updatedBatch : b)
+        );
+
+        persistProductionBatch(updatedBatch).catch((error) => {
+          console.error('Failed to save approved production batch to Firebase:', error);
+        });
+
         // Add to finished goods stock
         setProducts(prev => prev.map(p => p.id === batch.productId ? {
           ...p,
           currentStockMT: Number((p.currentStockMT + batch.quantityProducedMT).toFixed(2))
         } : p));
+
+        // Persist updated finished goods stock to Firebase Firestore
+        const product = products.find(p => p.id === batch.productId);
+
+        if (product) {
+          const updatedProduct = {
+            ...product,
+            currentStockMT: Number(
+              (product.currentStockMT + batch.quantityProducedMT).toFixed(2)
+            ),
+          };
+
+          persistFinishedProduct(updatedProduct).catch((error) => {
+            console.error('Failed to save finished product to Firebase:', error);
+          });
+        }
 
         // Mark associated production order completed
         const po = productionOrders.find(p => p.id === batch.productionOrderId);
@@ -583,6 +657,11 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setDispatches(prev => [newDispatch, ...prev]);
 
+    // Persist the newly created dispatch challan to Firebase Firestore
+    persistDispatch(newDispatch).catch((error) => {
+      console.error('Failed to save dispatch to Firebase:', error);
+    });
+
     // Deduct finished goods stock
     const so = salesOrders.find(s => s.id === dispatchData.salesOrderId);
     if (so) {
@@ -590,6 +669,26 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ...p,
         currentStockMT: Math.max(0, Number((p.currentStockMT - dispatchData.quantityMT).toFixed(2)))
       } : p));
+
+      // Persist updated finished goods stock to Firebase Firestore
+      const product = products.find(p => p.id === so.productId);
+
+      if (product) {
+        const updatedProduct = {
+          ...product,
+          currentStockMT: Math.max(
+            0,
+            Number((product.currentStockMT - dispatchData.quantityMT).toFixed(2))
+          ),
+        };
+
+        persistFinishedProduct(updatedProduct).catch((error) => {
+          console.error(
+            'Failed to save dispatched product stock to Firebase:',
+            error
+          );
+        });
+      }
 
       setSalesOrders(prev => prev.map(s => s.id === so.id ? {
         ...s,
@@ -652,6 +751,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setInvoices(prev => [newInvoice, ...prev]);
+
+    // Persist the newly generated invoice to Firebase Firestore
+    persistInvoice(newInvoice).catch((error) => {
+      console.error('Failed to save invoice to Firebase:', error);
+    });
+
+
     setDispatches(prev => prev.map(d => d.id === dispatchId ? { ...d, invoiceId: newInvoice.id, invoiceNumber: invNum } : d));
 
     // Automation 8: Update Customer Outstanding
@@ -709,6 +815,12 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setPayments(prev => [newTx, ...prev]);
 
+    // Persist the payment transaction to Firebase Firestore
+    persistPayment(newTx).catch((error) => {
+      console.error('Failed to save payment to Firebase:', error);
+    });
+
+
     setAlerts(prev => [{
       id: `alt-${Date.now()}`,
       type: 'info',
@@ -730,6 +842,10 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Issued'
     };
     setPurchaseOrders(prev => [newPO, ...prev]);
+    // Persist the newly created purchase order to Firebase Firestore
+    persistPurchaseOrder(newPO).catch((error) => {
+      console.error('Failed to save purchase order to Firebase:', error);
+    });
   };
 
   // Automation 9 & 10: GRN -> QC & Inventory
@@ -744,6 +860,11 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setGRNs(prev => [newGRN, ...prev]);
+
+    // Persist the newly created GRN to Firebase Firestore
+    persistGRN(newGRN).catch((error) => {
+      console.error('Failed to save GRN to Firebase:', error);
+    });
 
     // Add accepted quantity to Raw Material Inventory
     setRawMaterials(prev => prev.map(rm => rm.id === grnData.materialId ? {
