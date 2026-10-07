@@ -49,8 +49,16 @@ import {
   initialDocuments,
   initialAlerts
 } from '../data/seedTransactions';
+//add this line by me for
+// Firebase customer service
+// Handles customer data operations with Firestore.
+import {
+  createCustomer,
+  getCustomers,
+} from '../services/customers/customer.service';
 
-export type ERPModule = 
+
+export type ERPModule =
   | 'Dashboard'
   | 'CRM & Sales'
   | 'Purchase'
@@ -80,7 +88,7 @@ interface ERPContextType {
   setActiveModule: (module: ERPModule) => void;
   activeRole: UserRole;
   setActiveRole: (role: UserRole) => void;
-  
+
   // Master & Transaction States
   company: CompanyProfile;
   setCompany: React.Dispatch<React.SetStateAction<CompanyProfile>>;
@@ -184,6 +192,22 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [documents, setDocuments] = useState<ErpDocument[]>(() => loadStored('documents', initialDocuments));
   const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadStored('alerts', initialAlerts));
 
+  // Load customers from Firebase when the ERP starts
+  useEffect(() => {
+    const loadCustomersFromFirebase = async () => {
+      try {
+        const firebaseCustomers = await getCustomers();
+
+        if (firebaseCustomers.length > 0) {
+          setCustomers(firebaseCustomers);
+        }
+      } catch (error) {
+        console.error('Failed to load customers from Firebase:', error);
+      }
+    };
+
+    loadCustomersFromFirebase();
+  }, []);
   // Dialog & Modal states
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [quickAddType, setQuickAddType] = useState<string | null>(null);
@@ -258,16 +282,50 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, ...prev]);
   };
 
-  const addCustomer = (custData: Omit<Customer, 'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'>) => {
-    const newCust: Customer = {
+  // const addCustomer = (custData: Omit<Customer, 'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'>) => {
+  //   const newCust: Customer = {
+  //     ...custData,
+  //     id: `cust-${Date.now()}`,
+  //     code: `CUST-0${customers.length + 1}`,
+  //     totalSales: 0,
+  //     outstandingBalance: 0,
+  //     createdAt: new Date().toISOString().split('T')[0]
+  //   };
+  //   setCustomers(prev => [newCust, ...prev]);
+  // };
+  // Create customer and save it to Firebase Firestore
+  // Falls back to local state if the Firebase save fails.
+
+  const addCustomer = async (
+    custData: Omit<
+      Customer,
+      'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'
+    >
+  ) => {
+    const newCustomer: Customer = {
       ...custData,
       id: `cust-${Date.now()}`,
-      code: `CUST-0${customers.length + 1}`,
+      code: `CUST-${String(customers.length + 1).padStart(3, '0')}`,
       totalSales: 0,
       outstandingBalance: 0,
-      createdAt: new Date().toISOString().split('T')[0]
+      createdAt: new Date().toISOString().split('T')[0],
     };
-    setCustomers(prev => [newCust, ...prev]);
+
+    try {
+      const firebaseCustomerId = await createCustomer(newCustomer);
+
+      const customerWithFirebaseId: Customer = {
+        ...newCustomer,
+        id: firebaseCustomerId,
+      };
+
+      setCustomers((prev) => [customerWithFirebaseId, ...prev]);
+    } catch (error) {
+      console.error('Failed to save customer to Firebase:', error);
+
+      // Keep the existing demo behavior if Firebase save fails
+      setCustomers((prev) => [newCustomer, ...prev]);
+    }
   };
 
   // Automation 1: Sales Order Stock Check
@@ -309,7 +367,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!so) return;
 
     const matchingBOM = boms.find(b => b.productId === so.productId) || boms[0];
-    
+
     // Check required materials
     const materialCheck = matchingBOM.items.map(item => {
       const rm = rawMaterials.find(r => r.id === item.rawMaterialId);
@@ -349,7 +407,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setProductionOrders(prev => [newPO, ...prev]);
     setSalesOrders(prev => prev.map(o => o.id === salesOrderId ? { ...o, productionOrderId: newPO.id } : o));
-    
+
     setAlerts(prev => [{
       id: `alt-${Date.now()}`,
       type: 'info',
@@ -463,7 +521,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const batch = productionBatches.find(b => b.batchNumber === qc.batchLotNumber);
       if (batch) {
         setProductionBatches(prev => prev.map(b => b.id === batch.id ? { ...b, qcStatus: 'Approved' } : b));
-        
+
         // Add to finished goods stock
         setProducts(prev => prev.map(p => p.id === batch.productId ? {
           ...p,
@@ -595,7 +653,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setInvoices(prev => [newInvoice, ...prev]);
     setDispatches(prev => prev.map(d => d.id === dispatchId ? { ...d, invoiceId: newInvoice.id, invoiceNumber: invNum } : d));
-    
+
     // Automation 8: Update Customer Outstanding
     setCustomers(prev => prev.map(c => c.id === disp.customerId ? {
       ...c,

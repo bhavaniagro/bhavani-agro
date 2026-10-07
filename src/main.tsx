@@ -1,5 +1,10 @@
-import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
+import { createRoot } from "react-dom/client";
+import App from "./App.tsx";
+import "./index.css";
+import { testFirestoreConnection } from "./config/firebaseTest";
 
-createRoot(document.getElementById('root')!).render(<App />);
+testFirestoreConnection().catch((error) => {
+    console.error("Firestore connection failed:", error);
+});
+
+createRoot(document.getElementById("root")!).render(<App />);
