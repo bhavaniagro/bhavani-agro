@@ -1,6 +1,0 @@
-{
-  "name": "Bhavani Agro & Minerals ERP",
-  "description": "Comprehensive enterprise ERP for Agro & Fertilizer Manufacturing: CRM, Sales, Production, BOM, Raw Material, QC, Inventory, Dispatch, and Financials.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
