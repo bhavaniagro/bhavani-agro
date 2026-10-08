@@ -53,15 +53,21 @@ import {
 // Firebase customer service
 // Handles customer data operations with Firestore.
 import {
-  createCustomer,
-  getCustomers,
-} from '../services/customers/customer.service';
+  getCustomersFromApi,
+  createCustomerFromApi,
+} from "../services/api/customerApi.service";
+
+import {
+  createLeadFromApi,
+  getLeadsFromApi,
+} from "../services/api/leadApi.service";
 
 import {
   loadCollection,
   saveCollection,
   saveDocument,
 } from '../services/firestore/erpFirestore.service';
+
 
 import {
   persistCustomer,
@@ -214,21 +220,39 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadStored('alerts', initialAlerts));
 
   // Load customers from Firebase when the ERP starts
+  // Load customers from API when the ERP starts
   useEffect(() => {
-    const loadCustomersFromFirebase = async () => {
+    const loadCustomersFromApi = async () => {
       try {
-        const firebaseCustomers = await getCustomers();
+        const apiCustomers = await getCustomersFromApi();
 
-        if (firebaseCustomers.length > 0) {
-          setCustomers(firebaseCustomers);
+        if (apiCustomers.length > 0) {
+          setCustomers(apiCustomers);
         }
       } catch (error) {
-        console.error('Failed to load customers from Firebase:', error);
+        console.error("Failed to load customers from API:", error);
       }
     };
 
-    loadCustomersFromFirebase();
+    loadCustomersFromApi();
   }, []);
+  // Load leads from API when the ERP starts
+  useEffect(() => {
+    const loadLeadsFromApi = async () => {
+      try {
+        const apiLeads = await getLeadsFromApi();
+
+        if (apiLeads.length > 0) {
+          setLeads(apiLeads);
+        }
+      } catch (error) {
+        console.error("Failed to load leads from API:", error);
+      }
+    };
+
+    loadLeadsFromApi();
+  }, []);
+
   // Dialog & Modal states
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [quickAddType, setQuickAddType] = useState<string | null>(null);
@@ -259,12 +283,30 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Lead management
   const addLead = (leadData: Omit<Lead, 'id' | 'createdAt'>) => {
-    const newLead: Lead = {
+    const temporaryLead: Lead = {
       ...leadData,
       id: `lead-${Date.now()}`,
       createdAt: new Date().toISOString().split('T')[0]
     };
-    setLeads(prev => [newLead, ...prev]);
+
+    setLeads(prev => [temporaryLead, ...prev]);
+
+    createLeadFromApi(leadData)
+      .then((apiLead) => {
+        setLeads(prev =>
+          prev.map(lead =>
+            lead.id === temporaryLead.id
+              ? {
+                ...temporaryLead,
+                id: apiLead.id,
+              }
+              : lead
+          )
+        );
+      })
+      .catch((error) => {
+        console.error("Failed to save lead through API:", error);
+      });
   };
 
   const convertLeadToCustomer = (leadId: string) => {
@@ -335,14 +377,10 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     try {
       // Save customer to Firebase
-      const firebaseCustomerId = await createCustomer(customerData);
+      const apiCustomer = await createCustomerFromApi(customerData);
 
       // Create customer object for the UI
-      const newCustomer: Customer = {
-        ...customerData,
-        id: firebaseCustomerId,
-        createdAt: new Date().toISOString().split('T')[0],
-      };
+      const newCustomer: Customer = apiCustomer;
 
       // Update local React state
       setCustomers((prev) => [newCustomer, ...prev]);
