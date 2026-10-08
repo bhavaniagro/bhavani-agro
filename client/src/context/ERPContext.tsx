@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { MODULE_PATHS, PATH_TO_MODULE } from '../config/routes';
 import {
   CompanyProfile,
   Customer,
@@ -183,7 +184,38 @@ interface ERPContextType {
 const ERPContext = createContext<ERPContextType | undefined>(undefined);
 
 export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeModule, setActiveModule] = useState<ERPModule>('Dashboard');
+  const [activeModule, setActiveModuleState] = useState<ERPModule>(() => {
+    if (typeof window !== 'undefined') {
+      const initial = PATH_TO_MODULE[window.location.pathname];
+      if (initial) return initial;
+    }
+    return 'Dashboard';
+  });
+
+  const setActiveModule = (module: ERPModule) => {
+    setActiveModuleState(module);
+    const targetPath = MODULE_PATHS[module];
+    if (targetPath && typeof window !== 'undefined' && window.location.pathname !== targetPath) {
+      window.history.pushState({}, '', targetPath);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        const module = PATH_TO_MODULE[currentPath];
+        if (module) {
+          setActiveModuleState(module);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const [activeRole, setActiveRole] = useState<UserRole>('Owner / Admin');
 
   // Load from LocalStorage if exists

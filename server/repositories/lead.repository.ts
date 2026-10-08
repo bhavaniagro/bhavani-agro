@@ -1,4 +1,4 @@
-import type { Lead } from "../../src/types/erp";
+import type { Lead } from "../../client/src/types/erp";
 import { db } from "../config/firebase";
 
 const leadsCollection = db.collection("leads");

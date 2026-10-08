@@ -20,7 +20,9 @@ import {
   Settings,
   AlertTriangle
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useERP, ERPModule } from '../../context/ERPContext';
+import { MODULE_PATHS } from '../../config/routes';
 
 interface NavItem {
   id: ERPModule;
@@ -104,10 +106,12 @@ export const Sidebar: React.FC = () => {
         {navItems.filter(item => isItemVisible(item.id)).map(item => {
           const Icon = item.icon;
           const isActive = activeModule === item.id;
+          const path = MODULE_PATHS[item.id] || '/';
 
           return (
-            <button
+            <Link
               key={item.id}
+              to={path}
               onClick={() => setActiveModule(item.id)}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer text-left ${
                 isActive
@@ -126,7 +130,7 @@ export const Sidebar: React.FC = () => {
                   {item.badge}
                 </span>
               )}
-            </button>
+            </Link>
           );
         })}
       </nav>
