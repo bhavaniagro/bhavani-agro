@@ -9,16 +9,29 @@ import {
   ChevronRight, 
   Sparkles, 
   Boxes,
-  Plus
+  Plus,
+  Pencil,
+  Trash2,
+  X
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ConfirmModal } from '../modals/ConfirmModal';
+import { ProductionOrder, ProductionBatch, BOM } from '../../types/erp';
 
 export const ProductionModule: React.FC = () => {
   const { 
     productionOrders, 
     productionBatches, 
     boms, 
-    rawMaterials, 
+    rawMaterials,
+    products,
+    updateProductionOrder,
+    deleteProductionOrder,
+    updateProductionBatch,
+    deleteProductionBatch,
+    addBOM,
+    updateBOM,
+    deleteBOM,
     startProductionOrder, 
     completeProductionOrder,
     setActiveModule,
@@ -31,6 +44,29 @@ export const ProductionModule: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [entryOutputMT, setEntryOutputMT] = useState(25);
   const [entryLossMT, setEntryLossMT] = useState(0.5);
+
+  // Edit/Delete Production Order State
+  const [editingOrder, setEditingOrder] = useState<ProductionOrder | null>(null);
+  const [deletingOrder, setDeletingOrder] = useState<ProductionOrder | null>(null);
+  const [editOrderSupervisor, setEditOrderSupervisor] = useState('');
+  const [editOrderLine, setEditOrderLine] = useState('');
+  const [editOrderPriority, setEditOrderPriority] = useState<ProductionOrder['priority']>('Normal');
+  const [editOrderStatus, setEditOrderStatus] = useState<ProductionOrder['status']>('Planned');
+
+  // Edit/Delete Production Batch State
+  const [editingBatch, setEditingBatch] = useState<ProductionBatch | null>(null);
+  const [deletingBatch, setDeletingBatch] = useState<ProductionBatch | null>(null);
+  const [editBatchQty, setEditBatchQty] = useState(0);
+  const [editBatchStorage, setEditBatchStorage] = useState('');
+
+  // Edit/Delete/Add BOM State
+  const [editingBOM, setEditingBOM] = useState<BOM | null>(null);
+  const [deletingBOM, setDeletingBOM] = useState<BOM | null>(null);
+  const [showAddBOMModal, setShowAddBOMModal] = useState(false);
+  const [bomProductName, setBomProductName] = useState('');
+  const [bomVersion, setBomVersion] = useState('v1.0');
+  const [bomCost, setBomCost] = useState(4350);
+  const [bomNotes, setBomNotes] = useState('');
 
   const filteredOrders = productionOrders.filter(po => 
     po.productionOrderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -51,6 +87,107 @@ export const ProductionModule: React.FC = () => {
     completeProductionOrder(selectedOrder.id, Number(entryOutputMT), `Run finished with ${entryLossMT} MT process loss.`);
     setShowLogEntryModal(false);
     setActiveTab('batches');
+  };
+
+  // Production Order handlers
+  const openEditOrderModal = (po: ProductionOrder) => {
+    setEditingOrder(po);
+    setEditOrderSupervisor(po.supervisor);
+    setEditOrderLine(po.productionLine);
+    setEditOrderPriority(po.priority);
+    setEditOrderStatus(po.status);
+  };
+
+  const handleSaveOrderEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOrder) return;
+    await updateProductionOrder(editingOrder.id, {
+      supervisor: editOrderSupervisor,
+      productionLine: editOrderLine,
+      priority: editOrderPriority,
+      status: editOrderStatus
+    });
+    setEditingOrder(null);
+  };
+
+  const handleDeleteOrderConfirm = async () => {
+    if (!deletingOrder) return;
+    await deleteProductionOrder(deletingOrder.id);
+    setDeletingOrder(null);
+  };
+
+  // Production Batch handlers
+  const openEditBatchModal = (b: ProductionBatch) => {
+    setEditingBatch(b);
+    setEditBatchQty(b.quantityProducedMT);
+    setEditBatchStorage(b.storageLocation);
+  };
+
+  const handleSaveBatchEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBatch) return;
+    await updateProductionBatch(editingBatch.id, {
+      quantityProducedMT: Number(editBatchQty),
+      storageLocation: editBatchStorage
+    });
+    setEditingBatch(null);
+  };
+
+  const handleDeleteBatchConfirm = async () => {
+    if (!deletingBatch) return;
+    await deleteProductionBatch(deletingBatch.id);
+    setDeletingBatch(null);
+  };
+
+  // BOM Handlers
+  const openEditBOMModal = (b: BOM) => {
+    setEditingBOM(b);
+    setBomProductName(b.productName);
+    setBomVersion(b.version);
+    setBomCost(b.totalStandardCostPerMT);
+    setBomNotes(b.notes || '');
+  };
+
+  const handleSaveBOMEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBOM) return;
+    await updateBOM(editingBOM.id, {
+      productName: bomProductName,
+      version: bomVersion,
+      totalStandardCostPerMT: Number(bomCost),
+      notes: bomNotes
+    });
+    setEditingBOM(null);
+  };
+
+  const handleDeleteBOMConfirm = async () => {
+    if (!deletingBOM) return;
+    await deleteBOM(deletingBOM.id);
+    setDeletingBOM(null);
+  };
+
+  const handleCreateBOM = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addBOM({
+      productId: `prod-${Date.now()}`,
+      productName: bomProductName,
+      version: bomVersion,
+      batchYieldMT: 1,
+      processLossPercent: 2.0,
+      totalStandardCostPerMT: Number(bomCost),
+      totalRawMaterialCostPerMT: Number(bomCost * 0.8),
+      labourCostPerMT: 350,
+      powerElectricityCostPerMT: 250,
+      packagingCostPerMT: 270,
+      packagingBagsPerMT: 20,
+      overheadCostPerMT: 150,
+      isActive: true,
+      items: [
+        { rawMaterialId: 'rm-1', rawMaterialName: 'Bentonite Lumps Grade A', quantityPerMT: 1010, unit: 'KG', costPerUnit: 3.2, wastagePercent: 1.0 }
+      ],
+      notes: bomNotes || 'Standard mfg formulation.'
+    });
+    setShowAddBOMModal(false);
   };
 
   return (
@@ -139,6 +276,7 @@ export const ProductionModule: React.FC = () => {
                     <th className="p-3">Material Check</th>
                     <th className="p-3">Status</th>
                     <th className="p-3 text-right">Production Action</th>
+                    <th className="p-3 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
@@ -209,6 +347,24 @@ export const ProductionModule: React.FC = () => {
                           </span>
                         )}
                       </td>
+                      <td className="p-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => openEditOrderModal(po)}
+                            className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                            title="Edit Order"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingOrder(po)}
+                            className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                            title="Delete Order"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -220,54 +376,90 @@ export const ProductionModule: React.FC = () => {
 
       {/* TAB 2: BOM RECIPES */}
       {activeTab === 'boms' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {boms.map(bom => (
-            <div key={bom.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-3">
-              <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
-                <div>
-                  <h3 className="font-bold text-neutral-900 text-sm">{bom.productName}</h3>
-                  <div className="text-[11px] text-neutral-500 font-mono">{bom.version} · Base Yield: 1 MT</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-sm font-mono text-neutral-900">
-                    ₹{bom.totalStandardCostPerMT.toLocaleString('en-IN')}/MT
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                setBomProductName('');
+                setBomVersion('v1.0');
+                setBomCost(4350);
+                setBomNotes('');
+                setShowAddBOMModal(true);
+              }}
+              className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create New BOM</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {boms.map(bom => (
+              <div key={bom.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+                  <div>
+                    <h3 className="font-bold text-neutral-900 text-sm">{bom.productName}</h3>
+                    <div className="text-[11px] text-neutral-500 font-mono">{bom.version} · Base Yield: 1 MT</div>
                   </div>
-                  <div className="text-[10px] text-neutral-400">Total Standard Mfg Cost</div>
-                </div>
-              </div>
-
-              <div>
-                <div className="font-semibold text-neutral-700 mb-1">Raw Material Recipe per 1 MT Output:</div>
-                <div className="bg-neutral-50 border border-neutral-200 rounded p-2 space-y-1">
-                  {bom.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-[11px]">
-                      <span className="text-neutral-800 font-medium">{item.rawMaterialName}</span>
-                      <span className="font-mono text-neutral-600 font-semibold">{item.quantityPerMT} {item.unit}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="font-bold text-sm font-mono text-neutral-900">
+                        ₹{bom.totalStandardCostPerMT.toLocaleString('en-IN')}/MT
+                      </div>
+                      <div className="text-[10px] text-neutral-400">Total Standard Mfg Cost</div>
                     </div>
-                  ))}
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => openEditBOMModal(bom)}
+                        className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                        title="Edit BOM"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setDeletingBOM(bom)}
+                        className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                        title="Delete BOM"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-neutral-100 text-[11px]">
-                <div className="bg-neutral-50 p-2 rounded">
-                  <div className="text-neutral-500">RM Cost:</div>
-                  <div className="font-mono font-bold text-neutral-800">₹{bom.totalRawMaterialCostPerMT}</div>
+                <div>
+                  <div className="font-semibold text-neutral-700 mb-1">Raw Material Recipe per 1 MT Output:</div>
+                  <div className="bg-neutral-50 border border-neutral-200 rounded p-2 space-y-1">
+                    {bom.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-[11px]">
+                        <span className="text-neutral-800 font-medium">{item.rawMaterialName}</span>
+                        <span className="font-mono text-neutral-600 font-semibold">{item.quantityPerMT} {item.unit}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="bg-neutral-50 p-2 rounded">
-                  <div className="text-neutral-500">Power &amp; Labour:</div>
-                  <div className="font-mono font-bold text-neutral-800">₹{bom.labourCostPerMT + bom.powerElectricityCostPerMT}</div>
-                </div>
-                <div className="bg-neutral-50 p-2 rounded">
-                  <div className="text-neutral-500">Packaging (50kg):</div>
-                  <div className="font-mono font-bold text-neutral-800">₹{bom.packagingCostPerMT} ({bom.packagingBagsPerMT} bags)</div>
-                </div>
-              </div>
 
-              <div className="text-[10px] text-neutral-500 italic bg-amber-50/50 p-2 rounded border border-amber-100">
-                Notes: {bom.notes}
+                <div className="grid grid-cols-3 gap-2 pt-1 border-t border-neutral-100 text-[11px]">
+                  <div className="bg-neutral-50 p-2 rounded">
+                    <div className="text-neutral-500">RM Cost:</div>
+                    <div className="font-mono font-bold text-neutral-800">₹{bom.totalRawMaterialCostPerMT}</div>
+                  </div>
+                  <div className="bg-neutral-50 p-2 rounded">
+                    <div className="text-neutral-500">Power &amp; Labour:</div>
+                    <div className="font-mono font-bold text-neutral-800">₹{bom.labourCostPerMT + bom.powerElectricityCostPerMT}</div>
+                  </div>
+                  <div className="bg-neutral-50 p-2 rounded">
+                    <div className="text-neutral-500">Packaging (50kg):</div>
+                    <div className="font-mono font-bold text-neutral-800">₹{bom.packagingCostPerMT} ({bom.packagingBagsPerMT} bags)</div>
+                  </div>
+                </div>
+
+                <div className="text-[10px] text-neutral-500 italic bg-amber-50/50 p-2 rounded border border-amber-100">
+                  Notes: {bom.notes}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -286,6 +478,7 @@ export const ProductionModule: React.FC = () => {
                   <th className="p-3">Storage Bay</th>
                   <th className="p-3">QC Status</th>
                   <th className="p-3 text-right">Traceability</th>
+                  <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -323,6 +516,24 @@ export const ProductionModule: React.FC = () => {
                       >
                         Inspect QC
                       </button>
+                    </td>
+                    <td className="p-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => openEditBatchModal(b)}
+                          className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                          title="Edit Batch"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingBatch(b)}
+                          className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                          title="Delete Batch"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -405,6 +616,265 @@ export const ProductionModule: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* EDIT PRODUCTION ORDER MODAL */}
+      {editingOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
+              <h3 className="text-sm font-bold text-neutral-900">
+                Edit Production Order ({editingOrder.productionOrderNumber})
+              </h3>
+              <button onClick={() => setEditingOrder(null)} className="text-neutral-400 hover:text-neutral-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveOrderEdit} className="space-y-3">
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Supervisor</label>
+                <input
+                  type="text"
+                  value={editOrderSupervisor}
+                  onChange={(e) => setEditOrderSupervisor(e.target.value)}
+                  required
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Production Line</label>
+                <input
+                  type="text"
+                  value={editOrderLine}
+                  onChange={(e) => setEditOrderLine(e.target.value)}
+                  required
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Priority</label>
+                  <select
+                    value={editOrderPriority}
+                    onChange={(e) => setEditOrderPriority(e.target.value as any)}
+                    className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
+                  >
+                    <option value="Normal">Normal</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Status</label>
+                  <select
+                    value={editOrderStatus}
+                    onChange={(e) => setEditOrderStatus(e.target.value as any)}
+                    className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
+                  >
+                    <option value="Planned">Planned</option>
+                    <option value="Material Ready">Material Ready</option>
+                    <option value="In Production">In Production</option>
+                    <option value="QC">QC</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingOrder(null)}
+                  className="px-3.5 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT PRODUCTION BATCH MODAL */}
+      {editingBatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
+              <h3 className="text-sm font-bold text-neutral-900">
+                Edit Production Batch ({editingBatch.batchNumber})
+              </h3>
+              <button onClick={() => setEditingBatch(null)} className="text-neutral-400 hover:text-neutral-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBatchEdit} className="space-y-3">
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Quantity Produced (MT)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={editBatchQty}
+                  onChange={(e) => setEditBatchQty(Number(e.target.value))}
+                  required
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Storage Location Bay</label>
+                <input
+                  type="text"
+                  value={editBatchStorage}
+                  onChange={(e) => setEditBatchStorage(e.target.value)}
+                  required
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingBatch(null)}
+                  className="px-3.5 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE / EDIT BOM MODAL */}
+      {(showAddBOMModal || editingBOM) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
+              <h3 className="text-sm font-bold text-neutral-900">
+                {editingBOM ? `Edit BOM Recipe (${editingBOM.productName})` : 'Create New BOM Recipe'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowAddBOMModal(false);
+                  setEditingBOM(null);
+                }}
+                className="text-neutral-400 hover:text-neutral-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={editingBOM ? handleSaveBOMEdit : handleCreateBOM} className="space-y-3">
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Product Name</label>
+                <input
+                  type="text"
+                  value={bomProductName}
+                  onChange={(e) => setBomProductName(e.target.value)}
+                  required
+                  placeholder="e.g. Granulated Bentonite 16-30 Mesh"
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Recipe Version</label>
+                  <input
+                    type="text"
+                    value={bomVersion}
+                    onChange={(e) => setBomVersion(e.target.value)}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Total Std Cost / MT (₹)</label>
+                  <input
+                    type="number"
+                    value={bomCost}
+                    onChange={(e) => setBomCost(Number(e.target.value))}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Formulation Notes</label>
+                <textarea
+                  rows={2}
+                  value={bomNotes}
+                  onChange={(e) => setBomNotes(e.target.value)}
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddBOMModal(false);
+                    setEditingBOM(null);
+                  }}
+                  className="px-3.5 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  {editingBOM ? 'Save Changes' : 'Create BOM Recipe'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE MODALS */}
+      <ConfirmModal
+        isOpen={!!deletingOrder}
+        title="Delete Production Order"
+        message={`Are you sure you want to delete order ${deletingOrder?.productionOrderNumber}?`}
+        confirmText="Delete Order"
+        onConfirm={handleDeleteOrderConfirm}
+        onClose={() => setDeletingOrder(null)}
+      />
+
+      <ConfirmModal
+        isOpen={!!deletingBatch}
+        title="Delete Production Batch"
+        message={`Are you sure you want to delete batch ${deletingBatch?.batchNumber}?`}
+        confirmText="Delete Batch"
+        onConfirm={handleDeleteBatchConfirm}
+        onClose={() => setDeletingBatch(null)}
+      />
+
+      <ConfirmModal
+        isOpen={!!deletingBOM}
+        title="Delete BOM Recipe"
+        message={`Are you sure you want to delete BOM for ${deletingBOM?.productName}?`}
+        confirmText="Delete BOM"
+        onConfirm={handleDeleteBOMConfirm}
+        onClose={() => setDeletingBOM(null)}
+      />
     </div>
   );
 };
+

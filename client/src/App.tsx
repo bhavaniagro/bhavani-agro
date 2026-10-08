@@ -8,6 +8,7 @@ import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
 import { QuickAddModal } from './components/modals/QuickAddModal';
 import { PrintableDocumentModal } from './components/modals/PrintableDocumentModal';
 import { DemoScenarioRunner } from './components/demo/DemoScenarioRunner';
+import { ToastContainer } from './components/common/Toast';
 
 // Modules
 import { DashboardModule } from './components/modules/DashboardModule';
@@ -85,8 +86,14 @@ const MainContent: React.FC = () => {
       <QuickAddModal />
       <PrintableDocumentModal />
       <DemoScenarioRunner />
+      <ToastWrapper />
     </div>
   );
+};
+
+const ToastWrapper: React.FC = () => {
+  const { toasts, dismissToast } = useERP();
+  return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
 };
 
 export default function App() {

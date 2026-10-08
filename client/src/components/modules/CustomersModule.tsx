@@ -8,9 +8,15 @@ import {
   Truck, 
   ArrowRight,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Edit,
+  Trash2,
+  X,
+  Check
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ConfirmModal } from '../modals/ConfirmModal';
+import { Customer } from '../../types/erp';
 
 export const CustomersModule: React.FC = () => {
   const { 
@@ -21,11 +27,18 @@ export const CustomersModule: React.FC = () => {
     setIsQuickAddOpen, 
     setQuickAddType,
     setActiveModule,
-    setPrintableDoc
+    setPrintableDoc,
+    updateCustomer,
+    deleteCustomer
   } = useERP();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
+  // Edit & Delete modal states
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredCustomers = customers.filter(c => 
     c.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -122,8 +135,10 @@ export const CustomersModule: React.FC = () => {
               {/* Profile Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-200 pb-4 gap-2">
                 <div>
-                  <div className="text-[10px] font-mono text-emerald-800 font-bold uppercase tracking-wider">
-                    {activeCustomer.code} · {activeCustomer.customerType}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono text-emerald-800 font-bold uppercase tracking-wider">
+                      {activeCustomer.code} · {activeCustomer.customerType}
+                    </span>
                   </div>
                   <h2 className="text-base font-bold text-neutral-900 mt-0.5">
                     {activeCustomer.customerName}
@@ -133,12 +148,30 @@ export const CustomersModule: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div className="text-[11px] text-neutral-500">Credit Limit:</div>
-                  <div className="font-mono font-bold text-sm text-neutral-900">
-                    ₹{activeCustomer.creditLimit.toLocaleString('en-IN')}
+                <div className="flex sm:flex-col items-end justify-between sm:justify-start gap-2">
+                  <div className="text-right">
+                    <div className="text-[11px] text-neutral-500">Credit Limit:</div>
+                    <div className="font-mono font-bold text-sm text-neutral-900">
+                      ₹{activeCustomer.creditLimit.toLocaleString('en-IN')}
+                    </div>
+                    <div className="text-[10px] font-mono text-neutral-400">Terms: {activeCustomer.paymentTerms}</div>
                   </div>
-                  <div className="text-[10px] font-mono text-neutral-400">Terms: {activeCustomer.paymentTerms}</div>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <button
+                      onClick={() => setEditingCustomer(activeCustomer)}
+                      className="px-2.5 py-1 bg-white border border-neutral-300 hover:bg-neutral-100 text-neutral-700 rounded text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit className="w-3 h-3 text-neutral-600" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => setDeletingCustomerId(activeCustomer.id)}
+                      className="px-2.5 py-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 rounded text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3 text-rose-600" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -299,6 +332,212 @@ export const CustomersModule: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Customer Modal */}
+      {editingCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+            <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
+              <div className="font-bold text-neutral-900">Edit Customer: {editingCustomer.code}</div>
+              <button
+                onClick={() => setEditingCustomer(null)}
+                className="text-neutral-400 hover:text-neutral-600 cursor-pointer p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                try {
+                  await updateCustomer(editingCustomer.id, editingCustomer);
+                  setEditingCustomer(null);
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              className="p-4 space-y-3 max-h-[75vh] overflow-y-auto"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Customer Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingCustomer.customerName}
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, customerName: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Company Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingCustomer.companyName}
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, companyName: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Contact Person</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingCustomer.contactPerson}
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, contactPerson: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Mobile</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingCustomer.mobile}
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, mobile: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={editingCustomer.email}
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, email: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">GSTIN</label>
+                  <input
+                    type="text"
+                    value={editingCustomer.gstin}
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, gstin: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 uppercase font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">State</label>
+                  <input
+                    type="text"
+                    value={editingCustomer.state}
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, state: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Customer Type</label>
+                  <select
+                    value={editingCustomer.customerType}
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, customerType: e.target.value as any })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  >
+                    <option value="Distributor">Distributor</option>
+                    <option value="Dealer">Dealer</option>
+                    <option value="Fertilizer Blender">Fertilizer Blender</option>
+                    <option value="Cooperative">Cooperative</option>
+                    <option value="Institutional Buyer">Institutional Buyer</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Billing Address</label>
+                <textarea
+                  rows={2}
+                  value={editingCustomer.billingAddress}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, billingAddress: e.target.value })}
+                  className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Shipping Address</label>
+                <textarea
+                  rows={2}
+                  value={editingCustomer.shippingAddress}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, shippingAddress: e.target.value })}
+                  className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Credit Limit (₹)</label>
+                  <input
+                    type="number"
+                    value={editingCustomer.creditLimit}
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, creditLimit: Number(e.target.value) })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Payment Terms</label>
+                  <input
+                    type="text"
+                    value={editingCustomer.paymentTerms}
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, paymentTerms: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingCustomer(null)}
+                  className="px-3 py-1.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded text-xs font-medium cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-xs font-semibold cursor-pointer"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Customer Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deletingCustomerId)}
+        title="Delete Customer Record"
+        message="Are you sure you want to delete this customer? This action will remove the record from Firestore and update your directory."
+        confirmText="Delete Customer"
+        isDangerous={true}
+        isLoading={isSubmitting}
+        onClose={() => setDeletingCustomerId(null)}
+        onConfirm={async () => {
+          if (!deletingCustomerId) return;
+          setIsSubmitting(true);
+          try {
+            await deleteCustomer(deletingCustomerId);
+            if (selectedCustomer?.id === deletingCustomerId) {
+              setSelectedCustomer(null);
+            }
+            setDeletingCustomerId(null);
+          } finally {
+            setIsSubmitting(false);
+          }
+        }}
+      />
     </div>
   );
 };

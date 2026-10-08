@@ -10,9 +10,13 @@ import {
   Plus, 
   Search, 
   Printer,
-  ChevronRight
+  ChevronRight,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ConfirmModal } from '../modals/ConfirmModal';
+import { SalesInvoice, PaymentTransaction } from '../../types/erp';
 
 export const FinanceAccountsModule: React.FC = () => {
   const { 
@@ -21,6 +25,10 @@ export const FinanceAccountsModule: React.FC = () => {
     suppliers, 
     customers, 
     recordCustomerPayment, 
+    updateSalesInvoice,
+    deleteSalesInvoice,
+    updatePayment,
+    deletePayment,
     setPrintableDoc 
   } = useERP();
 
@@ -34,6 +42,14 @@ export const FinanceAccountsModule: React.FC = () => {
   const [paymentMode, setPaymentMode] = useState<any>('NEFT/RTGS');
   const [bankRef, setBankRef] = useState('');
   const [reminderSentId, setReminderSentId] = useState<string | null>(null);
+
+  // Invoice Edit & Delete State
+  const [editingInvoice, setEditingInvoice] = useState<SalesInvoice | null>(null);
+  const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null);
+
+  // Payment Edit & Delete State
+  const [editingPayment, setEditingPayment] = useState<PaymentTransaction | null>(null);
+  const [deletePaymentId, setDeletePaymentId] = useState<string | null>(null);
 
   const filteredInvoices = invoices.filter(inv => 
     inv.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,6 +85,32 @@ export const FinanceAccountsModule: React.FC = () => {
     if (!selectedInvoice) return;
     recordCustomerPayment(selectedInvoice.id, Number(paymentAmount), paymentMode, bankRef);
     setShowPaymentModal(false);
+  };
+
+  const handleUpdateInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingInvoice) return;
+    await updateSalesInvoice(editingInvoice.id, editingInvoice);
+    setEditingInvoice(null);
+  };
+
+  const handleDeleteInvoice = async () => {
+    if (!deleteInvoiceId) return;
+    await deleteSalesInvoice(deleteInvoiceId);
+    setDeleteInvoiceId(null);
+  };
+
+  const handleUpdatePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPayment) return;
+    await updatePayment(editingPayment.id, editingPayment);
+    setEditingPayment(null);
+  };
+
+  const handleDeletePayment = async () => {
+    if (!deletePaymentId) return;
+    await deletePayment(deletePaymentId);
+    setDeletePaymentId(null);
   };
 
   return (
@@ -246,6 +288,21 @@ export const FinanceAccountsModule: React.FC = () => {
                           Settled ✓
                         </span>
                       )}
+
+                      <button
+                        onClick={() => setEditingInvoice(inv)}
+                        className="p-1 hover:bg-neutral-100 rounded text-neutral-600 cursor-pointer inline-flex items-center ml-1"
+                        title="Edit Invoice"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteInvoiceId(inv.id)}
+                        className="p-1 hover:bg-rose-50 rounded text-rose-600 cursor-pointer inline-flex items-center"
+                        title="Delete Invoice"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -308,6 +365,7 @@ export const FinanceAccountsModule: React.FC = () => {
                 <th className="p-3">Date</th>
                 <th className="p-3">Payment Mode &amp; UTR</th>
                 <th className="p-3 text-right font-bold">Amount (₹)</th>
+                <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -323,11 +381,27 @@ export const FinanceAccountsModule: React.FC = () => {
                   <td className="p-3 text-right font-mono tabular-nums font-bold text-emerald-700 text-sm">
                     ₹{p.amount.toLocaleString('en-IN')}
                   </td>
+                  <td className="p-3 text-right space-x-1 whitespace-nowrap">
+                    <button
+                      onClick={() => setEditingPayment(p)}
+                      className="p-1 hover:bg-neutral-100 rounded text-neutral-600 cursor-pointer inline-flex items-center"
+                      title="Edit Payment"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeletePaymentId(p.id)}
+                      className="p-1 hover:bg-rose-50 rounded text-rose-600 cursor-pointer inline-flex items-center"
+                      title="Delete Payment"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {payments.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-neutral-400 italic">
+                  <td colSpan={7} className="p-6 text-center text-neutral-400 italic">
                     No payment vouchers recorded yet. Click "Record Payment" on any pending invoice.
                   </td>
                 </tr>
@@ -407,6 +481,183 @@ export const FinanceAccountsModule: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* EDIT INVOICE MODAL */}
+      {editingInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+            <h3 className="text-sm font-bold text-neutral-900 mb-3">
+              Edit Sales Invoice {editingInvoice.invoiceNumber}
+            </h3>
+
+            <form onSubmit={handleUpdateInvoice} className="space-y-3">
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Payment Status</label>
+                <select
+                  value={editingInvoice.paymentStatus}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, paymentStatus: e.target.value as any })}
+                  className="w-full border border-neutral-300 rounded p-2 bg-white"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Partially Paid">Partially Paid</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Overdue">Overdue</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Paid Amount (₹)</label>
+                  <input
+                    type="number"
+                    value={editingInvoice.paidAmount}
+                    onChange={(e) => {
+                      const paid = Number(e.target.value);
+                      const bal = editingInvoice.totalInvoiceAmount - paid;
+                      setEditingInvoice({
+                        ...editingInvoice,
+                        paidAmount: paid,
+                        balanceAmount: bal >= 0 ? bal : 0,
+                        paymentStatus: bal <= 0 ? 'Paid' : (paid > 0 ? 'Partially Paid' : editingInvoice.paymentStatus)
+                      });
+                    }}
+                    className="w-full border border-neutral-300 rounded p-2 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Balance Amount (₹)</label>
+                  <input
+                    type="number"
+                    value={editingInvoice.balanceAmount}
+                    onChange={(e) => setEditingInvoice({ ...editingInvoice, balanceAmount: Number(e.target.value) })}
+                    className="w-full border border-neutral-300 rounded p-2 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Due Date</label>
+                <input
+                  type="date"
+                  value={editingInvoice.dueDate}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, dueDate: e.target.value })}
+                  className="w-full border border-neutral-300 rounded p-2"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingInvoice(null)}
+                  className="px-3 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded cursor-pointer shadow-xs"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT PAYMENT MODAL */}
+      {editingPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+            <h3 className="text-sm font-bold text-neutral-900 mb-3">
+              Edit Payment Voucher {editingPayment.transactionNumber}
+            </h3>
+
+            <form onSubmit={handleUpdatePayment} className="space-y-3">
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Amount (₹)</label>
+                <input
+                  type="number"
+                  value={editingPayment.amount}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, amount: Number(e.target.value) })}
+                  className="w-full border border-neutral-300 rounded p-2 font-mono"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Payment Mode</label>
+                  <select
+                    value={editingPayment.paymentMode}
+                    onChange={(e) => setEditingPayment({ ...editingPayment, paymentMode: e.target.value as any })}
+                    className="w-full border border-neutral-300 rounded p-2 bg-white"
+                  >
+                    <option value="NEFT/RTGS">NEFT/RTGS</option>
+                    <option value="Cheque">Cheque</option>
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Bank Reference / UTR</label>
+                  <input
+                    type="text"
+                    value={editingPayment.bankReference}
+                    onChange={(e) => setEditingPayment({ ...editingPayment, bankReference: e.target.value })}
+                    className="w-full border border-neutral-300 rounded p-2 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Payment Date</label>
+                <input
+                  type="date"
+                  value={editingPayment.paymentDate}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, paymentDate: e.target.value })}
+                  className="w-full border border-neutral-300 rounded p-2"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingPayment(null)}
+                  className="px-3 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded cursor-pointer shadow-xs"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE INVOICE */}
+      <ConfirmModal
+        isOpen={!!deleteInvoiceId}
+        title="Delete Sales Invoice"
+        message="Are you sure you want to delete this sales invoice? This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={handleDeleteInvoice}
+        onClose={() => setDeleteInvoiceId(null)}
+      />
+
+      {/* CONFIRM DELETE PAYMENT */}
+      <ConfirmModal
+        isOpen={!!deletePaymentId}
+        title="Delete Payment Voucher"
+        message="Are you sure you want to delete this payment voucher record?"
+        confirmText="Delete"
+        onConfirm={handleDeletePayment}
+        onClose={() => setDeletePaymentId(null)}
+      />
     </div>
   );
 };

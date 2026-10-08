@@ -11,13 +11,14 @@ import {
 import { useERP } from '../../context/ERPContext';
 
 export const SettingsModule: React.FC = () => {
-  const { company, setCompany, resetAllData, activeRole, setActiveRole } = useERP();
+  const { company, setCompany, updateCompanyProfile, resetAllData, activeRole, setActiveRole } = useERP();
   const [formData, setFormData] = useState(company);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setCompany(formData);
+    await updateCompanyProfile(formData);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2500);
   };

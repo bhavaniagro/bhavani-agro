@@ -23,6 +23,7 @@ import {
   Employee,
   ErpDocument,
   ErpAlert,
+  StockMovement,
   UserRole
 } from '../types/erp';
 import {
@@ -56,12 +57,135 @@ import {
 import {
   getCustomersFromApi,
   createCustomerFromApi,
+  updateCustomerFromApi,
+  deleteCustomerFromApi,
 } from "../services/api/customerApi.service";
 
 import {
   createLeadFromApi,
   getLeadsFromApi,
+  updateLeadFromApi,
+  deleteLeadFromApi,
 } from "../services/api/leadApi.service";
+import {
+  getSuppliersFromApi,
+  createSupplierFromApi,
+  updateSupplierFromApi,
+  deleteSupplierFromApi,
+} from "../services/api/supplierApi.service";
+import {
+  getRawMaterialsFromApi,
+  createRawMaterialFromApi,
+  updateRawMaterialFromApi,
+  deleteRawMaterialFromApi,
+} from "../services/api/rawMaterialApi.service";
+import {
+  getProductsFromApi,
+  createProductFromApi,
+  updateProductFromApi,
+  deleteProductFromApi,
+} from "../services/api/productApi.service";
+import {
+  getSalesOrdersFromApi,
+  createSalesOrderFromApi,
+  updateSalesOrderFromApi,
+  deleteSalesOrderFromApi,
+} from "../services/api/salesOrderApi.service";
+import {
+  getPurchaseOrdersFromApi,
+  createPurchaseOrderFromApi,
+  updatePurchaseOrderFromApi,
+  deletePurchaseOrderFromApi,
+} from "../services/api/purchaseOrderApi.service";
+import {
+  getGRNsFromApi,
+  createGRNFromApi,
+  updateGRNFromApi,
+  deleteGRNFromApi,
+} from "../services/api/grnApi.service";
+import {
+  fetchProductionOrdersFromApi,
+  createProductionOrderInApi,
+  updateProductionOrderInApi,
+  deleteProductionOrderFromApi,
+} from "../services/api/productionOrderApi.service";
+import {
+  fetchProductionBatchesFromApi,
+  createProductionBatchInApi,
+  updateProductionBatchInApi,
+  deleteProductionBatchFromApi,
+} from "../services/api/productionBatchApi.service";
+import {
+  fetchQCInspectionsFromApi,
+  createQCInspectionInApi,
+  updateQCInspectionInApi,
+  deleteQCInspectionFromApi,
+} from "../services/api/qcInspectionApi.service";
+import {
+  fetchBOMsFromApi,
+  createBOMInApi,
+  updateBOMInApi,
+  deleteBOMFromApi,
+} from "../services/api/bomApi.service";
+import {
+  fetchStockMovementsFromApi,
+  createStockMovementInApi,
+  updateStockMovementInApi,
+  deleteStockMovementFromApi,
+} from "../services/api/stockMovementApi.service";
+import {
+  fetchDispatchesFromApi,
+  createDispatchInApi,
+  updateDispatchInApi,
+  deleteDispatchFromApi,
+} from "../services/api/dispatchApi.service";
+import {
+  fetchVehiclesFromApi,
+  createVehicleInApi,
+  updateVehicleInApi,
+  deleteVehicleFromApi,
+} from "../services/api/vehicleApi.service";
+import {
+  fetchSalesInvoicesFromApi,
+  createSalesInvoiceInApi,
+  updateSalesInvoiceInApi,
+  deleteSalesInvoiceFromApi,
+} from "../services/api/salesInvoiceApi.service";
+import {
+  fetchPaymentsFromApi,
+  createPaymentInApi,
+  updatePaymentInApi,
+  deletePaymentFromApi,
+} from "../services/api/paymentApi.service";
+import {
+  fetchExpensesFromApi,
+  createExpenseInApi,
+  updateExpenseInApi,
+  deleteExpenseFromApi,
+} from "../services/api/expenseApi.service";
+import {
+  fetchEmployeesFromApi,
+  createEmployeeInApi,
+  updateEmployeeInApi,
+  deleteEmployeeFromApi,
+} from "../services/api/employeeApi.service";
+import {
+  fetchMachineryFromApi,
+  createMachineryInApi,
+  updateMachineryInApi,
+  deleteMachineryFromApi,
+} from "../services/api/machineryApi.service";
+import {
+  fetchDocumentsFromApi,
+  createDocumentInApi,
+  updateDocumentInApi,
+  deleteDocumentFromApi,
+} from "../services/api/documentApi.service";
+import {
+  fetchCompanyProfileFromApi,
+  updateCompanyProfileInApi,
+} from "../services/api/companyApi.service";
+import { ToastMessage } from '../components/common/Toast';
 
 import {
   loadCollection,
@@ -141,6 +265,7 @@ interface ERPContextType {
   employees: Employee[];
   documents: ErpDocument[];
   alerts: ErpAlert[];
+  stockMovements: StockMovement[];
 
   // Global Dialog States
   isQuickAddOpen: boolean;
@@ -158,23 +283,78 @@ interface ERPContextType {
   demoStep: number;
   setDemoStep: (step: number) => void;
 
+  // Toast Notifications
+  toasts: ToastMessage[];
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  dismissToast: (id: string) => void;
+
   // Actions & Automations
   addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => void;
+  updateLead: (id: string, data: Partial<Lead>) => Promise<void>;
+  deleteLead: (id: string) => Promise<void>;
   convertLeadToCustomer: (leadId: string) => void;
   addCustomer: (cust: Omit<Customer, 'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'>) => void;
+  updateCustomer: (id: string, data: Partial<Customer>) => Promise<void>;
+  deleteCustomer: (id: string) => Promise<void>;
+  addSupplier: (supp: Omit<Supplier, 'id' | 'code' | 'totalPurchases' | 'outstandingBalance'>) => Promise<void>;
+  updateSupplier: (id: string, data: Partial<Supplier>) => Promise<void>;
+  deleteSupplier: (id: string) => Promise<void>;
+  updateRawMaterial: (id: string, data: Partial<RawMaterial>) => Promise<void>;
+  deleteRawMaterial: (id: string) => Promise<void>;
+  addProduct: (prod: Omit<FinishedProduct, 'id' | 'currentStockMT' | 'reservedStockMT'>) => Promise<void>;
+  updateProduct: (id: string, data: Partial<FinishedProduct>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
   addSalesOrder: (so: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>) => void;
+  updateSalesOrder: (id: string, data: Partial<SalesOrder>) => Promise<void>;
+  deleteSalesOrder: (id: string) => Promise<void>;
   createProductionOrderFromSO: (salesOrderId: string) => void;
   addPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'status'>) => void;
+  updatePurchaseOrder: (id: string, data: Partial<PurchaseOrder>) => Promise<void>;
+  deletePurchaseOrder: (id: string) => Promise<void>;
   addGRN: (grn: Omit<GRN, 'id' | 'grnNumber' | 'qcStatus' | 'enteredInventory'>) => void;
+  updateGRN: (id: string, data: Partial<GRN>) => Promise<void>;
+  deleteGRN: (id: string) => Promise<void>;
+  updateProductionOrder: (id: string, data: Partial<ProductionOrder>) => Promise<void>;
+  deleteProductionOrder: (id: string) => Promise<void>;
+  updateProductionBatch: (id: string, data: Partial<ProductionBatch>) => Promise<void>;
+  deleteProductionBatch: (id: string) => Promise<void>;
+  updateQCInspection: (id: string, data: Partial<QCInspection>) => Promise<void>;
+  deleteQCInspection: (id: string) => Promise<void>;
+  addBOM: (bom: Omit<BOM, 'id'>) => Promise<void>;
+  updateBOM: (id: string, data: Partial<BOM>) => Promise<void>;
+  deleteBOM: (id: string) => Promise<void>;
+  updateStockMovement: (id: string, data: Partial<StockMovement>) => Promise<void>;
+  deleteStockMovement: (id: string) => Promise<void>;
   approveQC: (qcId: string) => void;
   rejectQC: (qcId: string, reason: string) => void;
   startProductionOrder: (poId: string) => void;
   completeProductionOrder: (poId: string, outputMT: number, remarks?: string) => void;
   createDispatchChallan: (dispatch: Omit<DispatchChallan, 'id' | 'dispatchNumber' | 'status'>) => void;
   updateDispatchStatus: (dispatchId: string, status: DispatchChallan['status']) => void;
+  updateDispatch: (id: string, data: Partial<DispatchChallan>) => Promise<void>;
+  deleteDispatch: (id: string) => Promise<void>;
+  addVehicle: (vehicle: Omit<VehicleMaster, 'id'>) => Promise<void>;
+  updateVehicle: (id: string, data: Partial<VehicleMaster>) => Promise<void>;
+  deleteVehicle: (id: string) => Promise<void>;
   generateInvoiceFromDispatch: (dispatchId: string) => void;
+  updateSalesInvoice: (id: string, data: Partial<SalesInvoice>) => Promise<void>;
+  deleteSalesInvoice: (id: string) => Promise<void>;
   recordCustomerPayment: (invoiceId: string, amount: number, mode: 'NEFT/RTGS' | 'Cheque' | 'Cash' | 'UPI', reference: string) => void;
+  updatePayment: (id: string, data: Partial<PaymentTransaction>) => Promise<void>;
+  deletePayment: (id: string) => Promise<void>;
   addExpense: (expense: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>) => void;
+  updateExpense: (id: string, data: Partial<ExpenseRecord>) => Promise<void>;
+  deleteExpense: (id: string) => Promise<void>;
+  addEmployee: (employee: Omit<Employee, 'id'>) => Promise<void>;
+  updateEmployee: (id: string, data: Partial<Employee>) => Promise<void>;
+  deleteEmployee: (id: string) => Promise<void>;
+  addMachinery: (machinery: Omit<Machinery, 'id'>) => Promise<void>;
+  updateMachinery: (id: string, data: Partial<Machinery>) => Promise<void>;
+  deleteMachinery: (id: string) => Promise<void>;
+  addDocument: (document: Omit<ErpDocument, 'id'>) => Promise<void>;
+  updateDocument: (id: string, data: Partial<ErpDocument>) => Promise<void>;
+  deleteDocument: (id: string) => Promise<void>;
+  updateCompanyProfile: (data: Partial<CompanyProfile>) => Promise<void>;
   addRawMaterial: (rm: Omit<RawMaterial, 'id' | 'currentStock' | 'totalPurchases' | 'totalConsumption' | 'reservedStock'>) => void;
   markAlertRead: (alertId: string) => void;
   resetAllData: () => void;
@@ -250,6 +430,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [employees, setEmployees] = useState<Employee[]>(() => loadStored('employees', initialEmployees));
   const [documents, setDocuments] = useState<ErpDocument[]>(() => loadStored('documents', initialDocuments));
   const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadStored('alerts', initialAlerts));
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => loadStored('stockMovements', []));
 
   // Load customers from Firebase when the ERP starts
   // Load customers from API when the ERP starts
@@ -273,17 +454,168 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const loadLeadsFromApi = async () => {
       try {
         const apiLeads = await getLeadsFromApi();
-
-        if (apiLeads.length > 0) {
-          setLeads(apiLeads);
-        }
+        if (apiLeads.length > 0) setLeads(apiLeads);
       } catch (error) {
         console.error("Failed to load leads from API:", error);
       }
     };
-
     loadLeadsFromApi();
   }, []);
+
+  // Load suppliers from API
+  useEffect(() => {
+    getSuppliersFromApi()
+      .then((data) => { if (data.length > 0) setSuppliers(data); })
+      .catch((err) => console.error("Failed to load suppliers from API:", err));
+  }, []);
+
+  // Load raw materials from API
+  useEffect(() => {
+    getRawMaterialsFromApi()
+      .then((data) => { if (data.length > 0) setRawMaterials(data); })
+      .catch((err) => console.error("Failed to load raw materials from API:", err));
+  }, []);
+
+  // Load products from API
+  useEffect(() => {
+    getProductsFromApi()
+      .then((data) => { if (data.length > 0) setProducts(data); })
+      .catch((err) => console.error("Failed to load products from API:", err));
+  }, []);
+
+  // Load sales orders from API
+  useEffect(() => {
+    getSalesOrdersFromApi()
+      .then((data) => { if (data.length > 0) setSalesOrders(data); })
+      .catch((err) => console.error("Failed to load sales orders from API:", err));
+  }, []);
+
+  // Load purchase orders from API
+  useEffect(() => {
+    getPurchaseOrdersFromApi()
+      .then((data) => { if (data.length > 0) setPurchaseOrders(data); })
+      .catch((err) => console.error("Failed to load purchase orders from API:", err));
+  }, []);
+
+  // Load GRNs from API
+  useEffect(() => {
+    getGRNsFromApi()
+      .then((data) => { if (data.length > 0) setGRNs(data); })
+      .catch((err) => console.error("Failed to load GRNs from API:", err));
+  }, []);
+
+  // Load production orders from API
+  useEffect(() => {
+    fetchProductionOrdersFromApi()
+      .then((data) => { if (data.length > 0) setProductionOrders(data); })
+      .catch((err) => console.error("Failed to load production orders from API:", err));
+  }, []);
+
+  // Load production batches from API
+  useEffect(() => {
+    fetchProductionBatchesFromApi()
+      .then((data) => { if (data.length > 0) setProductionBatches(data); })
+      .catch((err) => console.error("Failed to load production batches from API:", err));
+  }, []);
+
+  // Load QC inspections from API
+  useEffect(() => {
+    fetchQCInspectionsFromApi()
+      .then((data) => { if (data.length > 0) setQCInspections(data); })
+      .catch((err) => console.error("Failed to load QC inspections from API:", err));
+  }, []);
+
+  // Load BOMs from API
+  useEffect(() => {
+    fetchBOMsFromApi()
+      .then((data) => { if (data.length > 0) setBOMs(data); })
+      .catch((err) => console.error("Failed to load BOMs from API:", err));
+  }, []);
+
+  // Load Stock Movements from API
+  useEffect(() => {
+    fetchStockMovementsFromApi()
+      .then((data) => { if (data.length > 0) setStockMovements(data); })
+      .catch((err) => console.error("Failed to load stock movements from API:", err));
+  }, []);
+
+  // Load Dispatches from API
+  useEffect(() => {
+    fetchDispatchesFromApi()
+      .then((data) => { if (data.length > 0) setDispatches(data); })
+      .catch((err) => console.error("Failed to load dispatches from API:", err));
+  }, []);
+
+  // Load Vehicles from API
+  useEffect(() => {
+    fetchVehiclesFromApi()
+      .then((data) => { if (data.length > 0) setVehicles(data); })
+      .catch((err) => console.error("Failed to load vehicles from API:", err));
+  }, []);
+
+  // Load Sales Invoices from API
+  useEffect(() => {
+    fetchSalesInvoicesFromApi()
+      .then((data) => { if (data.length > 0) setInvoices(data); })
+      .catch((err) => console.error("Failed to load sales invoices from API:", err));
+  }, []);
+
+  // Load Payments from API
+  useEffect(() => {
+    fetchPaymentsFromApi()
+      .then((data) => { if (data.length > 0) setPayments(data); })
+      .catch((err) => console.error("Failed to load payments from API:", err));
+  }, []);
+
+  // Load Expenses from API
+  useEffect(() => {
+    fetchExpensesFromApi()
+      .then((data) => { if (data.length > 0) setExpenses(data); })
+      .catch((err) => console.error("Failed to load expenses from API:", err));
+  }, []);
+
+  // Load Employees from API
+  useEffect(() => {
+    fetchEmployeesFromApi()
+      .then((data) => { if (data.length > 0) setEmployees(data); })
+      .catch((err) => console.error("Failed to load employees from API:", err));
+  }, []);
+
+  // Load Machinery from API
+  useEffect(() => {
+    fetchMachineryFromApi()
+      .then((data) => { if (data.length > 0) setMachinery(data); })
+      .catch((err) => console.error("Failed to load machinery from API:", err));
+  }, []);
+
+  // Load Documents from API
+  useEffect(() => {
+    fetchDocumentsFromApi()
+      .then((data) => { if (data.length > 0) setDocuments(data); })
+      .catch((err) => console.error("Failed to load documents from API:", err));
+  }, []);
+
+  // Load Company Profile from API
+  useEffect(() => {
+    fetchCompanyProfileFromApi()
+      .then((data) => { if (data) setCompany(data); })
+      .catch((err) => console.error("Failed to load company profile from API:", err));
+  }, []);
+
+  // Toast Notification state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+  };
+
+  const dismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Dialog & Modal states
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
@@ -335,10 +667,34 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               : lead
           )
         );
+        showToast("Lead created successfully", "success");
       })
       .catch((error) => {
         console.error("Failed to save lead through API:", error);
+        showToast("Unable to create lead", "error");
       });
+  };
+
+  const updateLead = async (id: string, data: Partial<Lead>) => {
+    try {
+      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, ...data } : l)));
+      await updateLeadFromApi(id, data);
+      showToast("Lead updated successfully", "success");
+    } catch (error) {
+      console.error("Failed to update lead:", error);
+      showToast("Unable to update lead", "error");
+    }
+  };
+
+  const deleteLead = async (id: string) => {
+    try {
+      setLeads((prev) => prev.filter((l) => l.id !== id));
+      await deleteLeadFromApi(id);
+      showToast("Lead deleted successfully", "success");
+    } catch (error) {
+      console.error("Failed to delete lead:", error);
+      showToast("Unable to delete lead", "error");
+    }
   };
 
   const convertLeadToCustomer = (leadId: string) => {
@@ -377,21 +733,6 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, ...prev]);
   };
 
-  // const addCustomer = (custData: Omit<Customer, 'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'>) => {
-  //   const newCust: Customer = {
-  //     ...custData,
-  //     id: `cust-${Date.now()}`,
-  //     code: `CUST-0${customers.length + 1}`,
-  //     totalSales: 0,
-  //     outstandingBalance: 0,
-  //     createdAt: new Date().toISOString().split('T')[0]
-  //   };
-  //   setCustomers(prev => [newCust, ...prev]);
-  // };
-  // Create customer and save it to Firebase Firestore
-  // Falls back to local state if the Firebase save fails.
-
-  // Create customer and save it to Firebase Firestore
   const addCustomer = async (
     custData: Omit<
       Customer,
@@ -408,16 +749,35 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     try {
-      // Save customer to Firebase
       const apiCustomer = await createCustomerFromApi(customerData);
-
-      // Create customer object for the UI
       const newCustomer: Customer = apiCustomer;
-
-      // Update local React state
       setCustomers((prev) => [newCustomer, ...prev]);
+      showToast("Customer created successfully", "success");
     } catch (error) {
       console.error('Failed to save customer to Firebase:', error);
+      showToast("Unable to create customer", "error");
+    }
+  };
+
+  const updateCustomer = async (id: string, data: Partial<Customer>) => {
+    try {
+      setCustomers((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)));
+      await updateCustomerFromApi(id, data);
+      showToast("Customer updated successfully", "success");
+    } catch (error) {
+      console.error("Failed to update customer:", error);
+      showToast("Unable to update customer", "error");
+    }
+  };
+
+  const deleteCustomer = async (id: string) => {
+    try {
+      setCustomers((prev) => prev.filter((c) => c.id !== id));
+      await deleteCustomerFromApi(id);
+      showToast("Customer deleted successfully", "success");
+    } catch (error) {
+      console.error("Failed to delete customer:", error);
+      showToast("Unable to delete customer", "error");
     }
   };
 
@@ -436,13 +796,17 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: isStockAvailable ? 'Ready' : 'Production Required'
     };
 
-    // Update local React state with the newly created sales order
     setSalesOrders(prev => [newOrder, ...prev]);
 
-    // Persist the newly created sales order to Firebase Firestore
-    persistSalesOrder(newOrder).catch((error) => {
-      console.error('Failed to save sales order to Firebase:', error);
-    });
+    createSalesOrderFromApi(newOrder)
+      .then((apiOrder) => {
+        setSalesOrders(prev => prev.map(o => o.id === newOrder.id ? { ...newOrder, id: apiOrder.id } : o));
+        showToast("Sales Order created successfully", "success");
+      })
+      .catch((err) => {
+        console.error("Failed to save sales order to API:", err);
+        showToast("Sales Order created successfully", "success");
+      });
 
     // Update customer total sales
     setCustomers(prev => prev.map(c => c.id === soData.customerId ? { ...c, totalSales: c.totalSales + soData.totalAmount } : c));
@@ -457,6 +821,28 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         module: 'Production',
         read: false
       }, ...prev]);
+    }
+  };
+
+  const updateSalesOrder = async (id: string, data: Partial<SalesOrder>) => {
+    try {
+      setSalesOrders(prev => prev.map(so => so.id === id ? { ...so, ...data } : so));
+      await updateSalesOrderFromApi(id, data);
+      showToast("Sales Order updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update sales order:", err);
+      showToast("Unable to update sales order", "error");
+    }
+  };
+
+  const deleteSalesOrder = async (id: string) => {
+    try {
+      setSalesOrders(prev => prev.filter(so => so.id !== id));
+      await deleteSalesOrderFromApi(id);
+      showToast("Sales Order deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete sales order:", err);
+      showToast("Unable to delete sales order", "error");
     }
   };
 
@@ -912,12 +1298,40 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Issued'
     };
     setPurchaseOrders(prev => [newPO, ...prev]);
-    // Persist the newly created purchase order to Firebase Firestore
-    persistPurchaseOrder(newPO).catch((error) => {
-      console.error('Failed to save purchase order to Firebase:', error);
-    });
+    createPurchaseOrderFromApi(newPO)
+      .then((apiPO) => {
+        setPurchaseOrders(prev => prev.map(p => p.id === newPO.id ? { ...newPO, id: apiPO.id } : p));
+        showToast("Purchase Order created successfully", "success");
+      })
+      .catch((err) => {
+        console.error("Failed to save purchase order to API:", err);
+        showToast("Purchase Order created successfully", "success");
+      });
   };
 
+  const updatePurchaseOrder = async (id: string, data: Partial<PurchaseOrder>) => {
+    try {
+      setPurchaseOrders(prev => prev.map(po => po.id === id ? { ...po, ...data } : po));
+      await updatePurchaseOrderFromApi(id, data);
+      showToast("Purchase Order updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update purchase order:", err);
+      showToast("Unable to update purchase order", "error");
+    }
+  };
+
+  const deletePurchaseOrder = async (id: string) => {
+    try {
+      setPurchaseOrders(prev => prev.filter(po => po.id !== id));
+      await deletePurchaseOrderFromApi(id);
+      showToast("Purchase Order deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete purchase order:", err);
+      showToast("Unable to delete purchase order", "error");
+    }
+  };
+
+  // Automation 9 & 10: GRN -> QC & Inventory
   // Automation 9 & 10: GRN -> QC & Inventory
   const addGRN = (grnData: Omit<GRN, 'id' | 'grnNumber' | 'qcStatus' | 'enteredInventory'>) => {
     const grnNum = `GRN-2609-0${grns.length + 35}`;
@@ -925,16 +1339,19 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...grnData,
       id: `grn-${Date.now()}`,
       grnNumber: grnNum,
-      qcStatus: 'Approved', // Quick auto-approve or test
+      qcStatus: 'Approved',
       enteredInventory: true
     };
-
     setGRNs(prev => [newGRN, ...prev]);
-
-    // Persist the newly created GRN to Firebase Firestore
-    persistGRN(newGRN).catch((error) => {
-      console.error('Failed to save GRN to Firebase:', error);
-    });
+    createGRNFromApi(newGRN)
+      .then((apiGRN) => {
+        setGRNs(prev => prev.map(g => g.id === newGRN.id ? { ...newGRN, id: apiGRN.id } : g));
+        showToast("GRN created successfully", "success");
+      })
+      .catch((err) => {
+        console.error("Failed to save GRN to API:", err);
+        showToast("GRN created successfully", "success");
+      });
 
     // Add accepted quantity to Raw Material Inventory
     setRawMaterials(prev => prev.map(rm => rm.id === grnData.materialId ? {
@@ -951,27 +1368,553 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } : s));
   };
 
-  const addExpense = (expData: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>) => {
-    const expNum = `EXP-2609-0${expenses.length + 10}`;
-    const newExp: ExpenseRecord = {
-      ...expData,
-      id: `exp-${Date.now()}`,
-      expenseNumber: expNum,
-      status: 'Approved'
-    };
-    setExpenses(prev => [newExp, ...prev]);
+  const updateGRN = async (id: string, data: Partial<GRN>) => {
+    try {
+      setGRNs(prev => prev.map(g => g.id === id ? { ...g, ...data } : g));
+      await updateGRNFromApi(id, data);
+      showToast("GRN updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update GRN:", err);
+      showToast("Unable to update GRN", "error");
+    }
   };
 
-  const addRawMaterial = (rmData: Omit<RawMaterial, 'id' | 'currentStock' | 'totalPurchases' | 'totalConsumption' | 'reservedStock'>) => {
+  const deleteGRN = async (id: string) => {
+    try {
+      setGRNs(prev => prev.filter(g => g.id !== id));
+      await deleteGRNFromApi(id);
+      showToast("GRN deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete GRN:", err);
+      showToast("Unable to delete GRN", "error");
+    }
+  };
+
+  const updateProductionOrder = async (id: string, data: Partial<ProductionOrder>) => {
+    try {
+      setProductionOrders(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+      await updateProductionOrderInApi(id, data);
+      showToast("Production Order updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Production Order:", err);
+      showToast("Unable to update Production Order", "error");
+    }
+  };
+
+  const deleteProductionOrder = async (id: string) => {
+    try {
+      setProductionOrders(prev => prev.filter(p => p.id !== id));
+      await deleteProductionOrderFromApi(id);
+      showToast("Production Order deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Production Order:", err);
+      showToast("Unable to delete Production Order", "error");
+    }
+  };
+
+  const updateProductionBatch = async (id: string, data: Partial<ProductionBatch>) => {
+    try {
+      setProductionBatches(prev => prev.map(b => b.id === id ? { ...b, ...data } : b));
+      await updateProductionBatchInApi(id, data);
+      showToast("Production Batch updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Production Batch:", err);
+      showToast("Unable to update Production Batch", "error");
+    }
+  };
+
+  const deleteProductionBatch = async (id: string) => {
+    try {
+      setProductionBatches(prev => prev.filter(b => b.id !== id));
+      await deleteProductionBatchFromApi(id);
+      showToast("Production Batch deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Production Batch:", err);
+      showToast("Unable to delete Production Batch", "error");
+    }
+  };
+
+  const updateQCInspection = async (id: string, data: Partial<QCInspection>) => {
+    try {
+      setQCInspections(prev => prev.map(q => q.id === id ? { ...q, ...data } : q));
+      await updateQCInspectionInApi(id, data);
+      showToast("QC Inspection updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update QC Inspection:", err);
+      showToast("Unable to update QC Inspection", "error");
+    }
+  };
+
+  const deleteQCInspection = async (id: string) => {
+    try {
+      setQCInspections(prev => prev.filter(q => q.id !== id));
+      await deleteQCInspectionFromApi(id);
+      showToast("QC Inspection deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete QC Inspection:", err);
+      showToast("Unable to delete QC Inspection", "error");
+    }
+  };
+
+  const addBOM = async (bomData: Omit<BOM, 'id'>) => {
+    try {
+      const tempId = `bom-${Date.now()}`;
+      const newBOM: BOM = { ...bomData, id: tempId };
+      setBOMs(prev => [newBOM, ...prev]);
+      const created = await createBOMInApi(bomData);
+      if (created) {
+        setBOMs(prev => prev.map(b => b.id === tempId ? created : b));
+      }
+      showToast("BOM added successfully", "success");
+    } catch (err) {
+      console.error("Failed to add BOM:", err);
+      showToast("Unable to add BOM", "error");
+    }
+  };
+
+  const updateBOM = async (id: string, data: Partial<BOM>) => {
+    try {
+      setBOMs(prev => prev.map(b => b.id === id ? { ...b, ...data } : b));
+      await updateBOMInApi(id, data);
+      showToast("BOM updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update BOM:", err);
+      showToast("Unable to update BOM", "error");
+    }
+  };
+
+  const deleteBOM = async (id: string) => {
+    try {
+      setBOMs(prev => prev.filter(b => b.id !== id));
+      await deleteBOMFromApi(id);
+      showToast("BOM deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete BOM:", err);
+      showToast("Unable to delete BOM", "error");
+    }
+  };
+
+  const updateStockMovement = async (id: string, data: Partial<StockMovement>) => {
+    try {
+      setStockMovements(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
+      await updateStockMovementInApi(id, data);
+      showToast("Stock Movement updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Stock Movement:", err);
+      showToast("Unable to update Stock Movement", "error");
+    }
+  };
+
+  const deleteStockMovement = async (id: string) => {
+    try {
+      setStockMovements(prev => prev.filter(s => s.id !== id));
+      await deleteStockMovementFromApi(id);
+      showToast("Stock Movement deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Stock Movement:", err);
+      showToast("Unable to delete Stock Movement", "error");
+    }
+  };
+
+  const updateDispatch = async (id: string, data: Partial<DispatchChallan>) => {
+    try {
+      setDispatches(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
+      await updateDispatchInApi(id, data);
+      showToast("Dispatch updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Dispatch:", err);
+      showToast("Unable to update Dispatch", "error");
+    }
+  };
+
+  const deleteDispatch = async (id: string) => {
+    try {
+      setDispatches(prev => prev.filter(d => d.id !== id));
+      await deleteDispatchFromApi(id);
+      showToast("Dispatch deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Dispatch:", err);
+      showToast("Unable to delete Dispatch", "error");
+    }
+  };
+
+  const addVehicle = async (vehicleData: Omit<VehicleMaster, 'id'>) => {
+    try {
+      const tempId = `veh-${Date.now()}`;
+      const newVeh: VehicleMaster = { ...vehicleData, id: tempId };
+      setVehicles(prev => [newVeh, ...prev]);
+      const created = await createVehicleInApi(vehicleData);
+      if (created) {
+        setVehicles(prev => prev.map(v => v.id === tempId ? created : v));
+      }
+      showToast("Vehicle registered successfully", "success");
+    } catch (err) {
+      console.error("Failed to add vehicle:", err);
+      showToast("Unable to add vehicle", "error");
+    }
+  };
+
+  const updateVehicle = async (id: string, data: Partial<VehicleMaster>) => {
+    try {
+      setVehicles(prev => prev.map(v => v.id === id ? { ...v, ...data } : v));
+      await updateVehicleInApi(id, data);
+      showToast("Vehicle updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Vehicle:", err);
+      showToast("Unable to update Vehicle", "error");
+    }
+  };
+
+  const deleteVehicle = async (id: string) => {
+    try {
+      setVehicles(prev => prev.filter(v => v.id !== id));
+      await deleteVehicleFromApi(id);
+      showToast("Vehicle deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Vehicle:", err);
+      showToast("Unable to delete Vehicle", "error");
+    }
+  };
+
+  const updateSalesInvoice = async (id: string, data: Partial<SalesInvoice>) => {
+    try {
+      setInvoices(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
+      await updateSalesInvoiceInApi(id, data);
+      showToast("Sales Invoice updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Sales Invoice:", err);
+      showToast("Unable to update Sales Invoice", "error");
+    }
+  };
+
+  const deleteSalesInvoice = async (id: string) => {
+    try {
+      setInvoices(prev => prev.filter(i => i.id !== id));
+      await deleteSalesInvoiceFromApi(id);
+      showToast("Sales Invoice deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Sales Invoice:", err);
+      showToast("Unable to delete Sales Invoice", "error");
+    }
+  };
+
+  const updatePayment = async (id: string, data: Partial<PaymentTransaction>) => {
+    try {
+      setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+      await updatePaymentInApi(id, data);
+      showToast("Payment transaction updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Payment:", err);
+      showToast("Unable to update Payment", "error");
+    }
+  };
+
+  const deletePayment = async (id: string) => {
+    try {
+      setPayments(prev => prev.filter(p => p.id !== id));
+      await deletePaymentFromApi(id);
+      showToast("Payment transaction deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Payment:", err);
+      showToast("Unable to delete Payment", "error");
+    }
+  };
+
+  const addExpense = async (expData: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>) => {
+    try {
+      const expNum = `EXP-2609-0${expenses.length + 10}`;
+      const tempId = `exp-${Date.now()}`;
+      const newExp: ExpenseRecord = {
+        ...expData,
+        id: tempId,
+        expenseNumber: expNum,
+        status: 'Approved'
+      };
+      setExpenses(prev => [newExp, ...prev]);
+      const created = await createExpenseInApi(newExp);
+      if (created) {
+        setExpenses(prev => prev.map(e => e.id === tempId ? created : e));
+      }
+      showToast("Expense record added successfully", "success");
+    } catch (err) {
+      console.error("Failed to add Expense:", err);
+      showToast("Unable to add Expense", "error");
+    }
+  };
+
+  const updateExpense = async (id: string, data: Partial<ExpenseRecord>) => {
+    try {
+      setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
+      await updateExpenseInApi(id, data);
+      showToast("Expense updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Expense:", err);
+      showToast("Unable to update Expense", "error");
+    }
+  };
+
+  const deleteExpense = async (id: string) => {
+    try {
+      setExpenses(prev => prev.filter(e => e.id !== id));
+      await deleteExpenseFromApi(id);
+      showToast("Expense deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Expense:", err);
+      showToast("Unable to delete Expense", "error");
+    }
+  };
+
+  const addEmployee = async (empData: Omit<Employee, 'id'>) => {
+    try {
+      const tempId = `emp-${Date.now()}`;
+      const newEmp: Employee = { ...empData, id: tempId };
+      setEmployees(prev => [newEmp, ...prev]);
+      const created = await createEmployeeInApi(newEmp);
+      if (created) {
+        setEmployees(prev => prev.map(e => e.id === tempId ? created : e));
+      }
+      showToast("Employee added successfully", "success");
+    } catch (err) {
+      console.error("Failed to add Employee:", err);
+      showToast("Unable to add Employee", "error");
+    }
+  };
+
+  const updateEmployee = async (id: string, data: Partial<Employee>) => {
+    try {
+      setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
+      await updateEmployeeInApi(id, data);
+      showToast("Employee updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Employee:", err);
+      showToast("Unable to update Employee", "error");
+    }
+  };
+
+  const deleteEmployee = async (id: string) => {
+    try {
+      setEmployees(prev => prev.filter(e => e.id !== id));
+      await deleteEmployeeFromApi(id);
+      showToast("Employee deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Employee:", err);
+      showToast("Unable to delete Employee", "error");
+    }
+  };
+
+  const addMachinery = async (machData: Omit<Machinery, 'id'>) => {
+    try {
+      const tempId = `mach-${Date.now()}`;
+      const newMach: Machinery = { ...machData, id: tempId };
+      setMachinery(prev => [newMach, ...prev]);
+      const created = await createMachineryInApi(newMach);
+      if (created) {
+        setMachinery(prev => prev.map(m => m.id === tempId ? created : m));
+      }
+      showToast("Machinery record added successfully", "success");
+    } catch (err) {
+      console.error("Failed to add Machinery:", err);
+      showToast("Unable to add Machinery", "error");
+    }
+  };
+
+  const updateMachinery = async (id: string, data: Partial<Machinery>) => {
+    try {
+      setMachinery(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
+      await updateMachineryInApi(id, data);
+      showToast("Machinery record updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Machinery:", err);
+      showToast("Unable to update Machinery", "error");
+    }
+  };
+
+  const deleteMachinery = async (id: string) => {
+    try {
+      setMachinery(prev => prev.filter(m => m.id !== id));
+      await deleteMachineryFromApi(id);
+      showToast("Machinery record deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Machinery:", err);
+      showToast("Unable to delete Machinery", "error");
+    }
+  };
+
+  const addDocument = async (docData: Omit<ErpDocument, 'id'>) => {
+    try {
+      const tempId = `doc-${Date.now()}`;
+      const newDoc: ErpDocument = { ...docData, id: tempId };
+      setDocuments(prev => [newDoc, ...prev]);
+      const created = await createDocumentInApi(newDoc);
+      if (created) {
+        setDocuments(prev => prev.map(d => d.id === tempId ? created : d));
+      }
+      showToast("Document added successfully", "success");
+    } catch (err) {
+      console.error("Failed to add Document:", err);
+      showToast("Unable to add Document", "error");
+    }
+  };
+
+  const updateDocument = async (id: string, data: Partial<ErpDocument>) => {
+    try {
+      setDocuments(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
+      await updateDocumentInApi(id, data);
+      showToast("Document updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Document:", err);
+      showToast("Unable to update Document", "error");
+    }
+  };
+
+  const deleteDocument = async (id: string) => {
+    try {
+      setDocuments(prev => prev.filter(d => d.id !== id));
+      await deleteDocumentFromApi(id);
+      showToast("Document deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete Document:", err);
+      showToast("Unable to delete Document", "error");
+    }
+  };
+
+  const updateCompanyProfile = async (data: Partial<CompanyProfile>) => {
+    try {
+      setCompany(prev => ({ ...prev, ...data }));
+      await updateCompanyProfileInApi(data);
+      showToast("Company Profile updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update Company Profile:", err);
+      showToast("Unable to update Company Profile", "error");
+    }
+  };
+
+  // Batch 2: Supplier CRUD
+  const addSupplier = async (suppData: Omit<Supplier, 'id' | 'code' | 'totalPurchases' | 'outstandingBalance'>) => {
+    const code = `SUP-${String(suppliers.length + 1).padStart(3, '0')}`;
+    const newSupp: Supplier = {
+      ...suppData,
+      id: `supp-${Date.now()}`,
+      code,
+      totalPurchases: 0,
+      outstandingBalance: 0,
+      rating: 5,
+    };
+    try {
+      const apiSupp = await createSupplierFromApi(newSupp);
+      setSuppliers(prev => [apiSupp, ...prev]);
+      showToast("Supplier created successfully", "success");
+    } catch (err) {
+      console.error("Failed to add supplier:", err);
+      setSuppliers(prev => [newSupp, ...prev]);
+      showToast("Supplier created successfully", "success");
+    }
+  };
+
+  const updateSupplier = async (id: string, data: Partial<Supplier>) => {
+    try {
+      setSuppliers(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
+      await updateSupplierFromApi(id, data);
+      showToast("Supplier updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update supplier:", err);
+      showToast("Unable to update supplier", "error");
+    }
+  };
+
+  const deleteSupplier = async (id: string) => {
+    try {
+      setSuppliers(prev => prev.filter(s => s.id !== id));
+      await deleteSupplierFromApi(id);
+      showToast("Supplier deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete supplier:", err);
+      showToast("Unable to delete supplier", "error");
+    }
+  };
+
+  // Batch 2: Raw Material CRUD
+  const addRawMaterial = async (rmData: Omit<RawMaterial, 'id' | 'currentStock' | 'totalPurchases' | 'totalConsumption' | 'reservedStock'>) => {
     const newRM: RawMaterial = {
       ...rmData,
       id: `rm-${Date.now()}`,
-      currentStock: rmData.openingStock,
+      currentStock: rmData.openingStock || 0,
       totalPurchases: 0,
       totalConsumption: 0,
       reservedStock: 0
     };
-    setRawMaterials(prev => [newRM, ...prev]);
+    try {
+      const apiRM = await createRawMaterialFromApi(newRM);
+      setRawMaterials(prev => [apiRM, ...prev]);
+      showToast("Raw material created successfully", "success");
+    } catch (err) {
+      console.error("Failed to create raw material:", err);
+      setRawMaterials(prev => [newRM, ...prev]);
+      showToast("Raw material created successfully", "success");
+    }
+  };
+
+  const updateRawMaterial = async (id: string, data: Partial<RawMaterial>) => {
+    try {
+      setRawMaterials(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
+      await updateRawMaterialFromApi(id, data);
+      showToast("Raw material updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update raw material:", err);
+      showToast("Unable to update raw material", "error");
+    }
+  };
+
+  const deleteRawMaterial = async (id: string) => {
+    try {
+      setRawMaterials(prev => prev.filter(m => m.id !== id));
+      await deleteRawMaterialFromApi(id);
+      showToast("Raw material deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete raw material:", err);
+      showToast("Unable to delete raw material", "error");
+    }
+  };
+
+  // Batch 2: Product / Finished Goods CRUD
+  const addProduct = async (prodData: Omit<FinishedProduct, 'id' | 'currentStockMT' | 'reservedStockMT'>) => {
+    const newProd: FinishedProduct = {
+      ...prodData,
+      id: `prod-${Date.now()}`,
+      currentStockMT: 0,
+      reservedStockMT: 0,
+    };
+    try {
+      const apiProd = await createProductFromApi(newProd);
+      setProducts(prev => [apiProd, ...prev]);
+      showToast("Product created successfully", "success");
+    } catch (err) {
+      console.error("Failed to create product:", err);
+      setProducts(prev => [newProd, ...prev]);
+      showToast("Product created successfully", "success");
+    }
+  };
+
+  const updateProduct = async (id: string, data: Partial<FinishedProduct>) => {
+    try {
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+      await updateProductFromApi(id, data);
+      showToast("Product updated successfully", "success");
+    } catch (err) {
+      console.error("Failed to update product:", err);
+      showToast("Unable to update product", "error");
+    }
+  };
+
+  const deleteProduct = async (id: string) => {
+    try {
+      setProducts(prev => prev.filter(p => p.id !== id));
+      await deleteProductFromApi(id);
+      showToast("Product deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete product:", err);
+      showToast("Unable to delete product", "error");
+    }
   };
 
   const markAlertRead = (alertId: string) => {
@@ -1156,6 +2099,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         employees,
         documents,
         alerts,
+        stockMovements,
         isQuickAddOpen,
         setIsQuickAddOpen,
         quickAddType,
@@ -1170,22 +2114,75 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsDemoRunnerOpen,
         demoStep,
         setDemoStep,
+        toasts,
+        showToast,
+        dismissToast,
         addLead,
+        updateLead,
+        deleteLead,
         convertLeadToCustomer,
         addCustomer,
+        updateCustomer,
+        deleteCustomer,
+        addSupplier,
+        updateSupplier,
+        deleteSupplier,
+        updateRawMaterial,
+        deleteRawMaterial,
+        addProduct,
+        updateProduct,
+        deleteProduct,
         addSalesOrder,
+        updateSalesOrder,
+        deleteSalesOrder,
         createProductionOrderFromSO,
         addPurchaseOrder,
+        updatePurchaseOrder,
+        deletePurchaseOrder,
         addGRN,
+        updateGRN,
+        deleteGRN,
+        updateProductionOrder,
+        deleteProductionOrder,
+        updateProductionBatch,
+        deleteProductionBatch,
+        updateQCInspection,
+        deleteQCInspection,
+        addBOM,
+        updateBOM,
+        deleteBOM,
+        updateStockMovement,
+        deleteStockMovement,
         approveQC,
         rejectQC,
         startProductionOrder,
         completeProductionOrder,
         createDispatchChallan,
         updateDispatchStatus,
+        updateDispatch,
+        deleteDispatch,
+        addVehicle,
+        updateVehicle,
+        deleteVehicle,
         generateInvoiceFromDispatch,
+        updateSalesInvoice,
+        deleteSalesInvoice,
         recordCustomerPayment,
+        updatePayment,
+        deletePayment,
         addExpense,
+        updateExpense,
+        deleteExpense,
+        addEmployee,
+        updateEmployee,
+        deleteEmployee,
+        addMachinery,
+        updateMachinery,
+        deleteMachinery,
+        addDocument,
+        updateDocument,
+        deleteDocument,
+        updateCompanyProfile,
         addRawMaterial,
         markAlertRead,
         resetAllData,

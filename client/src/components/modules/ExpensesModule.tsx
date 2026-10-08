@@ -10,14 +10,22 @@ import {
   Users, 
   Wrench, 
   Truck, 
-  Building 
+  Building,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ConfirmModal } from '../modals/ConfirmModal';
+import { ExpenseRecord } from '../../types/erp';
 
 export const ExpensesModule: React.FC = () => {
-  const { expenses, addExpense, setIsQuickAddOpen, setQuickAddType } = useERP();
+  const { expenses, addExpense, updateExpense, deleteExpense, setIsQuickAddOpen, setQuickAddType } = useERP();
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Edit & Delete State
+  const [editingExpense, setEditingExpense] = useState<ExpenseRecord | null>(null);
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
 
   const categories = [
     'All',
@@ -40,6 +48,19 @@ export const ExpensesModule: React.FC = () => {
   });
 
   const totalExpenseAmount = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+
+  const handleUpdateExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingExpense) return;
+    await updateExpense(editingExpense.id, editingExpense);
+    setEditingExpense(null);
+  };
+
+  const handleDeleteExpenseConfirm = async () => {
+    if (!deletingExpenseId) return;
+    await deleteExpense(deletingExpenseId);
+    setDeletingExpenseId(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -114,6 +135,7 @@ export const ExpensesModule: React.FC = () => {
                 <th className="p-3">Paid From Account</th>
                 <th className="p-3 text-right font-bold text-neutral-900">Amount (₹)</th>
                 <th className="p-3">Status</th>
+                <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -139,12 +161,121 @@ export const ExpensesModule: React.FC = () => {
                       {exp.status}
                     </span>
                   </td>
+                  <td className="p-3 text-right space-x-1 whitespace-nowrap">
+                    <button
+                      onClick={() => setEditingExpense(exp)}
+                      className="p-1 hover:bg-neutral-100 rounded text-neutral-600 cursor-pointer inline-flex items-center"
+                      title="Edit Expense"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingExpenseId(exp.id)}
+                      className="p-1 hover:bg-rose-50 rounded text-rose-600 cursor-pointer inline-flex items-center"
+                      title="Delete Expense"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* EDIT EXPENSE MODAL */}
+      {editingExpense && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+            <h3 className="text-sm font-bold text-neutral-900 mb-3">
+              Edit Expense Voucher {editingExpense.expenseNumber}
+            </h3>
+
+            <form onSubmit={handleUpdateExpense} className="space-y-3">
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Expense Category</label>
+                <select
+                  value={editingExpense.category}
+                  onChange={(e) => setEditingExpense({ ...editingExpense, category: e.target.value as any })}
+                  className="w-full border border-neutral-300 rounded p-2 bg-white"
+                >
+                  {categories.filter(c => c !== 'All').map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Vendor / Payee</label>
+                <input
+                  type="text"
+                  value={editingExpense.vendorName}
+                  onChange={(e) => setEditingExpense({ ...editingExpense, vendorName: e.target.value })}
+                  className="w-full border border-neutral-300 rounded p-2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Description</label>
+                <input
+                  type="text"
+                  value={editingExpense.description}
+                  onChange={(e) => setEditingExpense({ ...editingExpense, description: e.target.value })}
+                  className="w-full border border-neutral-300 rounded p-2"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Amount (₹)</label>
+                  <input
+                    type="number"
+                    value={editingExpense.amount}
+                    onChange={(e) => setEditingExpense({ ...editingExpense, amount: Number(e.target.value) })}
+                    className="w-full border border-neutral-300 rounded p-2 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Paid From</label>
+                  <input
+                    type="text"
+                    value={editingExpense.paidFromAccount}
+                    onChange={(e) => setEditingExpense({ ...editingExpense, paidFromAccount: e.target.value as any })}
+                    className="w-full border border-neutral-300 rounded p-2"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingExpense(null)}
+                  className="px-3 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded cursor-pointer shadow-xs"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE MODAL */}
+      <ConfirmModal
+        isOpen={!!deletingExpenseId}
+        title="Delete Expense Record"
+        message="Are you sure you want to delete this expense record?"
+        confirmText="Delete"
+        onConfirm={handleDeleteExpenseConfirm}
+        onClose={() => setDeletingExpenseId(null)}
+      />
     </div>
   );
 };

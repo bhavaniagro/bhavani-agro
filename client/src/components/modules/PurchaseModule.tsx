@@ -6,9 +6,14 @@ import {
   Truck, 
   Search, 
   CheckCircle2, 
-  AlertTriangle 
+  AlertTriangle,
+  Pencil,
+  Trash2,
+  X
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ConfirmModal } from '../modals/ConfirmModal';
+import { PurchaseOrder, GRN } from '../../types/erp';
 
 export const PurchaseModule: React.FC = () => {
   const { 
@@ -16,7 +21,11 @@ export const PurchaseModule: React.FC = () => {
     grns, 
     suppliers, 
     rawMaterials, 
-    addGRN, 
+    addGRN,
+    updatePurchaseOrder,
+    deletePurchaseOrder,
+    updateGRN,
+    deleteGRN,
     setIsQuickAddOpen, 
     setQuickAddType,
     setActiveModule
@@ -25,6 +34,7 @@ export const PurchaseModule: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'orders' | 'grn'>('orders');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // GRN Creation State
   const [showGRNModal, setShowGRNModal] = useState(false);
   const [selectedPO, setSelectedPO] = useState<any | null>(null);
   const [receivedQty, setReceivedQty] = useState(50);
@@ -32,10 +42,40 @@ export const PurchaseModule: React.FC = () => {
   const [vehicleNo, setVehicleNo] = useState('GJ-12-BW-9901');
   const [supplierBatch, setSupplierBatch] = useState('MINE-2609-08');
 
+  // PO Edit/Delete state
+  const [editingPO, setEditingPO] = useState<PurchaseOrder | null>(null);
+  const [deletingPO, setDeletingPO] = useState<PurchaseOrder | null>(null);
+  const [editPOSupplierName, setEditPOSupplierName] = useState('');
+  const [editPOMaterialName, setEditPOMaterialName] = useState('');
+  const [editPOQuantity, setEditPOQuantity] = useState(0);
+  const [editPORate, setEditPORate] = useState(0);
+  const [editPOUnit, setEditPOUnit] = useState('MT');
+  const [editPOExpectedDelivery, setEditPOExpectedDelivery] = useState('');
+  const [editPOPaymentTerms, setEditPOPaymentTerms] = useState('');
+  const [editPOStatus, setEditPOStatus] = useState<PurchaseOrder['status']>('Draft');
+
+  // GRN Edit/Delete state
+  const [editingGRN, setEditingGRN] = useState<GRN | null>(null);
+  const [deletingGRN, setDeletingGRN] = useState<GRN | null>(null);
+  const [editGRNReceivedQty, setEditGRNReceivedQty] = useState(0);
+  const [editGRNAcceptedQty, setEditGRNAcceptedQty] = useState(0);
+  const [editGRNRejectedQty, setEditGRNRejectedQty] = useState(0);
+  const [editGRNVehicleNo, setEditGRNVehicleNo] = useState('');
+  const [editGRNSupplierBatch, setEditGRNSupplierBatch] = useState('');
+  const [editGRNQCStatus, setEditGRNQCStatus] = useState<'Pending QC' | 'Approved' | 'Rejected'>('Approved');
+  const [editGRNRemarks, setEditGRNRemarks] = useState('');
+
   const filteredPOs = purchaseOrders.filter(po => 
     po.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.materialName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredGRNs = grns.filter(g =>
+    g.grnNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    g.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    g.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    g.materialName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleCreateGRN = (po: any) => {
@@ -72,6 +112,77 @@ export const PurchaseModule: React.FC = () => {
 
     setShowGRNModal(false);
     setActiveTab('grn');
+  };
+
+  // PO Edit handlers
+  const openEditPOModal = (po: PurchaseOrder) => {
+    setEditingPO(po);
+    setEditPOSupplierName(po.supplierName);
+    setEditPOMaterialName(po.materialName);
+    setEditPOQuantity(po.quantity);
+    setEditPORate(po.rate);
+    setEditPOUnit(po.unit || 'MT');
+    setEditPOExpectedDelivery(po.expectedDelivery);
+    setEditPOPaymentTerms(po.paymentTerms || '');
+    setEditPOStatus(po.status);
+  };
+
+  const handleSavePOEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPO) return;
+    const totalAmount = editPOQuantity * editPORate;
+    await updatePurchaseOrder(editingPO.id, {
+      supplierName: editPOSupplierName,
+      materialName: editPOMaterialName,
+      quantity: Number(editPOQuantity),
+      rate: Number(editPORate),
+      totalAmount: Number(totalAmount),
+      unit: editPOUnit,
+      expectedDelivery: editPOExpectedDelivery,
+      paymentTerms: editPOPaymentTerms,
+      status: editPOStatus
+    });
+    setEditingPO(null);
+  };
+
+  const handleDeletePOConfirm = async () => {
+    if (!deletingPO) return;
+    await deletePurchaseOrder(deletingPO.id);
+    setDeletingPO(null);
+  };
+
+  // GRN Edit handlers
+  const openEditGRNModal = (g: GRN) => {
+    setEditingGRN(g);
+    setEditGRNReceivedQty(g.receivedQuantity);
+    setEditGRNAcceptedQty(g.acceptedQuantity);
+    setEditGRNRejectedQty(g.rejectedQuantity);
+    setEditGRNVehicleNo(g.vehicleNumber);
+    setEditGRNSupplierBatch(g.supplierBatchNumber);
+    setEditGRNQCStatus(g.qcStatus);
+    setEditGRNRemarks(g.remarks || '');
+  };
+
+  const handleSaveGRNEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingGRN) return;
+    await updateGRN(editingGRN.id, {
+      receivedQuantity: Number(editGRNReceivedQty),
+      acceptedQuantity: Number(editGRNAcceptedQty),
+      rejectedQuantity: Number(editGRNRejectedQty),
+      weightReceiptMT: Number(editGRNReceivedQty),
+      vehicleNumber: editGRNVehicleNo,
+      supplierBatchNumber: editGRNSupplierBatch,
+      qcStatus: editGRNQCStatus,
+      remarks: editGRNRemarks
+    });
+    setEditingGRN(null);
+  };
+
+  const handleDeleteGRNConfirm = async () => {
+    if (!deletingGRN) return;
+    await deleteGRN(deletingGRN.id);
+    setDeletingGRN(null);
   };
 
   return (
@@ -153,6 +264,7 @@ export const PurchaseModule: React.FC = () => {
                   <th className="p-3 text-right">Rate &amp; Total (₹)</th>
                   <th className="p-3">Status</th>
                   <th className="p-3 text-right">Action</th>
+                  <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -202,6 +314,24 @@ export const PurchaseModule: React.FC = () => {
                         </span>
                       )}
                     </td>
+                    <td className="p-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => openEditPOModal(po)}
+                          className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                          title="Edit Purchase Order"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingPO(po)}
+                          className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                          title="Delete Purchase Order"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -224,10 +354,11 @@ export const PurchaseModule: React.FC = () => {
                   <th className="p-3 text-right">Received vs Accepted</th>
                   <th className="p-3">QC Status</th>
                   <th className="p-3 text-right">Inventory Entry</th>
+                  <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {grns.map(g => (
+                {filteredGRNs.map(g => (
                   <tr key={g.id} className="hover:bg-neutral-50/70 transition-colors">
                     <td className="p-3">
                       <div className="font-mono font-bold text-neutral-900">{g.grnNumber}</div>
@@ -263,6 +394,24 @@ export const PurchaseModule: React.FC = () => {
                       ) : (
                         <span className="text-[11px] text-amber-700 font-medium">Pending QC</span>
                       )}
+                    </td>
+                    <td className="p-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => openEditGRNModal(g)}
+                          className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                          title="Edit GRN"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingGRN(g)}
+                          className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                          title="Delete GRN"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -353,6 +502,270 @@ export const PurchaseModule: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* EDIT PO MODAL */}
+      {editingPO && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
+              <h3 className="text-sm font-bold text-neutral-900">
+                Edit Purchase Order ({editingPO.poNumber})
+              </h3>
+              <button onClick={() => setEditingPO(null)} className="text-neutral-400 hover:text-neutral-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePOEdit} className="space-y-3">
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Supplier Name</label>
+                <input
+                  type="text"
+                  value={editPOSupplierName}
+                  onChange={(e) => setEditPOSupplierName(e.target.value)}
+                  required
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Material Name</label>
+                <input
+                  type="text"
+                  value={editPOMaterialName}
+                  onChange={(e) => setEditPOMaterialName(e.target.value)}
+                  required
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editPOQuantity}
+                    onChange={(e) => setEditPOQuantity(Number(e.target.value))}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Rate (₹)</label>
+                  <input
+                    type="number"
+                    value={editPORate}
+                    onChange={(e) => setEditPORate(Number(e.target.value))}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Unit</label>
+                  <input
+                    type="text"
+                    value={editPOUnit}
+                    onChange={(e) => setEditPOUnit(e.target.value)}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Expected Delivery</label>
+                  <input
+                    type="date"
+                    value={editPOExpectedDelivery}
+                    onChange={(e) => setEditPOExpectedDelivery(e.target.value)}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Status</label>
+                  <select
+                    value={editPOStatus}
+                    onChange={(e) => setEditPOStatus(e.target.value as PurchaseOrder['status'])}
+                    className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
+                  >
+                    <option value="Draft">Draft</option>
+                    <option value="Issued">Issued</option>
+                    <option value="GRN Completed">GRN Completed</option>
+                    <option value="Billed">Billed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Payment Terms</label>
+                <input
+                  type="text"
+                  value={editPOPaymentTerms}
+                  onChange={(e) => setEditPOPaymentTerms(e.target.value)}
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingPO(null)}
+                  className="px-3.5 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT GRN MODAL */}
+      {editingGRN && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
+              <h3 className="text-sm font-bold text-neutral-900">
+                Edit GRN ({editingGRN.grnNumber})
+              </h3>
+              <button onClick={() => setEditingGRN(null)} className="text-neutral-400 hover:text-neutral-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveGRNEdit} className="space-y-3">
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Received Qty</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editGRNReceivedQty}
+                    onChange={(e) => setEditGRNReceivedQty(Number(e.target.value))}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Accepted Qty</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editGRNAcceptedQty}
+                    onChange={(e) => setEditGRNAcceptedQty(Number(e.target.value))}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Rejected Qty</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editGRNRejectedQty}
+                    onChange={(e) => setEditGRNRejectedQty(Number(e.target.value))}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Vehicle Truck No.</label>
+                  <input
+                    type="text"
+                    value={editGRNVehicleNo}
+                    onChange={(e) => setEditGRNVehicleNo(e.target.value)}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Supplier Batch</label>
+                  <input
+                    type="text"
+                    value={editGRNSupplierBatch}
+                    onChange={(e) => setEditGRNSupplierBatch(e.target.value)}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">QC Status</label>
+                <select
+                  value={editGRNQCStatus}
+                  onChange={(e) => setEditGRNQCStatus(e.target.value as any)}
+                  className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
+                >
+                  <option value="Approved">Approved</option>
+                  <option value="Pending QC">Pending QC</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Remarks</label>
+                <input
+                  type="text"
+                  value={editGRNRemarks}
+                  onChange={(e) => setEditGRNRemarks(e.target.value)}
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingGRN(null)}
+                  className="px-3.5 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE PO MODAL */}
+      <ConfirmModal
+        isOpen={!!deletingPO}
+        title="Delete Purchase Order"
+        message={`Are you sure you want to delete purchase order ${deletingPO?.poNumber} for ${deletingPO?.supplierName}?`}
+        confirmText="Delete PO"
+        onConfirm={handleDeletePOConfirm}
+        onClose={() => setDeletingPO(null)}
+      />
+
+      {/* CONFIRM DELETE GRN MODAL */}
+      <ConfirmModal
+        isOpen={!!deletingGRN}
+        title="Delete Goods Receipt Note"
+        message={`Are you sure you want to delete GRN ${deletingGRN?.grnNumber}?`}
+        confirmText="Delete GRN"
+        onConfirm={handleDeleteGRNConfirm}
+        onClose={() => setDeletingGRN(null)}
+      />
     </div>
   );
 };
+

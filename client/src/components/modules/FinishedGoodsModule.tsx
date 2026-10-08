@@ -7,19 +7,51 @@ import {
   CheckCircle2, 
   AlertTriangle,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Plus,
+  Edit,
+  Trash2,
+  X
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { FinishedProduct } from '../../types/erp';
+import { ConfirmModal } from '../modals/ConfirmModal';
 
 export const FinishedGoodsModule: React.FC = () => {
   const { 
     products, 
     productionBatches, 
     setActiveModule,
-    setIsDemoRunnerOpen
+    setIsDemoRunnerOpen,
+    addProduct,
+    updateProduct,
+    deleteProduct
   } = useERP();
 
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Modal state
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<FinishedProduct | null>(null);
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // New product state
+  const [newProd, setNewProd] = useState({
+    sku: `FG-${Date.now().toString().slice(-4)}`,
+    productName: '',
+    category: 'Granules' as FinishedProduct['category'],
+    unit: 'MT' as FinishedProduct['unit'],
+    sellingPricePerMT: 6500,
+    standardCostPerMT: 4200,
+    minimumStockMT: 20,
+    maximumStockMT: 200,
+    packagingType: '50kg HDPE Woven Bag' as FinishedProduct['packagingType'],
+    storageLocation: 'Warehouse Bay 1',
+    taxRate: 5,
+    hsnCode: '3105',
+    description: 'High-grade agro granule product'
+  });
 
   const filteredProducts = products.filter(p => 
     p.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,6 +86,13 @@ export const FinishedGoodsModule: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsAddOpen(true)}
+            className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Product</span>
+          </button>
           <button
             onClick={() => setActiveModule('CRM & Sales')}
             className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
@@ -127,7 +166,7 @@ export const FinishedGoodsModule: React.FC = () => {
                 <th className="p-3 text-right font-bold text-emerald-800">Available to Sell</th>
                 <th className="p-3 text-right">Selling Price</th>
                 <th className="p-3">Status</th>
-                <th className="p-3 text-right">Action</th>
+                <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -167,12 +206,22 @@ export const FinishedGoodsModule: React.FC = () => {
                       )}
                     </td>
                     <td className="p-3 text-right">
-                      <button
-                        onClick={() => setActiveModule('Production')}
-                        className="px-2.5 py-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-[11px] font-medium text-neutral-700 cursor-pointer"
-                      >
-                        Plan Production
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setEditingProduct(p)}
+                          title="Edit"
+                          className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingProductId(p.id)}
+                          title="Delete"
+                          className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -181,6 +230,222 @@ export const FinishedGoodsModule: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Add Product Modal */}
+      {isAddOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+            <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
+              <div className="font-bold text-neutral-900">Add Finished Product</div>
+              <button onClick={() => setIsAddOpen(false)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                try {
+                  await addProduct({
+                    sku: newProd.sku,
+                    productName: newProd.productName,
+                    category: newProd.category,
+                    unit: newProd.unit,
+                    sellingPricePerMT: Number(newProd.sellingPricePerMT),
+                    standardCostPerMT: Number(newProd.standardCostPerMT),
+                    minimumStockMT: Number(newProd.minimumStockMT),
+                    maximumStockMT: Number(newProd.maximumStockMT),
+                    packagingType: newProd.packagingType,
+                    storageLocation: newProd.storageLocation,
+                    taxRate: Number(newProd.taxRate),
+                    hsnCode: newProd.hsnCode,
+                    description: newProd.description
+                  });
+                  setIsAddOpen(false);
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              className="p-4 space-y-3 max-h-[75vh] overflow-y-auto"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">SKU Code</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProd.sku}
+                    onChange={(e) => setNewProd({ ...newProd, sku: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Product Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProd.productName}
+                    onChange={(e) => setNewProd({ ...newProd, productName: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Category</label>
+                  <select
+                    value={newProd.category}
+                    onChange={(e) => setNewProd({ ...newProd, category: e.target.value as any })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  >
+                    <option value="Granules">Granules</option>
+                    <option value="Bio-Fertilizer">Bio-Fertilizer</option>
+                    <option value="Organic">Organic</option>
+                    <option value="Powder">Powder</option>
+                    <option value="Mineral">Mineral</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Selling Price / MT (₹)</label>
+                  <input
+                    type="number"
+                    value={newProd.sellingPricePerMT}
+                    onChange={(e) => setNewProd({ ...newProd, sellingPricePerMT: Number(e.target.value) })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">HSN Code</label>
+                  <input
+                    type="text"
+                    value={newProd.hsnCode}
+                    onChange={(e) => setNewProd({ ...newProd, hsnCode: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Storage Location</label>
+                  <input
+                    type="text"
+                    value={newProd.storageLocation}
+                    onChange={(e) => setNewProd({ ...newProd, storageLocation: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-200">
+                <button type="button" onClick={() => setIsAddOpen(false)} className="px-3 py-1.5 bg-white border border-neutral-300 rounded text-xs font-medium cursor-pointer">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="px-3 py-1.5 bg-neutral-900 text-white rounded text-xs font-semibold cursor-pointer">
+                  {isSubmitting ? 'Saving...' : 'Add Product'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product Modal */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+            <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
+              <div className="font-bold text-neutral-900">Edit Product: {editingProduct.sku}</div>
+              <button onClick={() => setEditingProduct(null)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                try {
+                  await updateProduct(editingProduct.id, editingProduct);
+                  setEditingProduct(null);
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              className="p-4 space-y-3 max-h-[75vh] overflow-y-auto"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Product Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingProduct.productName}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, productName: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Selling Price / MT (₹)</label>
+                  <input
+                    type="number"
+                    value={editingProduct.sellingPricePerMT}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, sellingPricePerMT: Number(e.target.value) })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Standard Cost / MT (₹)</label>
+                  <input
+                    type="number"
+                    value={editingProduct.standardCostPerMT}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, standardCostPerMT: Number(e.target.value) })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Storage Location</label>
+                  <input
+                    type="text"
+                    value={editingProduct.storageLocation}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, storageLocation: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-200">
+                <button type="button" onClick={() => setEditingProduct(null)} className="px-3 py-1.5 bg-white border border-neutral-300 rounded text-xs font-medium cursor-pointer">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="px-3 py-1.5 bg-neutral-900 text-white rounded text-xs font-semibold cursor-pointer">
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirm Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deletingProductId)}
+        title="Delete Finished Product"
+        message="Are you sure you want to delete this finished product record from Firestore?"
+        confirmText="Delete Product"
+        isDangerous={true}
+        isLoading={isSubmitting}
+        onClose={() => setDeletingProductId(null)}
+        onConfirm={async () => {
+          if (!deletingProductId) return;
+          setIsSubmitting(true);
+          try {
+            await deleteProduct(deletingProductId);
+            setDeletingProductId(null);
+          } finally {
+            setIsSubmitting(false);
+          }
+        }}
+      />
     </div>
   );
 };

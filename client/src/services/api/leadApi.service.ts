@@ -39,3 +39,39 @@ export async function createLeadFromApi(
 
     return result.data;
 }
+
+export async function updateLeadFromApi(
+    id: string,
+    lead: Partial<Lead>
+): Promise<Lead> {
+    const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(lead),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to update lead");
+    }
+
+    const result: {
+        success: boolean;
+        data: Lead;
+    } = await response.json();
+
+    return result.data;
+}
+
+export async function deleteLeadFromApi(
+    id: string
+): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/leads/${id}`, {
+        method: "DELETE",
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to delete lead");
+    }
+}

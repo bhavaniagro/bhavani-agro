@@ -7,15 +7,22 @@ import {
   FileText, 
   Search, 
   Printer,
-  Sparkles
+  Sparkles,
+  Pencil,
+  Trash2,
+  X
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ConfirmModal } from '../modals/ConfirmModal';
+import { QCInspection } from '../../types/erp';
 
 export const QualityControlModule: React.FC = () => {
   const { 
     qcInspections, 
     approveQC, 
     rejectQC, 
+    updateQCInspection,
+    deleteQCInspection,
     setPrintableDoc,
     setActiveModule 
   } = useERP();
@@ -23,6 +30,13 @@ export const QualityControlModule: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedQC, setSelectedQC] = useState<any | null>(null);
+
+  // Edit/Delete state
+  const [editingQC, setEditingQC] = useState<QCInspection | null>(null);
+  const [deletingQC, setDeletingQC] = useState<QCInspection | null>(null);
+  const [editInspector, setEditInspector] = useState('');
+  const [editOverallStatus, setEditOverallStatus] = useState<QCInspection['overallStatus']>('Pending');
+  const [editRemarks, setEditRemarks] = useState('');
 
   const filteredQC = qcInspections.filter(q => {
     const matchesType = typeFilter === 'All' || q.type === typeFilter;
@@ -33,6 +47,31 @@ export const QualityControlModule: React.FC = () => {
   });
 
   const activeInspection = selectedQC || filteredQC[0];
+
+  const openEditQCModal = (q: QCInspection) => {
+    setEditingQC(q);
+    setEditInspector(q.inspector);
+    setEditOverallStatus(q.overallStatus);
+    setEditRemarks(q.remarks || '');
+  };
+
+  const handleSaveQCEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingQC) return;
+    await updateQCInspection(editingQC.id, {
+      inspector: editInspector,
+      overallStatus: editOverallStatus,
+      remarks: editRemarks
+    });
+    setEditingQC(null);
+  };
+
+  const handleDeleteQCConfirm = async () => {
+    if (!deletingQC) return;
+    await deleteQCInspection(deletingQC.id);
+    setDeletingQC(null);
+    setSelectedQC(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -151,16 +190,35 @@ export const QualityControlModule: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <span className={`text-xs font-bold px-3 py-1 rounded uppercase tracking-wider ${
-                    activeInspection.overallStatus === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
-                    activeInspection.overallStatus === 'Pending' ? 'bg-amber-100 text-amber-800' :
-                    'bg-rose-100 text-rose-800'
-                  }`}>
-                    Status: {activeInspection.overallStatus}
-                  </span>
-                  <div className="text-[11px] text-neutral-400 mt-1">
-                    Chemist: {activeInspection.inspector}
+                <div className="text-right flex items-center gap-3">
+                  <div>
+                    <span className={`text-xs font-bold px-3 py-1 rounded uppercase tracking-wider ${
+                      activeInspection.overallStatus === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
+                      activeInspection.overallStatus === 'Pending' ? 'bg-amber-100 text-amber-800' :
+                      'bg-rose-100 text-rose-800'
+                    }`}>
+                      Status: {activeInspection.overallStatus}
+                    </span>
+                    <div className="text-[11px] text-neutral-400 mt-1">
+                      Chemist: {activeInspection.inspector}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openEditQCModal(activeInspection)}
+                      className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                      title="Edit QC Record"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingQC(activeInspection)}
+                      className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                      title="Delete QC Record"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -246,6 +304,85 @@ export const QualityControlModule: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* EDIT QC MODAL */}
+      {editingQC && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
+              <h3 className="text-sm font-bold text-neutral-900">
+                Edit QC Record ({editingQC.qcNumber})
+              </h3>
+              <button onClick={() => setEditingQC(null)} className="text-neutral-400 hover:text-neutral-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveQCEdit} className="space-y-3">
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">QC Inspector / Chemist</label>
+                <input
+                  type="text"
+                  value={editInspector}
+                  onChange={(e) => setEditInspector(e.target.value)}
+                  required
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Overall QC Status</label>
+                <select
+                  value={editOverallStatus}
+                  onChange={(e) => setEditOverallStatus(e.target.value as any)}
+                  className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
+                >
+                  <option value="Approved">Approved</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Remarks</label>
+                <textarea
+                  rows={3}
+                  value={editRemarks}
+                  onChange={(e) => setEditRemarks(e.target.value)}
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingQC(null)}
+                  className="px-3.5 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE MODAL */}
+      <ConfirmModal
+        isOpen={!!deletingQC}
+        title="Delete QC Inspection"
+        message={`Are you sure you want to delete inspection record ${deletingQC?.qcNumber}?`}
+        confirmText="Delete Record"
+        onConfirm={handleDeleteQCConfirm}
+        onClose={() => setDeletingQC(null)}
+      />
     </div>
   );
 };
+

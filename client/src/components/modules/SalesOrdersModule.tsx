@@ -9,14 +9,22 @@ import {
   Search, 
   ArrowRight,
   Sparkles,
-  Download
+  Download,
+  Pencil,
+  Trash2,
+  X
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ConfirmModal } from '../modals/ConfirmModal';
+import { SalesOrder } from '../../types/erp';
 
 export const SalesOrdersModule: React.FC = () => {
   const { 
     salesOrders, 
-    products, 
+    products,
+    customers,
+    updateSalesOrder,
+    deleteSalesOrder,
     createProductionOrderFromSO, 
     createDispatchChallan, 
     generateInvoiceFromDispatch, 
@@ -28,6 +36,62 @@ export const SalesOrdersModule: React.FC = () => {
 
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Modals state
+  const [editingOrder, setEditingOrder] = useState<SalesOrder | null>(null);
+  const [deletingOrder, setDeletingOrder] = useState<SalesOrder | null>(null);
+
+  // Edit form state
+  const [editCustomerName, setEditCustomerName] = useState('');
+  const [editProductName, setEditProductName] = useState('');
+  const [editQuantityMT, setEditQuantityMT] = useState(0);
+  const [editRatePerMT, setEditRatePerMT] = useState(0);
+  const [editTaxPercent, setEditTaxPercent] = useState(18);
+  const [editDeliveryDate, setEditDeliveryDate] = useState('');
+  const [editStatus, setEditStatus] = useState<SalesOrder['status']>('Pending');
+  const [editShippingAddress, setEditShippingAddress] = useState('');
+  const [editRemarks, setEditRemarks] = useState('');
+
+  const openEditModal = (so: SalesOrder) => {
+    setEditingOrder(so);
+    setEditCustomerName(so.customerName);
+    setEditProductName(so.productName);
+    setEditQuantityMT(so.quantityMT);
+    setEditRatePerMT(so.ratePerMT);
+    setEditTaxPercent(so.taxPercent);
+    setEditDeliveryDate(so.deliveryDate);
+    setEditStatus(so.status);
+    setEditShippingAddress(so.shippingAddress);
+    setEditRemarks(so.notes || '');
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOrder) return;
+    const subtotal = editQuantityMT * editRatePerMT;
+    const taxAmount = (subtotal * editTaxPercent) / 100;
+    const totalAmount = subtotal + taxAmount;
+
+    await updateSalesOrder(editingOrder.id, {
+      customerName: editCustomerName,
+      productName: editProductName,
+      quantityMT: Number(editQuantityMT),
+      ratePerMT: Number(editRatePerMT),
+      taxPercent: Number(editTaxPercent),
+      totalAmount: Number(totalAmount),
+      deliveryDate: editDeliveryDate,
+      status: editStatus,
+      shippingAddress: editShippingAddress,
+      notes: editRemarks,
+    });
+    setEditingOrder(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingOrder) return;
+    await deleteSalesOrder(deletingOrder.id);
+    setDeletingOrder(null);
+  };
 
   const filteredOrders = salesOrders.filter(so => {
     const matchesStatus = statusFilter === 'All' || so.status === statusFilter;
@@ -113,6 +177,7 @@ export const SalesOrdersModule: React.FC = () => {
                 <th className="p-3 text-center">Stock Check</th>
                 <th className="p-3">Fulfillment Status</th>
                 <th className="p-3 text-right">Automated Action</th>
+                <th className="p-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -235,6 +300,24 @@ export const SalesOrdersModule: React.FC = () => {
                         </span>
                       )}
                     </td>
+                    <td className="p-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => openEditModal(so)}
+                          className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                          title="Edit Order"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingOrder(so)}
+                          className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                          title="Delete Order"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -242,6 +325,154 @@ export const SalesOrdersModule: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* EDIT SALES ORDER MODAL */}
+      {editingOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
+              <h3 className="text-sm font-bold text-neutral-900">
+                Edit Sales Order ({editingOrder.orderNumber})
+              </h3>
+              <button onClick={() => setEditingOrder(null)} className="text-neutral-400 hover:text-neutral-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-3">
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Customer Name</label>
+                <input
+                  type="text"
+                  value={editCustomerName}
+                  onChange={(e) => setEditCustomerName(e.target.value)}
+                  required
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Product Name</label>
+                <input
+                  type="text"
+                  value={editProductName}
+                  onChange={(e) => setEditProductName(e.target.value)}
+                  required
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Quantity (MT)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editQuantityMT}
+                    onChange={(e) => setEditQuantityMT(Number(e.target.value))}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Rate (₹/MT)</label>
+                  <input
+                    type="number"
+                    value={editRatePerMT}
+                    onChange={(e) => setEditRatePerMT(Number(e.target.value))}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Tax (% GST)</label>
+                  <input
+                    type="number"
+                    value={editTaxPercent}
+                    onChange={(e) => setEditTaxPercent(Number(e.target.value))}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Delivery Date</label>
+                  <input
+                    type="date"
+                    value={editDeliveryDate}
+                    onChange={(e) => setEditDeliveryDate(e.target.value)}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Status</label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value as SalesOrder['status'])}
+                    className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Production Required">Production Required</option>
+                    <option value="Ready">Ready</option>
+                    <option value="Dispatched">Dispatched</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Shipping Address</label>
+                <textarea
+                  rows={2}
+                  value={editShippingAddress}
+                  onChange={(e) => setEditShippingAddress(e.target.value)}
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Remarks</label>
+                <input
+                  type="text"
+                  value={editRemarks}
+                  onChange={(e) => setEditRemarks(e.target.value)}
+                  className="w-full border border-neutral-300 rounded p-2 text-xs"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setEditingOrder(null)}
+                  className="px-3.5 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE MODAL */}
+      <ConfirmModal
+        isOpen={!!deletingOrder}
+        title="Delete Sales Order"
+        message={`Are you sure you want to delete sales order ${deletingOrder?.orderNumber} for ${deletingOrder?.customerName}?`}
+        confirmText="Delete Order"
+        onConfirm={handleDeleteConfirm}
+        onClose={() => setDeletingOrder(null)}
+      />
     </div>
   );
 };
+

@@ -443,6 +443,7 @@ export interface VehicleMaster {
   status: 'Available' | 'On Trip' | 'Under Maintenance';
   pucExpiry: string;
   fitnessExpiry: string;
+  insuranceExpiry?: string;
 }
 
 export type InvoicePaymentStatus = 
