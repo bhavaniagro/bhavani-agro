@@ -1,10 +1,11 @@
 import { DispatchChallan } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/dispatches';
+const ENDPOINT_URL = `${API_BASE_URL}/dispatches`;
 
 export async function fetchDispatchesFromApi(): Promise<DispatchChallan[]> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch dispatches');
     return await res.json();
   } catch (err) {
@@ -15,7 +16,7 @@ export async function fetchDispatchesFromApi(): Promise<DispatchChallan[]> {
 
 export async function createDispatchInApi(dispatch: Partial<DispatchChallan>): Promise<DispatchChallan | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dispatch),
@@ -30,7 +31,7 @@ export async function createDispatchInApi(dispatch: Partial<DispatchChallan>): P
 
 export async function updateDispatchInApi(id: string, updates: Partial<DispatchChallan>): Promise<DispatchChallan | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -45,7 +46,7 @@ export async function updateDispatchInApi(id: string, updates: Partial<DispatchC
 
 export async function deleteDispatchFromApi(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete dispatch');

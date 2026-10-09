@@ -43,13 +43,13 @@ export const RawMaterialModule: React.FC = () => {
     materialName: '',
     category: 'Mineral Ore' as RawMaterial['category'],
     unit: 'MT' as RawMaterial['unit'],
-    minimumStock: 20,
-    maximumStock: 500,
-    openingStock: 50,
-    averageCost: 2500,
-    storageLocation: 'Shed A - Bin 1',
-    primarySupplier: 'Bhavnagar Mines Pvt Ltd',
-    reorderLevel: 30
+    minimumStock: 0,
+    maximumStock: 0,
+    openingStock: 0,
+    averageCost: 0,
+    storageLocation: '',
+    primarySupplier: '',
+    reorderLevel: 0
   });
 
   const categories = [

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { FileText, Download, Eye, Plus, Search, CheckCircle2, Edit, Trash2 } from 'lucide-react';
+import { FileText, Download, Eye, Plus, Search, CheckCircle2, Edit, Trash2, Upload, ExternalLink } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ErpDocument } from '../../types/erp';
+import { uploadDocumentFileInApi } from '../../services/api/documentApi.service';
 
 export const DocumentsModule: React.FC = () => {
   const { documents, addDocument, updateDocument, deleteDocument } = useERP();
@@ -14,11 +15,13 @@ export const DocumentsModule: React.FC = () => {
   const [editingDoc, setEditingDoc] = useState<ErpDocument | null>(null);
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
 
-  // Form State
+  // Form & Upload State
   const [title, setTitle] = useState('');
   const [docType, setDocType] = useState('GST & Statutory');
   const [relatedEntity, setRelatedEntity] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const docTypes = [
     'All',
@@ -39,19 +42,42 @@ export const DocumentsModule: React.FC = () => {
 
   const handleCreateDocument = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addDocument({
-      title,
-      documentType: docType as any,
-      relatedEntity,
-      fileName: fileName || `${title.toLowerCase().replace(/\s+/g, '_')}.pdf`,
-      uploadDate: new Date().toISOString().split('T')[0],
-      fileSize: '1.4 MB',
-      uploadedBy: 'System Admin'
-    });
-    setShowAddModal(false);
-    setTitle('');
-    setRelatedEntity('');
-    setFileName('');
+    if (!selectedFile) {
+      setUploadError('Please select a file to upload.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const uploadRes = await uploadDocumentFileInApi(selectedFile);
+      if (!uploadRes) {
+        setUploadError('Failed to upload file to backend server. Please try again.');
+        setIsUploading(false);
+        return;
+      }
+
+      await addDocument({
+        title: title || selectedFile.name,
+        documentType: docType as any,
+        relatedEntity: relatedEntity || 'General Establishment',
+        fileName: uploadRes.fileName || selectedFile.name,
+        fileSize: uploadRes.fileSize || `${(selectedFile.size / 1024).toFixed(1)} KB`,
+        fileUrl: uploadRes.fileUrl,
+        uploadDate: new Date().toISOString().split('T')[0],
+        uploadedBy: 'System Admin'
+      });
+
+      setShowAddModal(false);
+      setTitle('');
+      setRelatedEntity('');
+      setSelectedFile(null);
+    } catch (err: any) {
+      setUploadError(err.message || 'An error occurred during file upload.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleUpdateDocument = async (e: React.FormEvent) => {
@@ -86,10 +112,13 @@ export const DocumentsModule: React.FC = () => {
         </div>
 
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => {
+            setUploadError(null);
+            setShowAddModal(true);
+          }}
           className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap self-start md:self-auto"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Upload className="w-3.5 h-3.5" />
           <span>Upload Document</span>
         </button>
       </div>
@@ -159,24 +188,62 @@ export const DocumentsModule: React.FC = () => {
               <span className="text-[10px] font-semibold text-emerald-800 bg-neutral-100 px-2 py-0.5 rounded">
                 {doc.documentType}
               </span>
-              <button
-                onClick={() => alert(`Downloading verified copy of ${doc.fileName}`)}
-                className="px-2.5 py-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-[11px] font-medium text-neutral-700 flex items-center gap-1 cursor-pointer"
-              >
-                <Download className="w-3 h-3" />
-                <span>Download</span>
-              </button>
+              {doc.fileUrl ? (
+                <a
+                  href={doc.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 rounded text-[11px] font-medium text-emerald-800 flex items-center gap-1 cursor-pointer"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Open / Download</span>
+                </a>
+              ) : (
+                <button
+                  onClick={() => alert(`Document file record: ${doc.fileName}`)}
+                  className="px-2.5 py-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-[11px] font-medium text-neutral-700 flex items-center gap-1 cursor-pointer"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>View</span>
+                </button>
+              )}
             </div>
           </div>
         ))}
+        {filteredDocs.length === 0 && (
+          <div className="col-span-full py-12 text-center text-xs text-neutral-400 italic bg-white border border-neutral-200 rounded-xl">
+            No documents uploaded yet. Click "Upload Document" above to upload statutory or lab documents.
+          </div>
+        )}
       </div>
 
       {/* UPLOAD MODAL */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
           <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
-            <h3 className="text-sm font-bold text-neutral-900 mb-3">Upload / Register Document</h3>
+            <h3 className="text-sm font-bold text-neutral-900 mb-3">Upload Real Document File</h3>
+            
+            {uploadError && (
+              <div className="mb-3 p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded text-xs">
+                {uploadError}
+              </div>
+            )}
+
             <form onSubmit={handleCreateDocument} className="space-y-3">
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Select File (PDF, Images, Office Docs)</label>
+                <input
+                  type="file"
+                  required
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] || null;
+                    setSelectedFile(f);
+                    if (f && !title) setTitle(f.name.replace(/\.[^/.]+$/, ""));
+                  }}
+                  className="w-full border border-neutral-300 rounded p-2 bg-neutral-50 cursor-pointer"
+                />
+              </div>
+
               <div>
                 <label className="block text-neutral-700 font-medium mb-1">Document Title</label>
                 <input
@@ -214,20 +281,10 @@ export const DocumentsModule: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-neutral-700 font-medium mb-1">File Name</label>
-                <input
-                  type="text"
-                  value={fileName}
-                  onChange={(e) => setFileName(e.target.value)}
-                  className="w-full border border-neutral-300 rounded p-2 font-mono"
-                  placeholder="e.g. organic_cert_2026.pdf"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2 border-t border-neutral-200">
+              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200">
                 <button
                   type="button"
+                  disabled={isUploading}
                   onClick={() => setShowAddModal(false)}
                   className="px-3 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer"
                 >
@@ -235,9 +292,17 @@ export const DocumentsModule: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer shadow-xs"
+                  disabled={isUploading}
+                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  Save Document
+                  {isUploading ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Uploading File...</span>
+                    </>
+                  ) : (
+                    <span>Upload &amp; Save</span>
+                  )}
                 </button>
               </div>
             </form>

@@ -34,19 +34,22 @@ export const QuickAddModal: React.FC = () => {
   const [poRate, setPoRate] = useState(2200);
 
   const [expCategory, setExpCategory] = useState<any>('Electricity & Power');
-  const [expAmount, setExpAmount] = useState(25000);
-  const [expVendor, setExpVendor] = useState('Local Supplier / PGVCL');
+  const [expAmount, setExpAmount] = useState<number | ''>('');
+  const [expVendor, setExpVendor] = useState('');
   const [expDesc, setExpDesc] = useState('');
+  const [expPaidFrom, setExpPaidFrom] = useState('SBI Current Account');
 
   const [leadName, setLeadName] = useState('');
   const [leadCompany, setLeadCompany] = useState('');
   const [leadMobile, setLeadMobile] = useState('');
-  const [leadProduct, setLeadProduct] = useState(products[0]?.productName || '');
+  const [leadEmail, setLeadEmail] = useState('');
+  const [leadLocation, setLeadLocation] = useState('');
+  const [leadProduct, setLeadProduct] = useState('');
 
   const [custName, setCustName] = useState('');
   const [custCompany, setCustCompany] = useState('');
   const [custMobile, setCustMobile] = useState('');
-  const [custCity, setCustCity] = useState('Rajkot, Gujarat');
+  const [custCity, setCustCity] = useState('');
 
   if (!isQuickAddOpen) return null;
 
@@ -58,6 +61,7 @@ export const QuickAddModal: React.FC = () => {
     if (currentType === 'Sales Order') {
       const cust = customers.find(c => c.id === soCustomer) || customers[0];
       const prod = products.find(p => p.id === soProduct) || products[0];
+      if (!cust || !prod) return;
       const total = soQuantity * (soRate || prod.sellingPricePerMT) * 1.05;
 
       addSalesOrder({
@@ -80,6 +84,7 @@ export const QuickAddModal: React.FC = () => {
     } else if (currentType === 'Purchase Order') {
       const supp = suppliers.find(s => s.id === poSupplier) || suppliers[0];
       const mat = rawMaterials.find(m => m.id === poMaterial) || rawMaterials[0];
+      if (!supp || !mat) return;
       const total = poQuantity * (poRate || mat.averageCost) * 1.05;
 
       addPurchaseOrder({
@@ -102,43 +107,43 @@ export const QuickAddModal: React.FC = () => {
       addExpense({
         category: expCategory,
         date: new Date().toISOString().split('T')[0],
-        amount: Number(expAmount),
-        paidFromAccount: 'SBI Industrial Current A/c',
-        vendorName: expVendor || 'Authorized Vendor',
-        description: expDesc || 'Plant operations expense entry',
+        amount: Number(expAmount || 0),
+        paidFromAccount: expPaidFrom || 'SBI Current Account',
+        vendorName: expVendor,
+        description: expDesc,
         invoiceOrVoucherNo: `VCH-${Math.floor(1000 + Math.random() * 9000)}`
       });
     } else if (currentType === 'Lead') {
       addLead({
-        leadName: leadName || 'New Prospective Client',
-        company: leadCompany || 'Agro Corp',
-        contactPerson: leadName || 'Contact',
-        mobile: leadMobile || '+91 98250 00000',
-        email: 'info@leadcompany.com',
-        location: 'Ahmedabad, Gujarat',
-        productInterested: leadProduct,
-        expectedQuantityMT: 50,
-        leadSource: 'Direct Phone / Inbound',
-        estimatedValue: 310000,
+        leadName: leadName,
+        company: leadCompany,
+        contactPerson: leadName,
+        mobile: leadMobile,
+        email: leadEmail,
+        location: leadLocation,
+        productInterested: leadProduct || (products[0]?.productName || ''),
+        expectedQuantityMT: 10,
+        leadSource: 'Direct Enquiry',
+        estimatedValue: 0,
         followUpDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-        salesperson: 'Rajesh Shah',
+        salesperson: 'Sales Executive',
         status: 'New'
       });
     } else if (currentType === 'Customer') {
       addCustomer({
-        customerName: custName || 'New Agro Dealer',
-        companyName: custCompany || custName || 'Agro Agency',
-        contactPerson: custName || 'Manager',
-        mobile: custMobile || '+91 98250 11111',
-        email: 'dealer@gujaratagro.com',
+        customerName: custName,
+        companyName: custCompany || custName,
+        contactPerson: custName,
+        mobile: custMobile,
+        email: '',
         billingAddress: custCity,
         shippingAddress: custCity,
-        gstin: '24' + Math.random().toString(36).substring(2, 12).toUpperCase(),
-        state: 'Gujarat',
-        creditLimit: 2500000,
+        gstin: '',
+        state: custCity.split(',')[1]?.trim() || 'Gujarat',
+        creditLimit: 1000000,
         paymentTerms: 'Net 30 Days',
         customerType: 'Dealer',
-        assignedSalesperson: 'Rajesh Shah'
+        assignedSalesperson: 'Sales Executive'
       });
     }
 
@@ -346,15 +351,27 @@ export const QuickAddModal: React.FC = () => {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-neutral-700 font-medium mb-1">Vendor / Payee</label>
-                <input
-                  type="text"
-                  value={expVendor}
-                  onChange={(e) => setExpVendor(e.target.value)}
-                  placeholder="e.g. PGVCL / IOCL Petrol Pump"
-                  className="w-full border border-neutral-300 rounded p-2"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Vendor / Payee</label>
+                  <input
+                    type="text"
+                    value={expVendor}
+                    onChange={(e) => setExpVendor(e.target.value)}
+                    placeholder="e.g. PGVCL / IOCL Petrol Pump"
+                    className="w-full border border-neutral-300 rounded p-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Paid From Account</label>
+                  <input
+                    type="text"
+                    value={expPaidFrom}
+                    onChange={(e) => setExpPaidFrom(e.target.value)}
+                    placeholder="e.g. SBI Industrial Current A/c"
+                    className="w-full border border-neutral-300 rounded p-2"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-neutral-700 font-medium mb-1">Description / Bill Notes</label>

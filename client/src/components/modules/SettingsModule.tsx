@@ -117,35 +117,43 @@ export const SettingsModule: React.FC = () => {
           Registered Plant Address &amp; Contact
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-neutral-700 font-semibold mb-1">Plot / Street Address</label>
+          <input
+            type="text"
+            value={formData.address}
+            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            className="w-full border border-neutral-300 rounded p-2"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-neutral-700 font-semibold mb-1">Plot / GIDC Street Address</label>
+            <label className="block text-neutral-700 font-semibold mb-1">City</label>
             <input
               type="text"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
               className="w-full border border-neutral-300 rounded p-2"
             />
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-neutral-700 font-semibold mb-1">City &amp; State</label>
-              <input
-                type="text"
-                value={`${formData.city}, ${formData.state}`}
-                readOnly
-                className="w-full border border-neutral-200 rounded p-2 bg-neutral-50 text-neutral-600"
-              />
-            </div>
-            <div>
-              <label className="block text-neutral-700 font-semibold mb-1">Pincode</label>
-              <input
-                type="text"
-                value={formData.pincode}
-                onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                className="w-full border border-neutral-300 rounded p-2 font-mono"
-              />
-            </div>
+          <div>
+            <label className="block text-neutral-700 font-semibold mb-1">State</label>
+            <input
+              type="text"
+              value={formData.state}
+              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+              className="w-full border border-neutral-300 rounded p-2"
+            />
+          </div>
+          <div>
+            <label className="block text-neutral-700 font-semibold mb-1">Pincode</label>
+            <input
+              type="text"
+              value={formData.pincode}
+              onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+              className="w-full border border-neutral-300 rounded p-2 font-mono"
+            />
           </div>
         </div>
 

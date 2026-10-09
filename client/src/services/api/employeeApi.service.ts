@@ -1,10 +1,11 @@
 import { Employee } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/employees';
+const ENDPOINT_URL = `${API_BASE_URL}/employees`;
 
 export async function fetchEmployeesFromApi(): Promise<Employee[]> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch employees');
     const json = await res.json();
     return Array.isArray(json) ? json : (json.data || []);
@@ -16,7 +17,7 @@ export async function fetchEmployeesFromApi(): Promise<Employee[]> {
 
 export async function createEmployeeInApi(employee: Partial<Employee>): Promise<Employee | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(employee),
@@ -32,7 +33,7 @@ export async function createEmployeeInApi(employee: Partial<Employee>): Promise<
 
 export async function updateEmployeeInApi(id: string, updates: Partial<Employee>): Promise<Employee | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -48,7 +49,7 @@ export async function updateEmployeeInApi(id: string, updates: Partial<Employee>
 
 export async function deleteEmployeeFromApi(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete employee');

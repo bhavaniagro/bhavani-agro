@@ -1,10 +1,11 @@
 import { ErpDocument } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/documents';
+const ENDPOINT_URL = `${API_BASE_URL}/documents`;
 
 export async function fetchDocumentsFromApi(): Promise<ErpDocument[]> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch documents');
     const json = await res.json();
     return Array.isArray(json) ? json : (json.data || []);
@@ -16,7 +17,7 @@ export async function fetchDocumentsFromApi(): Promise<ErpDocument[]> {
 
 export async function createDocumentInApi(document: Partial<ErpDocument>): Promise<ErpDocument | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(document),
@@ -32,7 +33,7 @@ export async function createDocumentInApi(document: Partial<ErpDocument>): Promi
 
 export async function updateDocumentInApi(id: string, updates: Partial<ErpDocument>): Promise<ErpDocument | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -48,7 +49,7 @@ export async function updateDocumentInApi(id: string, updates: Partial<ErpDocume
 
 export async function deleteDocumentFromApi(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete document');
@@ -56,5 +57,32 @@ export async function deleteDocumentFromApi(id: string): Promise<boolean> {
   } catch (err) {
     console.error('API Delete Document Error:', err);
     return false;
+  }
+}
+
+export async function uploadDocumentFileInApi(file: File): Promise<{ fileUrl: string; fileName: string; fileSize: string } | null> {
+  try {
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
+
+    const res = await fetch(`${ENDPOINT_URL}/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileName: file.name,
+        fileData: base64
+      }),
+    });
+
+    if (!res.ok) throw new Error('Failed to upload document file');
+    const json = await res.json();
+    return json.data || json;
+  } catch (err) {
+    console.error('API Upload Document File Error:', err);
+    return null;
   }
 }

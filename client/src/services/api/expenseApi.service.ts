@@ -1,10 +1,11 @@
 import { ExpenseRecord } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/expenses';
+const ENDPOINT_URL = `${API_BASE_URL}/expenses`;
 
 export async function fetchExpensesFromApi(): Promise<ExpenseRecord[]> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch expenses');
     const json = await res.json();
     return Array.isArray(json) ? json : (json.data || []);
@@ -16,7 +17,7 @@ export async function fetchExpensesFromApi(): Promise<ExpenseRecord[]> {
 
 export async function createExpenseInApi(expense: Partial<ExpenseRecord>): Promise<ExpenseRecord | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(expense),
@@ -32,7 +33,7 @@ export async function createExpenseInApi(expense: Partial<ExpenseRecord>): Promi
 
 export async function updateExpenseInApi(id: string, updates: Partial<ExpenseRecord>): Promise<ExpenseRecord | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -48,7 +49,7 @@ export async function updateExpenseInApi(id: string, updates: Partial<ExpenseRec
 
 export async function deleteExpenseFromApi(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete expense');

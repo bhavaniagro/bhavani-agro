@@ -557,6 +557,7 @@ export interface ErpDocument {
   fileSize: string;
   uploadDate: string;
   uploadedBy: string;
+  fileUrl?: string;
 }
 
 export interface ErpAlert {

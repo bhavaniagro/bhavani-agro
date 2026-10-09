@@ -18,7 +18,7 @@ import { Supplier } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
 
 export const SuppliersModule: React.FC = () => {
-  const { suppliers, purchaseOrders, setActiveModule, setIsQuickAddOpen, setQuickAddType, addSupplier, updateSupplier, deleteSupplier } = useERP();
+  const { suppliers, rawMaterials, purchaseOrders, setActiveModule, setIsQuickAddOpen, setQuickAddType, addSupplier, updateSupplier, deleteSupplier } = useERP();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
@@ -36,12 +36,12 @@ export const SuppliersModule: React.FC = () => {
     email: '',
     address: '',
     gstin: '',
-    materialSupplied: 'Bentonite Ore',
+    materialSupplied: '',
     paymentTerms: 'Net 30 Days',
     creditPeriodDays: 30,
-    bankName: 'SBI Rajkot',
+    bankName: '',
     accountNo: '',
-    ifscCode: 'SBIN0001234'
+    ifscCode: ''
   });
 
   const filteredSuppliers = suppliers.filter(s => 
@@ -363,12 +363,28 @@ export const SuppliersModule: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">Material Supplied</label>
-                  <input
-                    type="text"
-                    value={newSupp.materialSupplied}
-                    onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
+                  {rawMaterials.length > 0 ? (
+                    <select
+                      value={newSupp.materialSupplied}
+                      onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
+                      className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                    >
+                      <option value="">Select Raw Material</option>
+                      {rawMaterials.map((rm) => (
+                        <option key={rm.id} value={rm.materialName}>
+                          {rm.materialName} ({rm.category})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="e.g. Bentonite Ore"
+                      value={newSupp.materialSupplied}
+                      onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
+                      className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                    />
+                  )}
                 </div>
               </div>
 

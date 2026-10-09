@@ -398,39 +398,45 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [activeRole, setActiveRole] = useState<UserRole>('Owner / Admin');
 
-  // Load from LocalStorage if exists
-  const loadStored = <T,>(key: string, defaultVal: T): T => {
-    try {
-      const stored = localStorage.getItem(`bhavani_erp_${key}`);
-      return stored ? JSON.parse(stored) : defaultVal;
-    } catch {
-      return defaultVal;
-    }
+  const defaultCompanyProfile: CompanyProfile = {
+    id: 'profile',
+    name: 'Bhavani Agro & Minerals',
+    formation: 'Sole Proprietorship',
+    established: '1985',
+    gstin: '24AAAAA0000A1Z5',
+    pan: 'AAAAA0000A',
+    address: 'Plot 42-45, GIDC Metoda Industrial Estate',
+    city: 'Rajkot',
+    state: 'Gujarat',
+    pincode: '360021',
+    bankName: 'State Bank of India, Main Branch Rajkot',
+    accountNo: '38291048571',
+    ifscCode: 'SBIN0001234'
   };
 
-  const [company, setCompany] = useState<CompanyProfile>(() => loadStored('company', initialCompanyProfile));
-  const [customers, setCustomers] = useState<Customer[]>(() => loadStored('customers', []));
-  const [suppliers, setSuppliers] = useState<Supplier[]>(() => loadStored('suppliers', []));
-  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>(() => loadStored('rawMaterials', []));
-  const [products, setProducts] = useState<FinishedProduct[]>(() => loadStored('products', []));
-  const [boms, setBOMs] = useState<BOM[]>(() => loadStored('boms', []));
-  const [leads, setLeads] = useState<Lead[]>(() => loadStored('leads', []));
-  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(() => loadStored('salesOrders', []));
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => loadStored('purchaseOrders', []));
-  const [grns, setGRNs] = useState<GRN[]>(() => loadStored('grns', []));
-  const [qcInspections, setQCInspections] = useState<QCInspection[]>(() => loadStored('qcInspections', []));
-  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(() => loadStored('productionOrders', []));
-  const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>(() => loadStored('productionBatches', []));
-  const [vehicles, setVehicles] = useState<VehicleMaster[]>(() => loadStored('vehicles', []));
-  const [dispatches, setDispatches] = useState<DispatchChallan[]>(() => loadStored('dispatches', []));
-  const [invoices, setInvoices] = useState<SalesInvoice[]>(() => loadStored('invoices', []));
-  const [payments, setPayments] = useState<PaymentTransaction[]>(() => loadStored('payments', []));
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => loadStored('expenses', []));
-  const [machinery, setMachinery] = useState<Machinery[]>(() => loadStored('machinery', []));
-  const [employees, setEmployees] = useState<Employee[]>(() => loadStored('employees', []));
-  const [documents, setDocuments] = useState<ErpDocument[]>(() => loadStored('documents', []));
-  const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadStored('alerts', []));
-  const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => loadStored('stockMovements', []));
+  const [company, setCompany] = useState<CompanyProfile>(defaultCompanyProfile);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
+  const [products, setProducts] = useState<FinishedProduct[]>([]);
+  const [boms, setBOMs] = useState<BOM[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [grns, setGRNs] = useState<GRN[]>([]);
+  const [qcInspections, setQCInspections] = useState<QCInspection[]>([]);
+  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>([]);
+  const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
+  const [dispatches, setDispatches] = useState<DispatchChallan[]>([]);
+  const [invoices, setInvoices] = useState<SalesInvoice[]>([]);
+  const [payments, setPayments] = useState<PaymentTransaction[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
+  const [machinery, setMachinery] = useState<Machinery[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [documents, setDocuments] = useState<ErpDocument[]>([]);
+  const [alerts, setAlerts] = useState<ErpAlert[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
 
   // Load customers from API when the ERP starts
   useEffect(() => {
@@ -623,24 +629,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isDemoRunnerOpen, setIsDemoRunnerOpen] = useState(false);
   const [demoStep, setDemoStep] = useState(1);
 
-  // Sync to local storage
-  useEffect(() => {
-    try {
-      localStorage.setItem('bhavani_erp_customers', JSON.stringify(customers));
-      localStorage.setItem('bhavani_erp_rawMaterials', JSON.stringify(rawMaterials));
-      localStorage.setItem('bhavani_erp_products', JSON.stringify(products));
-      localStorage.setItem('bhavani_erp_salesOrders', JSON.stringify(salesOrders));
-      localStorage.setItem('bhavani_erp_purchaseOrders', JSON.stringify(purchaseOrders));
-      localStorage.setItem('bhavani_erp_productionOrders', JSON.stringify(productionOrders));
-      localStorage.setItem('bhavani_erp_productionBatches', JSON.stringify(productionBatches));
-      localStorage.setItem('bhavani_erp_dispatches', JSON.stringify(dispatches));
-      localStorage.setItem('bhavani_erp_invoices', JSON.stringify(invoices));
-      localStorage.setItem('bhavani_erp_expenses', JSON.stringify(expenses));
-      localStorage.setItem('bhavani_erp_alerts', JSON.stringify(alerts));
-    } catch (e) {
-      console.warn('Storage sync error', e);
-    }
-  }, [customers, rawMaterials, products, salesOrders, purchaseOrders, productionOrders, productionBatches, dispatches, invoices, expenses, alerts]);
+
 
   // Lead management
   const addLead = (leadData: Omit<Lead, 'id' | 'createdAt'>) => {
@@ -694,31 +683,28 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const convertLeadToCustomer = (leadId: string) => {
+  const convertLeadToCustomer = async (leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
-    const newCustomer: Customer = {
-      id: `cust-${Date.now()}`,
-      code: `CUST-0${customers.length + 1}`,
+    
+    await addCustomer({
       customerName: lead.leadName,
       companyName: lead.company,
       contactPerson: lead.contactPerson,
       mobile: lead.mobile,
       email: lead.email,
-      billingAddress: `${lead.location}`,
-      shippingAddress: `${lead.location}`,
+      billingAddress: lead.location,
+      shippingAddress: lead.location,
       gstin: '24' + Math.random().toString(36).substring(2, 12).toUpperCase(),
       state: lead.location.split(',')[1]?.trim() || 'Gujarat',
       creditLimit: 2000000,
       paymentTerms: 'Net 30 Days',
       customerType: 'Distributor',
       assignedSalesperson: lead.salesperson,
-      totalSales: 0,
-      outstandingBalance: 0,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setCustomers(prev => [newCustomer, ...prev]);
-    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: 'Won' } : l));
+    });
+
+    await updateLead(leadId, { status: 'Won' });
+
     setAlerts(prev => [{
       id: `alt-${Date.now()}`,
       type: 'info',
