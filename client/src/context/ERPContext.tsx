@@ -409,39 +409,35 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [company, setCompany] = useState<CompanyProfile>(() => loadStored('company', initialCompanyProfile));
-  const [customers, setCustomers] = useState<Customer[]>(() => loadStored('customers', initialCustomers));
-  const [suppliers, setSuppliers] = useState<Supplier[]>(() => loadStored('suppliers', initialSuppliers));
-  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>(() => loadStored('rawMaterials', initialRawMaterials));
-  const [products, setProducts] = useState<FinishedProduct[]>(() => loadStored('products', initialFinishedProducts));
-  const [boms, setBOMs] = useState<BOM[]>(() => loadStored('boms', initialBOMs));
-  const [leads, setLeads] = useState<Lead[]>(() => loadStored('leads', initialLeads));
-  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(() => loadStored('salesOrders', initialSalesOrders));
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => loadStored('purchaseOrders', initialPurchaseOrders));
-  const [grns, setGRNs] = useState<GRN[]>(() => loadStored('grns', initialGRNs));
-  const [qcInspections, setQCInspections] = useState<QCInspection[]>(() => loadStored('qcInspections', initialQCInspections));
-  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(() => loadStored('productionOrders', initialProductionOrders));
-  const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>(() => loadStored('productionBatches', initialProductionBatches));
-  const [vehicles, setVehicles] = useState<VehicleMaster[]>(() => loadStored('vehicles', initialVehicles));
-  const [dispatches, setDispatches] = useState<DispatchChallan[]>(() => loadStored('dispatches', initialDispatches));
-  const [invoices, setInvoices] = useState<SalesInvoice[]>(() => loadStored('invoices', initialInvoices));
+  const [customers, setCustomers] = useState<Customer[]>(() => loadStored('customers', []));
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => loadStored('suppliers', []));
+  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>(() => loadStored('rawMaterials', []));
+  const [products, setProducts] = useState<FinishedProduct[]>(() => loadStored('products', []));
+  const [boms, setBOMs] = useState<BOM[]>(() => loadStored('boms', []));
+  const [leads, setLeads] = useState<Lead[]>(() => loadStored('leads', []));
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(() => loadStored('salesOrders', []));
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => loadStored('purchaseOrders', []));
+  const [grns, setGRNs] = useState<GRN[]>(() => loadStored('grns', []));
+  const [qcInspections, setQCInspections] = useState<QCInspection[]>(() => loadStored('qcInspections', []));
+  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(() => loadStored('productionOrders', []));
+  const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>(() => loadStored('productionBatches', []));
+  const [vehicles, setVehicles] = useState<VehicleMaster[]>(() => loadStored('vehicles', []));
+  const [dispatches, setDispatches] = useState<DispatchChallan[]>(() => loadStored('dispatches', []));
+  const [invoices, setInvoices] = useState<SalesInvoice[]>(() => loadStored('invoices', []));
   const [payments, setPayments] = useState<PaymentTransaction[]>(() => loadStored('payments', []));
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => loadStored('expenses', initialExpenses));
-  const [machinery, setMachinery] = useState<Machinery[]>(() => loadStored('machinery', initialMachinery));
-  const [employees, setEmployees] = useState<Employee[]>(() => loadStored('employees', initialEmployees));
-  const [documents, setDocuments] = useState<ErpDocument[]>(() => loadStored('documents', initialDocuments));
-  const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadStored('alerts', initialAlerts));
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => loadStored('expenses', []));
+  const [machinery, setMachinery] = useState<Machinery[]>(() => loadStored('machinery', []));
+  const [employees, setEmployees] = useState<Employee[]>(() => loadStored('employees', []));
+  const [documents, setDocuments] = useState<ErpDocument[]>(() => loadStored('documents', []));
+  const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadStored('alerts', []));
   const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => loadStored('stockMovements', []));
 
-  // Load customers from Firebase when the ERP starts
   // Load customers from API when the ERP starts
   useEffect(() => {
     const loadCustomersFromApi = async () => {
       try {
         const apiCustomers = await getCustomersFromApi();
-
-        if (apiCustomers.length > 0) {
-          setCustomers(apiCustomers);
-        }
+        setCustomers(apiCustomers || []);
       } catch (error) {
         console.error("Failed to load customers from API:", error);
       }
@@ -449,12 +445,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     loadCustomersFromApi();
   }, []);
+
   // Load leads from API when the ERP starts
   useEffect(() => {
     const loadLeadsFromApi = async () => {
       try {
         const apiLeads = await getLeadsFromApi();
-        if (apiLeads.length > 0) setLeads(apiLeads);
+        setLeads(apiLeads || []);
       } catch (error) {
         console.error("Failed to load leads from API:", error);
       }
@@ -465,133 +462,133 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Load suppliers from API
   useEffect(() => {
     getSuppliersFromApi()
-      .then((data) => { if (data.length > 0) setSuppliers(data); })
+      .then((data) => { setSuppliers(data || []); })
       .catch((err) => console.error("Failed to load suppliers from API:", err));
   }, []);
 
   // Load raw materials from API
   useEffect(() => {
     getRawMaterialsFromApi()
-      .then((data) => { if (data.length > 0) setRawMaterials(data); })
+      .then((data) => { setRawMaterials(data || []); })
       .catch((err) => console.error("Failed to load raw materials from API:", err));
   }, []);
 
   // Load products from API
   useEffect(() => {
     getProductsFromApi()
-      .then((data) => { if (data.length > 0) setProducts(data); })
+      .then((data) => { setProducts(data || []); })
       .catch((err) => console.error("Failed to load products from API:", err));
   }, []);
 
   // Load sales orders from API
   useEffect(() => {
     getSalesOrdersFromApi()
-      .then((data) => { if (data.length > 0) setSalesOrders(data); })
+      .then((data) => { setSalesOrders(data || []); })
       .catch((err) => console.error("Failed to load sales orders from API:", err));
   }, []);
 
   // Load purchase orders from API
   useEffect(() => {
     getPurchaseOrdersFromApi()
-      .then((data) => { if (data.length > 0) setPurchaseOrders(data); })
+      .then((data) => { setPurchaseOrders(data || []); })
       .catch((err) => console.error("Failed to load purchase orders from API:", err));
   }, []);
 
   // Load GRNs from API
   useEffect(() => {
     getGRNsFromApi()
-      .then((data) => { if (data.length > 0) setGRNs(data); })
+      .then((data) => { setGRNs(data || []); })
       .catch((err) => console.error("Failed to load GRNs from API:", err));
   }, []);
 
   // Load production orders from API
   useEffect(() => {
     fetchProductionOrdersFromApi()
-      .then((data) => { if (data.length > 0) setProductionOrders(data); })
+      .then((data) => { setProductionOrders(data || []); })
       .catch((err) => console.error("Failed to load production orders from API:", err));
   }, []);
 
   // Load production batches from API
   useEffect(() => {
     fetchProductionBatchesFromApi()
-      .then((data) => { if (data.length > 0) setProductionBatches(data); })
+      .then((data) => { setProductionBatches(data || []); })
       .catch((err) => console.error("Failed to load production batches from API:", err));
   }, []);
 
   // Load QC inspections from API
   useEffect(() => {
     fetchQCInspectionsFromApi()
-      .then((data) => { if (data.length > 0) setQCInspections(data); })
+      .then((data) => { setQCInspections(data || []); })
       .catch((err) => console.error("Failed to load QC inspections from API:", err));
   }, []);
 
   // Load BOMs from API
   useEffect(() => {
     fetchBOMsFromApi()
-      .then((data) => { if (data.length > 0) setBOMs(data); })
+      .then((data) => { setBOMs(data || []); })
       .catch((err) => console.error("Failed to load BOMs from API:", err));
   }, []);
 
   // Load Stock Movements from API
   useEffect(() => {
     fetchStockMovementsFromApi()
-      .then((data) => { if (data.length > 0) setStockMovements(data); })
+      .then((data) => { setStockMovements(data || []); })
       .catch((err) => console.error("Failed to load stock movements from API:", err));
   }, []);
 
   // Load Dispatches from API
   useEffect(() => {
     fetchDispatchesFromApi()
-      .then((data) => { if (data.length > 0) setDispatches(data); })
+      .then((data) => { setDispatches(data || []); })
       .catch((err) => console.error("Failed to load dispatches from API:", err));
   }, []);
 
   // Load Vehicles from API
   useEffect(() => {
     fetchVehiclesFromApi()
-      .then((data) => { if (data.length > 0) setVehicles(data); })
+      .then((data) => { setVehicles(data || []); })
       .catch((err) => console.error("Failed to load vehicles from API:", err));
   }, []);
 
   // Load Sales Invoices from API
   useEffect(() => {
     fetchSalesInvoicesFromApi()
-      .then((data) => { if (data.length > 0) setInvoices(data); })
+      .then((data) => { setInvoices(data || []); })
       .catch((err) => console.error("Failed to load sales invoices from API:", err));
   }, []);
 
   // Load Payments from API
   useEffect(() => {
     fetchPaymentsFromApi()
-      .then((data) => { if (data.length > 0) setPayments(data); })
+      .then((data) => { setPayments(data || []); })
       .catch((err) => console.error("Failed to load payments from API:", err));
   }, []);
 
   // Load Expenses from API
   useEffect(() => {
     fetchExpensesFromApi()
-      .then((data) => { if (data.length > 0) setExpenses(data); })
+      .then((data) => { setExpenses(data || []); })
       .catch((err) => console.error("Failed to load expenses from API:", err));
   }, []);
 
   // Load Employees from API
   useEffect(() => {
     fetchEmployeesFromApi()
-      .then((data) => { if (data.length > 0) setEmployees(data); })
+      .then((data) => { setEmployees(data || []); })
       .catch((err) => console.error("Failed to load employees from API:", err));
   }, []);
 
   // Load Machinery from API
   useEffect(() => {
     fetchMachineryFromApi()
-      .then((data) => { if (data.length > 0) setMachinery(data); })
+      .then((data) => { setMachinery(data || []); })
       .catch((err) => console.error("Failed to load machinery from API:", err));
   }, []);
 
   // Load Documents from API
   useEffect(() => {
     fetchDocumentsFromApi()
-      .then((data) => { if (data.length > 0) setDocuments(data); })
+      .then((data) => { setDocuments(data || []); })
       .catch((err) => console.error("Failed to load documents from API:", err));
   }, []);
 
@@ -781,6 +778,71 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Automation 12: Sales Order -> Create Production Order
+  const createProductionOrderFromSOObj = (so: SalesOrder) => {
+    const matchingBOM = boms.find(b => b.productId === so.productId) || boms[0];
+
+    // Check required materials
+    const materialCheck = (matchingBOM?.items || []).map(item => {
+      const rm = rawMaterials.find(r => r.id === item.rawMaterialId);
+      const required = item.quantityPerMT * so.quantityMT;
+      const available = rm ? (rm.unit === 'MT' ? rm.currentStock * 1000 : rm.currentStock) : 0;
+      return {
+        materialId: item.rawMaterialId,
+        materialName: item.rawMaterialName,
+        requiredQty: required,
+        availableQty: available,
+        shortageQty: Math.max(0, required - available),
+        unit: item.unit
+      };
+    });
+
+    const hasShortage = materialCheck.some(m => m.shortageQty > 0);
+    const poNum = `PO-MFG-0${productionOrders.length + 95}`;
+
+    const newPO: ProductionOrder = {
+      id: `po-mfg-${Date.now()}`,
+      productionOrderNumber: poNum,
+      salesOrderId: so.id,
+      productId: so.productId,
+      productName: so.productName,
+      targetQuantityMT: so.quantityMT,
+      bomId: matchingBOM ? matchingBOM.id : 'bom-1',
+      plannedStartDate: new Date().toISOString().split('T')[0],
+      plannedEndDate: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0],
+      productionLine: 'Granulation Line 1',
+      supervisor: 'Bipinchandra Solanki',
+      priority: 'High',
+      status: 'Planned',
+      materialCheck,
+      hasMaterialShortage: hasShortage,
+      notes: `Generated automatically from Sales Order ${so.orderNumber}.`
+    };
+
+    setProductionOrders(prev => [newPO, ...prev]);
+
+    persistProductionOrder(newPO).catch((error) => {
+      console.error('Failed to save production order to Firebase:', error);
+    });
+
+    setSalesOrders(prev => prev.map(o => o.id === so.id ? { ...o, productionOrderId: newPO.id } : o));
+
+    setAlerts(prev => [{
+      id: `alt-${Date.now()}`,
+      type: 'info',
+      title: `Production Order ${poNum} Created`,
+      description: `BOM verified for ${so.quantityMT} MT of ${so.productName}.`,
+      timestamp: 'Just now',
+      module: 'Production',
+      read: false
+    }, ...prev]);
+  };
+
+  const createProductionOrderFromSO = (salesOrderId: string) => {
+    const so = salesOrders.find(o => o.id === salesOrderId);
+    if (so) createProductionOrderFromSOObj(so);
+  };
+
   // Automation 1: Sales Order Stock Check
   const addSalesOrder = (soData: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>) => {
     const targetProduct = products.find(p => p.id === soData.productId);
@@ -812,6 +874,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCustomers(prev => prev.map(c => c.id === soData.customerId ? { ...c, totalSales: c.totalSales + soData.totalAmount } : c));
 
     if (!isStockAvailable) {
+      createProductionOrderFromSOObj(newOrder);
       setAlerts(prev => [{
         id: `alt-${Date.now()}`,
         type: 'critical',
@@ -846,69 +909,6 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Automation 12: Sales Order -> Create Production Order
-  const createProductionOrderFromSO = (salesOrderId: string) => {
-    const so = salesOrders.find(o => o.id === salesOrderId);
-    if (!so) return;
-
-    const matchingBOM = boms.find(b => b.productId === so.productId) || boms[0];
-
-    // Check required materials
-    const materialCheck = matchingBOM.items.map(item => {
-      const rm = rawMaterials.find(r => r.id === item.rawMaterialId);
-      const required = item.quantityPerMT * so.quantityMT;
-      const available = rm ? (rm.unit === 'MT' ? rm.currentStock * 1000 : rm.currentStock) : 0;
-      return {
-        materialId: item.rawMaterialId,
-        materialName: item.rawMaterialName,
-        requiredQty: required,
-        availableQty: available,
-        shortageQty: Math.max(0, required - available),
-        unit: item.unit
-      };
-    });
-
-    const hasShortage = materialCheck.some(m => m.shortageQty > 0);
-    const poNum = `PO-MFG-0${productionOrders.length + 95}`;
-
-    const newPO: ProductionOrder = {
-      id: `po-mfg-${Date.now()}`,
-      productionOrderNumber: poNum,
-      salesOrderId: so.id,
-      productId: so.productId,
-      productName: so.productName,
-      targetQuantityMT: so.quantityMT,
-      bomId: matchingBOM.id,
-      plannedStartDate: new Date().toISOString().split('T')[0],
-      plannedEndDate: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0],
-      productionLine: 'Granulation Line 1',
-      supervisor: 'Bipinchandra Solanki',
-      priority: 'High',
-      status: 'Planned',
-      materialCheck,
-      hasMaterialShortage: hasShortage,
-      notes: `Generated automatically from Sales Order ${so.orderNumber}.`
-    };
-
-    setProductionOrders(prev => [newPO, ...prev]);
-
-    // Persist the newly created production order to Firebase Firestore
-    persistProductionOrder(newPO).catch((error) => {
-      console.error('Failed to save production order to Firebase:', error);
-    });
-    setSalesOrders(prev => prev.map(o => o.id === salesOrderId ? { ...o, productionOrderId: newPO.id } : o));
-
-    setAlerts(prev => [{
-      id: `alt-${Date.now()}`,
-      type: 'info',
-      title: `Production Order ${poNum} Created`,
-      description: `BOM verified for ${so.quantityMT} MT of ${so.productName}.`,
-      timestamp: 'Just now',
-      module: 'Production',
-      read: false
-    }, ...prev]);
-  };
-
   // Automation 2 & 3: Start Production & Material Issue
   const startProductionOrder = (poId: string) => {
     const po = productionOrders.find(p => p.id === poId);
@@ -918,7 +918,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Deduct raw material stock
     setRawMaterials(prev => prev.map(rm => {
-      const neededItem = bom.items.find(i => i.rawMaterialId === rm.id);
+      const neededItem = (bom?.items || []).find(i => i.rawMaterialId === rm.id);
       if (!neededItem) return rm;
       const consumedAmount = (neededItem.quantityPerMT * po.targetQuantityMT) / (rm.unit === 'MT' ? 1000 : 1);
       const newStock = Math.max(0, rm.currentStock - consumedAmount);
@@ -930,6 +930,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
 
     setProductionOrders(prev => prev.map(p => p.id === poId ? { ...p, status: 'In Production' } : p));
+    updateProductionOrderInApi(poId, { status: 'In Production' }).catch(console.error);
   };
 
   // Automation 4: Complete Production -> Create Batch & Send to QC
@@ -960,9 +961,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       actualCostPerMT: 4210
     };
 
-    setProductionBatches(prev => [newBatch, ...prev])
-
-    // Persist the newly created production batch to Firebase Firestore
+    setProductionBatches(prev => [newBatch, ...prev]);
+    createProductionBatchInApi(newBatch).catch(console.error);
     persistProductionBatch(newBatch).catch((error) => {
       console.error('Failed to save production batch to Firebase:', error);
     });
@@ -991,8 +991,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setQCInspections(prev => [newQC, ...prev]);
-
-    // Persist the newly created QC inspection to Firebase Firestore
+    createQCInspectionInApi(newQC).catch(console.error);
     persistQCInspection(newQC).catch((error) => {
       console.error('Failed to save QC inspection to Firebase:', error);
     });
@@ -1003,6 +1002,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       actualBatchNumber: batchCode,
       outputProducedMT: outputMT
     } : p));
+    updateProductionOrderInApi(poId, { status: 'QC', actualBatchNumber: batchCode, outputProducedMT: outputMT }).catch(console.error);
   };
 
   // Automation 5: QC Approval -> Make Finished Goods Available for Sale
@@ -1015,22 +1015,19 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       overallStatus: 'Approved',
       parameters: q.parameters.map(p => ({ ...p, status: 'Pass' }))
     } : q));
+    updateQCInspectionInApi(qcId, { overallStatus: 'Approved' }).catch(console.error);
 
     // If Finished Goods batch
     if (qc.type === 'Finished Goods') {
       const batch = productionBatches.find(b => b.batchNumber === qc.batchLotNumber);
       if (batch) {
         setProductionBatches(prev => prev.map(b => b.id === batch.id ? { ...b, qcStatus: 'Approved' } : b));
+        updateProductionBatchInApi(batch.id, { qcStatus: 'Approved' }).catch(console.error);
 
-        // Persist QC-approved production batch to Firebase Firestore
         const updatedBatch = {
           ...batch,
           qcStatus: 'Approved' as const,
         };
-
-        setProductionBatches(prev =>
-          prev.map(b => b.id === batch.id ? updatedBatch : b)
-        );
 
         persistProductionBatch(updatedBatch).catch((error) => {
           console.error('Failed to save approved production batch to Firebase:', error);
@@ -1042,38 +1039,54 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           currentStockMT: Number((p.currentStockMT + batch.quantityProducedMT).toFixed(2))
         } : p));
 
-        // Persist updated finished goods stock to Firebase Firestore
         const product = products.find(p => p.id === batch.productId);
-
         if (product) {
-          const updatedProduct = {
-            ...product,
-            currentStockMT: Number(
-              (product.currentStockMT + batch.quantityProducedMT).toFixed(2)
-            ),
-          };
-
-          persistFinishedProduct(updatedProduct).catch((error) => {
-            console.error('Failed to save finished product to Firebase:', error);
-          });
+          const newQty = Number((product.currentStockMT + batch.quantityProducedMT).toFixed(2));
+          updateProductFromApi(product.id, { currentStockMT: newQty }).catch(console.error);
+          persistFinishedProduct({ ...product, currentStockMT: newQty }).catch(console.error);
         }
 
         // Mark associated production order completed
         const po = productionOrders.find(p => p.id === batch.productionOrderId);
         if (po) {
           setProductionOrders(prev => prev.map(p => p.id === po.id ? { ...p, status: 'Completed' } : p));
-          // If generated from sales order, mark sales order Ready!
+          updateProductionOrderInApi(po.id, { status: 'Completed' }).catch(console.error);
+          // If generated from sales order, mark sales order Ready & auto-create Dispatch Challan!
           if (po.salesOrderId) {
             setSalesOrders(prev => prev.map(so => so.id === po.salesOrderId ? { ...so, status: 'Ready', stockAvailable: true } : so));
+            updateSalesOrderFromApi(po.salesOrderId, { status: 'Ready', stockAvailable: true }).catch(console.error);
+            const so = salesOrders.find(s => s.id === po.salesOrderId);
+            if (so) {
+              createDispatchChallan({
+                salesOrderId: so.id,
+                orderNumber: so.orderNumber,
+                customerId: so.customerId,
+                customerName: so.customerName,
+                productName: so.productName,
+                batchNumber: batch.batchNumber,
+                quantityMT: so.quantityMT,
+                bagsCount: so.quantityMT * 20,
+                vehicleNumber: 'GJ-12-BV-9908',
+                driverName: 'Ramesh Rabari',
+                driverMobile: '+91 98251 44556',
+                transporterName: 'Gujarat Freight Logistics',
+                dispatchDate: new Date().toISOString().split('T')[0],
+                destination: so.shippingAddress || 'Junagadh Godown',
+                eWayBillNumber: `2410${Math.floor(100000008 + Math.random() * 90000000)}`,
+                lrNumber: `LR-2609-${Math.floor(100 + Math.random() * 900)}`,
+                freightAmountRs: 12500,
+                freightPaidBy: 'Customer',
+                remarks: 'Dispatched in full under delivery challan.'
+              });
+            }
           }
         }
       }
     } else if (qc.type === 'Incoming Raw Material') {
-      // Incoming GRN QC approved
       const grn = grns.find(g => g.internalLotNumber === qc.batchLotNumber || g.grnNumber === qc.referenceId);
       if (grn) {
         setGRNs(prev => prev.map(g => g.id === grn.id ? { ...g, qcStatus: 'Approved', enteredInventory: true } : g));
-        // Add to raw material stock
+        updateGRNFromApi(grn.id, { qcStatus: 'Approved', enteredInventory: true }).catch(console.error);
         setRawMaterials(prev => prev.map(rm => rm.id === grn.materialId ? {
           ...rm,
           currentStock: Number((rm.currentStock + grn.acceptedQuantity).toFixed(2)),
@@ -1099,6 +1112,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       overallStatus: 'Rejected',
       remarks: reason
     } : q));
+    updateQCInspectionInApi(qcId, { overallStatus: 'Rejected', remarks: reason }).catch(console.error);
   };
 
   // Automation 6: Dispatch -> Deduct Finished Goods Stock
@@ -1112,8 +1126,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setDispatches(prev => [newDispatch, ...prev]);
-
-    // Persist the newly created dispatch challan to Firebase Firestore
+    createDispatchInApi(newDispatch).catch(console.error);
     persistDispatch(newDispatch).catch((error) => {
       console.error('Failed to save dispatch to Firebase:', error);
     });
@@ -1121,29 +1134,16 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Deduct finished goods stock
     const so = salesOrders.find(s => s.id === dispatchData.salesOrderId);
     if (so) {
+      const newStock = Math.max(0, Number((so.quantityMT > 0 ? 0 : dispatchData.quantityMT).toFixed(2)));
       setProducts(prev => prev.map(p => p.id === so.productId ? {
         ...p,
-        currentStockMT: Math.max(0, Number((p.currentStockMT - dispatchData.quantityMT).toFixed(2)))
+        currentStockMT: newStock
       } : p));
 
-      // Persist updated finished goods stock to Firebase Firestore
       const product = products.find(p => p.id === so.productId);
-
       if (product) {
-        const updatedProduct = {
-          ...product,
-          currentStockMT: Math.max(
-            0,
-            Number((product.currentStockMT - dispatchData.quantityMT).toFixed(2))
-          ),
-        };
-
-        persistFinishedProduct(updatedProduct).catch((error) => {
-          console.error(
-            'Failed to save dispatched product stock to Firebase:',
-            error
-          );
-        });
+        updateProductFromApi(product.id, { currentStockMT: newStock }).catch(console.error);
+        persistFinishedProduct({ ...product, currentStockMT: newStock }).catch(console.error);
       }
 
       setSalesOrders(prev => prev.map(s => s.id === so.id ? {
@@ -1151,11 +1151,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         status: 'Dispatched',
         dispatchId: newDispatch.id
       } : s));
+      updateSalesOrderFromApi(so.id, { status: 'Dispatched', dispatchId: newDispatch.id }).catch(console.error);
     }
   };
 
   const updateDispatchStatus = (dispatchId: string, status: DispatchChallan['status']) => {
     setDispatches(prev => prev.map(d => d.id === dispatchId ? { ...d, status } : d));
+    updateDispatchInApi(dispatchId, { status }).catch(console.error);
   };
 
   // Automation 7: Generate Invoice from Dispatch / Sales Order -> Create Receivable
@@ -1163,7 +1165,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const disp = dispatches.find(d => d.id === dispatchId);
     if (!disp) return;
 
-    const cust = customers.find(c => c.id === disp.customerId);
+    const cust = customers.find(c => c.id === disp.customerId || (c.customerName && disp.customerName && c.customerName.toLowerCase() === disp.customerName.toLowerCase()));
     const so = salesOrders.find(s => s.id === disp.salesOrderId);
     const product = products.find(p => p.productName === disp.productName);
 
@@ -1180,7 +1182,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       invoiceNumber: invNum,
       salesOrderId: disp.salesOrderId,
       dispatchId: disp.id,
-      customerId: disp.customerId,
+      customerId: cust ? cust.id : disp.customerId,
       customerName: disp.customerName,
       gstin: cust ? cust.gstin : '24AABCK9921E1Z4',
       billingAddress: cust ? cust.billingAddress : 'Gujarat',
@@ -1207,20 +1209,21 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setInvoices(prev => [newInvoice, ...prev]);
-
-    // Persist the newly generated invoice to Firebase Firestore
+    createSalesInvoiceInApi(newInvoice).catch(console.error);
     persistInvoice(newInvoice).catch((error) => {
       console.error('Failed to save invoice to Firebase:', error);
     });
 
-
     setDispatches(prev => prev.map(d => d.id === dispatchId ? { ...d, invoiceId: newInvoice.id, invoiceNumber: invNum } : d));
+    updateDispatchInApi(dispatchId, { invoiceId: newInvoice.id, invoiceNumber: invNum }).catch(console.error);
 
     // Automation 8: Update Customer Outstanding
-    setCustomers(prev => prev.map(c => c.id === disp.customerId ? {
-      ...c,
-      outstandingBalance: c.outstandingBalance + total
-    } : c));
+    if (cust) {
+      const newBal = cust.outstandingBalance + total;
+      const newSales = cust.totalSales + total;
+      setCustomers(prev => prev.map(c => c.id === cust.id ? { ...c, outstandingBalance: newBal, totalSales: newSales } : c));
+      updateCustomerFromApi(cust.id, { outstandingBalance: newBal, totalSales: newSales }).catch(console.error);
+    }
 
     setAlerts(prev => [{
       id: `alt-${Date.now()}`,
@@ -1248,12 +1251,15 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       balanceAmount: newBalance,
       paymentStatus: newStatus
     } : i));
+    updateSalesInvoiceInApi(invoiceId, { paidAmount: newPaid, balanceAmount: newBalance, paymentStatus: newStatus }).catch(console.error);
 
     // Update customer outstanding balance
-    setCustomers(prev => prev.map(c => c.id === inv.customerId ? {
-      ...c,
-      outstandingBalance: Math.max(0, c.outstandingBalance - amount)
-    } : c));
+    const cust = customers.find(c => c.id === inv.customerId || (c.customerName && inv.customerName && c.customerName.toLowerCase() === inv.customerName.toLowerCase()));
+    if (cust) {
+      const newBal = Math.max(0, cust.outstandingBalance - amount);
+      setCustomers(prev => prev.map(c => c.id === cust.id ? { ...c, outstandingBalance: newBal } : c));
+      updateCustomerFromApi(cust.id, { outstandingBalance: newBal }).catch(console.error);
+    }
 
     // Record transaction
     const newTx: PaymentTransaction = {
@@ -1270,8 +1276,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notes: `Received towards invoice ${inv.invoiceNumber}`
     };
     setPayments(prev => [newTx, ...prev]);
-
-    // Persist the payment transaction to Firebase Firestore
+    createPaymentInApi(newTx).catch(console.error);
     persistPayment(newTx).catch((error) => {
       console.error('Failed to save payment to Firebase:', error);
     });
@@ -1924,27 +1929,28 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const resetAllData = () => {
     localStorage.clear();
     setCompany(initialCompanyProfile);
-    setCustomers(initialCustomers);
-    setSuppliers(initialSuppliers);
-    setProducts(initialFinishedProducts);
-    setRawMaterials(initialRawMaterials);
-    setBOMs(initialBOMs);
-    setLeads(initialLeads);
-    setSalesOrders(initialSalesOrders);
-    setPurchaseOrders(initialPurchaseOrders);
-    setGRNs(initialGRNs);
-    setQCInspections(initialQCInspections);
-    setProductionOrders(initialProductionOrders);
-    setProductionBatches(initialProductionBatches);
-    setVehicles(initialVehicles);
-    setDispatches(initialDispatches);
-    setInvoices(initialInvoices);
+    setCustomers([]);
+    setSuppliers([]);
+    setProducts([]);
+    setRawMaterials([]);
+    setBOMs([]);
+    setLeads([]);
+    setSalesOrders([]);
+    setPurchaseOrders([]);
+    setGRNs([]);
+    setQCInspections([]);
+    setProductionOrders([]);
+    setProductionBatches([]);
+    setVehicles([]);
+    setDispatches([]);
+    setInvoices([]);
     setPayments([]);
-    setExpenses(initialExpenses);
-    setMachinery(initialMachinery);
-    setEmployees(initialEmployees);
-    setDocuments(initialDocuments);
-    setAlerts(initialAlerts);
+    setExpenses([]);
+    setMachinery([]);
+    setEmployees([]);
+    setDocuments([]);
+    setAlerts([]);
+    setStockMovements([]);
   };
 
   // Live execution helper for the 21-step interactive demo

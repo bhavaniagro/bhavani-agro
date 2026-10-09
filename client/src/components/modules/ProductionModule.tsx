@@ -208,15 +208,7 @@ export const ProductionModule: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsDemoRunnerOpen(true)}
-            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Demo 100 MT Granulation Run</span>
-          </button>
-        </div>
+
       </div>
 
       {/* Tabs */}

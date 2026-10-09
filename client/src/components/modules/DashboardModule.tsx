@@ -113,13 +113,7 @@ export const DashboardModule: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsDemoRunnerOpen(true)}
-            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Interactive 21-Step Demo</span>
-          </button>
+
           <button
             onClick={() => {
               setQuickAddType('Sales Order');

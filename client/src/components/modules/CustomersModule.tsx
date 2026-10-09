@@ -49,10 +49,30 @@ export const CustomersModule: React.FC = () => {
 
   const activeCustomer = selectedCustomer || filteredCustomers[0];
 
+  const isCustomerMatch = (recordCustomerId?: string, recordCustomerName?: string, customer?: Customer) => {
+    if (!customer) return false;
+    if (recordCustomerId && (recordCustomerId === customer.id || recordCustomerId === customer.code)) return true;
+    if (customers.length === 1) return true; // Single active customer fallback
+    if (!recordCustomerName) return false;
+
+    const recName = recordCustomerName.toLowerCase().trim();
+    const cName = (customer.customerName || '').toLowerCase().trim();
+    const compName = (customer.companyName || '').toLowerCase().trim();
+
+    if (cName && (recName.includes(cName) || cName.includes(recName))) return true;
+    if (compName && (recName.includes(compName) || compName.includes(recName))) return true;
+
+    const firstWordRec = recName.split(' ')[0];
+    const firstWordCust = cName.split(' ')[0];
+    if (firstWordRec && firstWordCust && firstWordRec.length > 2 && firstWordRec === firstWordCust) return true;
+
+    return false;
+  };
+
   // 360 Degree Customer Profile data
-  const custOrders = activeCustomer ? salesOrders.filter(s => s.customerId === activeCustomer.id) : [];
-  const custInvoices = activeCustomer ? invoices.filter(i => i.customerId === activeCustomer.id) : [];
-  const custDispatches = activeCustomer ? dispatches.filter(d => d.customerId === activeCustomer.id) : [];
+  const custOrders = activeCustomer ? salesOrders.filter(s => isCustomerMatch(s.customerId, s.customerName, activeCustomer)) : [];
+  const custInvoices = activeCustomer ? invoices.filter(i => isCustomerMatch(i.customerId, i.customerName, activeCustomer)) : [];
+  const custDispatches = activeCustomer ? dispatches.filter(d => isCustomerMatch(d.customerId, d.customerName, activeCustomer)) : [];
 
   return (
     <div className="space-y-6">
@@ -180,14 +200,14 @@ export const CustomersModule: React.FC = () => {
                 <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-200">
                   <div className="text-neutral-500 text-[10px]">Lifetime Sales</div>
                   <div className="font-mono font-bold text-sm text-neutral-900 mt-1">
-                    ₹{activeCustomer.totalSales.toLocaleString('en-IN')}
+                    ₹{(activeCustomer.totalSales || custOrders.reduce((acc, curr) => acc + curr.totalAmount, 0)).toLocaleString('en-IN')}
                   </div>
                 </div>
 
                 <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-200">
                   <div className="text-neutral-500 text-[10px]">Outstanding Balance</div>
                   <div className="font-mono font-bold text-sm text-amber-800 mt-1">
-                    ₹{activeCustomer.outstandingBalance.toLocaleString('en-IN')}
+                    ₹{custInvoices.reduce((acc, curr) => acc + curr.balanceAmount, 0).toLocaleString('en-IN')}
                   </div>
                 </div>
 

@@ -73,15 +73,7 @@ export const Navbar: React.FC = () => {
 
       {/* Zone 3: Primary Actions, Role Switcher, Quick Add, Alerts */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Interactive Guided Demo Scenario Button */}
-        <button
-          onClick={() => setIsDemoRunnerOpen(true)}
-          className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-colors cursor-pointer"
-          title="Run the 21-step end-to-end demo transaction from brief"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-          <span>21-Step Demo Scenario</span>
-        </button>
+
 
         {/* Global Quick Add Button */}
         <button
