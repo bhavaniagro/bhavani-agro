@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
 import * as documentService from "../services/document.service";
+import { getUploadsDir } from "../config/upload";
 
 export async function getDocuments(req: Request, res: Response): Promise<void> {
     try {
@@ -56,12 +57,7 @@ export async function uploadDocumentFile(req: Request, res: Response): Promise<v
         }
 
         const safeName = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-        const uploadsDir = path.join(process.cwd(), "uploads");
-
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-
+        const uploadsDir = getUploadsDir();
         const filePath = path.join(uploadsDir, safeName);
         fs.writeFileSync(filePath, buffer);
 

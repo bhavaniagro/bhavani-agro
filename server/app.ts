@@ -27,12 +27,11 @@ import companyRoutes from "./routes/company.routes";
 import fs from "node:fs";
 import path from "node:path";
 
+import { getUploadsDir } from "./config/upload";
+
 const app = express();
 
-const uploadsDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
+const uploadsDir = getUploadsDir();
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
