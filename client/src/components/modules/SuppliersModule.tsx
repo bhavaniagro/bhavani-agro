@@ -18,7 +18,7 @@ import { Supplier } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
 
 export const SuppliersModule: React.FC = () => {
-  const { suppliers, purchaseOrders, setActiveModule, setIsQuickAddOpen, setQuickAddType, addSupplier, updateSupplier, deleteSupplier } = useERP();
+  const { suppliers, rawMaterials, purchaseOrders, setActiveModule, setIsQuickAddOpen, setQuickAddType, addSupplier, updateSupplier, deleteSupplier } = useERP();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
@@ -36,12 +36,12 @@ export const SuppliersModule: React.FC = () => {
     email: '',
     address: '',
     gstin: '',
-    materialSupplied: 'Bentonite Ore',
+    materialSupplied: '',
     paymentTerms: 'Net 30 Days',
     creditPeriodDays: 30,
-    bankName: 'SBI Rajkot',
+    bankName: '',
     accountNo: '',
-    ifscCode: 'SBIN0001234'
+    ifscCode: ''
   });
 
   const filteredSuppliers = suppliers.filter(s => 
@@ -110,35 +110,41 @@ export const SuppliersModule: React.FC = () => {
           </div>
 
           <div className="divide-y divide-neutral-100 max-h-[600px] overflow-y-auto">
-            {filteredSuppliers.map(s => (
-              <div
-                key={s.id}
-                onClick={() => setSelectedSupplier(s)}
-                className={`p-3.5 cursor-pointer transition-colors text-xs space-y-1 ${
-                  activeSupplier?.id === s.id 
-                    ? 'bg-emerald-50/60 border-l-4 border-l-emerald-600' 
-                    : 'hover:bg-neutral-50/70'
-                }`}
-              >
-                <div className="flex items-center justify-between font-bold text-neutral-900">
-                  <span>{s.supplierName}</span>
-                  <div className="flex items-center gap-1 text-[11px] text-amber-500 font-mono">
-                    <Star className="w-3 h-3 fill-current" />
-                    <span>{s.rating}</span>
+            {filteredSuppliers.length > 0 ? (
+              filteredSuppliers.map(s => (
+                <div
+                  key={s.id}
+                  onClick={() => setSelectedSupplier(s)}
+                  className={`p-3.5 cursor-pointer transition-colors text-xs space-y-1 ${
+                    activeSupplier?.id === s.id 
+                      ? 'bg-emerald-50/60 border-l-4 border-l-emerald-600' 
+                      : 'hover:bg-neutral-50/70'
+                  }`}
+                >
+                  <div className="flex items-center justify-between font-bold text-neutral-900">
+                    <span>{s.supplierName}</span>
+                    <div className="flex items-center gap-1 text-[11px] text-amber-500 font-mono">
+                      <Star className="w-3 h-3 fill-current" />
+                      <span>{s.rating}</span>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-neutral-500">{s.contactPerson} · {s.mobile}</div>
+                  <div className="text-[10px] text-neutral-600 truncate">
+                    Supplies: {Array.isArray(s.materialSupplied) ? s.materialSupplied.join(', ') : s.materialSupplied}
+                  </div>
+                  <div className="text-[10px] text-neutral-400 font-mono flex items-center justify-between pt-1">
+                    <span>Total PO: ₹{s.totalPurchases.toLocaleString('en-IN')}</span>
+                    <span className="text-amber-800 font-bold">
+                      Payable: ₹{s.outstandingBalance.toLocaleString('en-IN')}
+                    </span>
                   </div>
                 </div>
-                <div className="text-[11px] text-neutral-500">{s.contactPerson} · {s.mobile}</div>
-                <div className="text-[10px] text-neutral-600 truncate">
-                  Supplies: {s.materialSupplied.join(', ')}
-                </div>
-                <div className="text-[10px] text-neutral-400 font-mono flex items-center justify-between pt-1">
-                  <span>Total PO: ₹{s.totalPurchases.toLocaleString('en-IN')}</span>
-                  <span className="text-amber-800 font-bold">
-                    Payable: ₹{s.outstandingBalance.toLocaleString('en-IN')}
-                  </span>
-                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-neutral-400 text-xs italic">
+                No suppliers found. Click "Add Supplier" to create a record.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -300,6 +306,20 @@ export const SuppliersModule: React.FC = () => {
                     rating: 5
                   });
                   setIsAddOpen(false);
+                  setNewSupp({
+                    supplierName: '',
+                    contactPerson: '',
+                    mobile: '',
+                    email: '',
+                    address: '',
+                    gstin: '',
+                    materialSupplied: '',
+                    paymentTerms: 'Net 30 Days',
+                    creditPeriodDays: 30,
+                    bankName: '',
+                    accountNo: '',
+                    ifscCode: ''
+                  });
                 } finally {
                   setIsSubmitting(false);
                 }
@@ -363,11 +383,60 @@ export const SuppliersModule: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">Material Supplied</label>
+                  {rawMaterials.length > 0 ? (
+                    <select
+                      value={newSupp.materialSupplied}
+                      onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
+                      className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                    >
+                      <option value="">Select Raw Material</option>
+                      {rawMaterials.map((rm) => (
+                        <option key={rm.id} value={rm.materialName}>
+                          {rm.materialName} ({rm.category})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="e.g. Bentonite Ore"
+                      value={newSupp.materialSupplied}
+                      onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
+                      className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Bank Name</label>
                   <input
                     type="text"
-                    value={newSupp.materialSupplied}
-                    onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
+                    value={newSupp.bankName}
+                    onChange={(e) => setNewSupp({ ...newSupp, bankName: e.target.value })}
+                    placeholder="e.g. State Bank of India"
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Account Number</label>
+                  <input
+                    type="text"
+                    value={newSupp.accountNo}
+                    onChange={(e) => setNewSupp({ ...newSupp, accountNo: e.target.value })}
+                    placeholder="e.g. 38291048571"
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">IFSC Code</label>
+                  <input
+                    type="text"
+                    value={newSupp.ifscCode}
+                    onChange={(e) => setNewSupp({ ...newSupp, ifscCode: e.target.value })}
+                    placeholder="e.g. SBIN0001234"
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono uppercase"
                   />
                 </div>
               </div>
@@ -482,8 +551,38 @@ export const SuppliersModule: React.FC = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Bank Name</label>
+                  <input
+                    type="text"
+                    value={editingSupplier.bankName || ''}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, bankName: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Account Number</label>
+                  <input
+                    type="text"
+                    value={editingSupplier.accountNo || ''}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, accountNo: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">IFSC Code</label>
+                  <input
+                    type="text"
+                    value={editingSupplier.ifscCode || ''}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, ifscCode: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono uppercase"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Address</label>
+                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Address / Mine Location</label>
                 <textarea
                   rows={2}
                   value={editingSupplier.address}

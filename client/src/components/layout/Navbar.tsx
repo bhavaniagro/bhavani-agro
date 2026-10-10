@@ -57,19 +57,7 @@ export const Navbar: React.FC = () => {
         </span>
       </div>
 
-      {/* Zone 2: Quick Search affordance */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => setIsSearchOpen(true)}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs text-neutral-500 bg-neutral-100 hover:bg-neutral-200/80 rounded-md border border-neutral-200 transition-colors cursor-pointer w-48 sm:w-64"
-        >
-          <Search className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-          <span className="truncate text-left flex-1">Search batch, order, invoice...</span>
-          <kbd className="hidden sm:inline-block text-[10px] bg-white border border-neutral-300 px-1 rounded text-neutral-400 font-mono">
-            ⌘K
-          </kbd>
-        </button>
-      </div>
+
 
       {/* Zone 3: Primary Actions, Role Switcher, Quick Add, Alerts */}
       <div className="flex items-center gap-2 sm:gap-3">

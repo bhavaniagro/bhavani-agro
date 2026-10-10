@@ -63,10 +63,16 @@ export const ProductionModule: React.FC = () => {
   const [editingBOM, setEditingBOM] = useState<BOM | null>(null);
   const [deletingBOM, setDeletingBOM] = useState<BOM | null>(null);
   const [showAddBOMModal, setShowAddBOMModal] = useState(false);
+  const [bomProductId, setBomProductId] = useState('');
   const [bomProductName, setBomProductName] = useState('');
   const [bomVersion, setBomVersion] = useState('v1.0');
   const [bomCost, setBomCost] = useState(4350);
+  const [bomLabourCost, setBomLabourCost] = useState(350);
+  const [bomPowerCost, setBomPowerCost] = useState(250);
+  const [bomPackagingCost, setBomPackagingCost] = useState(270);
+  const [bomOverheadCost, setBomOverheadCost] = useState(150);
   const [bomNotes, setBomNotes] = useState('');
+  const [bomItems, setBomItems] = useState<any[]>([]);
 
   const filteredOrders = productionOrders.filter(po => 
     po.productionOrderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -140,24 +146,53 @@ export const ProductionModule: React.FC = () => {
   };
 
   // BOM Handlers
+  const resetBOMForm = () => {
+    setBomProductId('');
+    setBomProductName('');
+    setBomVersion('v1.0');
+    setBomCost(4350);
+    setBomLabourCost(350);
+    setBomPowerCost(250);
+    setBomPackagingCost(270);
+    setBomOverheadCost(150);
+    setBomNotes('');
+    setBomItems([]);
+  };
+
   const openEditBOMModal = (b: BOM) => {
     setEditingBOM(b);
+    setBomProductId(b.productId || '');
     setBomProductName(b.productName);
     setBomVersion(b.version);
     setBomCost(b.totalStandardCostPerMT);
+    setBomLabourCost(b.labourCostPerMT || 350);
+    setBomPowerCost(b.powerElectricityCostPerMT || 250);
+    setBomPackagingCost(b.packagingCostPerMT || 270);
+    setBomOverheadCost(b.overheadCostPerMT || 150);
+    setBomItems(b.items || []);
     setBomNotes(b.notes || '');
   };
 
   const handleSaveBOMEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingBOM) return;
+    const rmCost = bomItems.reduce((acc, item) => acc + ((item.quantityPerMT || 0) * (item.costPerUnit || 0)), 0);
+    const totalCost = rmCost + Number(bomLabourCost) + Number(bomPowerCost) + Number(bomPackagingCost) + Number(bomOverheadCost);
     await updateBOM(editingBOM.id, {
-      productName: bomProductName,
+      productId: bomProductId || editingBOM.productId,
+      productName: bomProductName || editingBOM.productName,
       version: bomVersion,
-      totalStandardCostPerMT: Number(bomCost),
+      items: bomItems,
+      totalRawMaterialCostPerMT: rmCost,
+      labourCostPerMT: Number(bomLabourCost),
+      powerElectricityCostPerMT: Number(bomPowerCost),
+      packagingCostPerMT: Number(bomPackagingCost),
+      overheadCostPerMT: Number(bomOverheadCost),
+      totalStandardCostPerMT: totalCost || Number(bomCost),
       notes: bomNotes
     });
     setEditingBOM(null);
+    resetBOMForm();
   };
 
   const handleDeleteBOMConfirm = async () => {
@@ -168,26 +203,45 @@ export const ProductionModule: React.FC = () => {
 
   const handleCreateBOM = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addBOM({
-      productId: `prod-${Date.now()}`,
-      productName: bomProductName,
-      version: bomVersion,
-      batchYieldMT: 1,
-      processLossPercent: 2.0,
-      totalStandardCostPerMT: Number(bomCost),
-      totalRawMaterialCostPerMT: Number(bomCost * 0.8),
-      labourCostPerMT: 350,
-      powerElectricityCostPerMT: 250,
-      packagingCostPerMT: 270,
-      packagingBagsPerMT: 20,
-      overheadCostPerMT: 150,
-      isActive: true,
-      items: [
-        { rawMaterialId: 'rm-1', rawMaterialName: 'Bentonite Lumps Grade A', quantityPerMT: 1010, unit: 'KG', costPerUnit: 3.2, wastagePercent: 1.0 }
-      ],
-      notes: bomNotes || 'Standard mfg formulation.'
-    });
-    setShowAddBOMModal(false);
+    try {
+      const targetProd = products.find(p => p.id === bomProductId || p.productName === bomProductName) || products[0];
+      const finalProdName = targetProd ? targetProd.productName : (bomProductName || 'Custom Product');
+      const finalProdId = targetProd ? targetProd.id : `prod-${Date.now()}`;
+
+      const rmCost = bomItems.reduce((acc, item) => acc + ((item.quantityPerMT || 0) * (item.costPerUnit || 0)), 0);
+      const totalCost = rmCost + Number(bomLabourCost) + Number(bomPowerCost) + Number(bomPackagingCost) + Number(bomOverheadCost);
+
+      const itemsToSave = bomItems.length > 0 ? bomItems : (rawMaterials[0] ? [{
+        rawMaterialId: rawMaterials[0].id,
+        rawMaterialName: rawMaterials[0].materialName,
+        quantityPerMT: 1000,
+        unit: rawMaterials[0].unit,
+        costPerUnit: rawMaterials[0].averageCost,
+        wastagePercent: 1.0
+      }] : []);
+
+      await addBOM({
+        productId: finalProdId,
+        productName: finalProdName,
+        version: bomVersion,
+        batchYieldMT: 1,
+        processLossPercent: 2.0,
+        totalStandardCostPerMT: totalCost || Number(bomCost),
+        totalRawMaterialCostPerMT: rmCost,
+        labourCostPerMT: Number(bomLabourCost),
+        powerElectricityCostPerMT: Number(bomPowerCost),
+        packagingCostPerMT: Number(bomPackagingCost),
+        packagingBagsPerMT: 20,
+        overheadCostPerMT: Number(bomOverheadCost),
+        isActive: true,
+        items: itemsToSave,
+        notes: bomNotes || 'Standard mfg formulation.'
+      });
+      setShowAddBOMModal(false);
+      resetBOMForm();
+    } catch (err) {
+      console.error("Failed to create BOM:", err);
+    }
   };
 
   return (
@@ -386,71 +440,79 @@ export const ProductionModule: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {boms.map(bom => (
-              <div key={bom.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-3">
-                <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+            {boms.length > 0 ? (
+              boms.map(bom => (
+                <div key={bom.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+                    <div>
+                      <h3 className="font-bold text-neutral-900 text-sm">{bom.productName}</h3>
+                      <div className="text-[11px] text-neutral-500 font-mono">{bom.version} · Base Yield: 1 MT</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="font-bold text-sm font-mono text-neutral-900">
+                          ₹{bom.totalStandardCostPerMT.toLocaleString('en-IN')}/MT
+                        </div>
+                        <div className="text-[10px] text-neutral-400">Total Standard Mfg Cost</div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openEditBOMModal(bom)}
+                          className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                          title="Edit BOM"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingBOM(bom)}
+                          className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                          title="Delete BOM"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
-                    <h3 className="font-bold text-neutral-900 text-sm">{bom.productName}</h3>
-                    <div className="text-[11px] text-neutral-500 font-mono">{bom.version} · Base Yield: 1 MT</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="font-bold text-sm font-mono text-neutral-900">
-                        ₹{bom.totalStandardCostPerMT.toLocaleString('en-IN')}/MT
-                      </div>
-                      <div className="text-[10px] text-neutral-400">Total Standard Mfg Cost</div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => openEditBOMModal(bom)}
-                        className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
-                        title="Edit BOM"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setDeletingBOM(bom)}
-                        className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
-                        title="Delete BOM"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="font-semibold text-neutral-700 mb-1">Raw Material Recipe per 1 MT Output:</div>
+                    <div className="bg-neutral-50 border border-neutral-200 rounded p-2 space-y-1">
+                      {(bom.items || []).map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-center text-[11px]">
+                          <span className="text-neutral-800 font-medium">{item.rawMaterialName}</span>
+                          <span className="font-mono text-neutral-600 font-semibold">{item.quantityPerMT} {item.unit}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <div className="font-semibold text-neutral-700 mb-1">Raw Material Recipe per 1 MT Output:</div>
-                  <div className="bg-neutral-50 border border-neutral-200 rounded p-2 space-y-1">
-                    {bom.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-[11px]">
-                        <span className="text-neutral-800 font-medium">{item.rawMaterialName}</span>
-                        <span className="font-mono text-neutral-600 font-semibold">{item.quantityPerMT} {item.unit}</span>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-neutral-100 text-[11px]">
+                    <div className="bg-neutral-50 p-2 rounded">
+                      <div className="text-neutral-500">RM Cost:</div>
+                      <div className="font-mono font-bold text-neutral-800">₹{bom.totalRawMaterialCostPerMT}</div>
+                    </div>
+                    <div className="bg-neutral-50 p-2 rounded">
+                      <div className="text-neutral-500">Power &amp; Labour:</div>
+                      <div className="font-mono font-bold text-neutral-800">₹{(bom.labourCostPerMT || 0) + (bom.powerElectricityCostPerMT || 0)}</div>
+                    </div>
+                    <div className="bg-neutral-50 p-2 rounded">
+                      <div className="text-neutral-500">Packaging:</div>
+                      <div className="font-mono font-bold text-neutral-800">₹{bom.packagingCostPerMT || 0}</div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-1 border-t border-neutral-100 text-[11px]">
-                  <div className="bg-neutral-50 p-2 rounded">
-                    <div className="text-neutral-500">RM Cost:</div>
-                    <div className="font-mono font-bold text-neutral-800">₹{bom.totalRawMaterialCostPerMT}</div>
-                  </div>
-                  <div className="bg-neutral-50 p-2 rounded">
-                    <div className="text-neutral-500">Power &amp; Labour:</div>
-                    <div className="font-mono font-bold text-neutral-800">₹{bom.labourCostPerMT + bom.powerElectricityCostPerMT}</div>
-                  </div>
-                  <div className="bg-neutral-50 p-2 rounded">
-                    <div className="text-neutral-500">Packaging (50kg):</div>
-                    <div className="font-mono font-bold text-neutral-800">₹{bom.packagingCostPerMT} ({bom.packagingBagsPerMT} bags)</div>
-                  </div>
+                  {bom.notes && (
+                    <div className="text-[10px] text-neutral-500 italic bg-amber-50/50 p-2 rounded border border-amber-100">
+                      Notes: {bom.notes}
+                    </div>
+                  )}
                 </div>
-
-                <div className="text-[10px] text-neutral-500 italic bg-amber-50/50 p-2 rounded border border-amber-100">
-                  Notes: {bom.notes}
-                </div>
+              ))
+            ) : (
+              <div className="col-span-2 p-8 text-center text-neutral-400 italic text-xs bg-white rounded-xl border border-neutral-200">
+                No BOM recipes found. Click "Create New BOM" to define a manufacturing recipe.
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}
@@ -763,6 +825,7 @@ export const ProductionModule: React.FC = () => {
                 onClick={() => {
                   setShowAddBOMModal(false);
                   setEditingBOM(null);
+                  resetBOMForm();
                 }}
                 className="text-neutral-400 hover:text-neutral-600 cursor-pointer"
               >
@@ -770,17 +833,35 @@ export const ProductionModule: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={editingBOM ? handleSaveBOMEdit : handleCreateBOM} className="space-y-3">
+            <form onSubmit={editingBOM ? handleSaveBOMEdit : handleCreateBOM} className="space-y-3 max-h-[75vh] overflow-y-auto pr-1">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Product Name</label>
-                <input
-                  type="text"
-                  value={bomProductName}
-                  onChange={(e) => setBomProductName(e.target.value)}
-                  required
-                  placeholder="e.g. Granulated Bentonite 16-30 Mesh"
-                  className="w-full border border-neutral-300 rounded p-2 text-xs"
-                />
+                <label className="block text-neutral-700 font-medium mb-1">Output Product</label>
+                {products.length > 0 ? (
+                  <select
+                    value={bomProductId}
+                    onChange={(e) => {
+                      setBomProductId(e.target.value);
+                      const prod = products.find(p => p.id === e.target.value);
+                      if (prod) setBomProductName(prod.productName);
+                    }}
+                    required
+                    className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
+                  >
+                    <option value="">Select Product Output</option>
+                    {products.map(p => (
+                      <option key={p.id} value={p.id}>{p.productName} ({p.category})</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={bomProductName}
+                    onChange={(e) => setBomProductName(e.target.value)}
+                    required
+                    placeholder="e.g. Granulated Bentonite 16-30 Mesh"
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -795,15 +876,112 @@ export const ProductionModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Total Std Cost / MT (₹)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">Labour Cost / MT (₹)</label>
                   <input
                     type="number"
-                    value={bomCost}
-                    onChange={(e) => setBomCost(Number(e.target.value))}
+                    value={bomLabourCost}
+                    onChange={(e) => setBomLabourCost(Number(e.target.value))}
                     required
                     className="w-full border border-neutral-300 rounded p-2 text-xs"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Power (₹/MT)</label>
+                  <input
+                    type="number"
+                    value={bomPowerCost}
+                    onChange={(e) => setBomPowerCost(Number(e.target.value))}
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Packaging (₹)</label>
+                  <input
+                    type="number"
+                    value={bomPackagingCost}
+                    onChange={(e) => setBomPackagingCost(Number(e.target.value))}
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Overhead (₹)</label>
+                  <input
+                    type="number"
+                    value={bomOverheadCost}
+                    onChange={(e) => setBomOverheadCost(Number(e.target.value))}
+                    className="w-full border border-neutral-300 rounded p-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Raw Material Component Row */}
+              <div className="border border-neutral-200 rounded p-2 bg-neutral-50 space-y-2">
+                <div className="flex items-center justify-between font-semibold text-neutral-700 text-[11px]">
+                  <span>Raw Material Inputs:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const firstRM = rawMaterials[0];
+                      setBomItems(prev => [...prev, {
+                        rawMaterialId: firstRM?.id || 'rm-1',
+                        rawMaterialName: firstRM?.materialName || 'Bentonite Ore',
+                        quantityPerMT: 1000,
+                        unit: firstRM?.unit || 'KG',
+                        costPerUnit: firstRM?.averageCost || 3.5,
+                        wastagePercent: 1.0
+                      }]);
+                    }}
+                    className="text-emerald-700 hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    + Add Component
+                  </button>
+                </div>
+                {bomItems.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <select
+                      value={item.rawMaterialId}
+                      onChange={(e) => {
+                        const rm = rawMaterials.find(r => r.id === e.target.value);
+                        const updated = [...bomItems];
+                        updated[idx] = {
+                          ...updated[idx],
+                          rawMaterialId: e.target.value,
+                          rawMaterialName: rm?.materialName || updated[idx].rawMaterialName,
+                          unit: rm?.unit || updated[idx].unit,
+                          costPerUnit: rm?.averageCost || updated[idx].costPerUnit
+                        };
+                        setBomItems(updated);
+                      }}
+                      className="flex-1 border border-neutral-300 rounded p-1 bg-white"
+                    >
+                      {rawMaterials.map(r => (
+                        <option key={r.id} value={r.id}>{r.materialName}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      placeholder="Qty/MT"
+                      value={item.quantityPerMT}
+                      onChange={(e) => {
+                        const updated = [...bomItems];
+                        updated[idx].quantityPerMT = Number(e.target.value);
+                        setBomItems(updated);
+                      }}
+                      className="w-20 border border-neutral-300 rounded p-1 font-mono"
+                    />
+                    <span className="font-mono text-neutral-500">{item.unit || 'KG'}</span>
+                    <button
+                      type="button"
+                      onClick={() => setBomItems(prev => prev.filter((_, i) => i !== idx))}
+                      className="text-rose-600 hover:text-rose-800 font-bold p-1 cursor-pointer"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
 
               <div>
@@ -822,6 +1000,7 @@ export const ProductionModule: React.FC = () => {
                   onClick={() => {
                     setShowAddBOMModal(false);
                     setEditingBOM(null);
+                    resetBOMForm();
                   }}
                   className="px-3.5 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer font-medium"
                 >

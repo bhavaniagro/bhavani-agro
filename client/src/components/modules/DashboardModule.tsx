@@ -35,33 +35,31 @@ export const DashboardModule: React.FC = () => {
     setQuickAddType
   } = useERP();
 
-  // Calculations for Top 12 KPIs
-  const todaySales = invoices
-    .filter(i => i.invoiceDate >= '2026-09-24')
-    .reduce((acc, curr) => acc + curr.totalInvoiceAmount, 0);
+  // Dynamic Calculations for Top 12 KPIs
+  const todayStr = new Date().toISOString().split('T')[0];
 
-  const monthlySales = invoices
-    .reduce((acc, curr) => acc + curr.totalInvoiceAmount, 0);
+  const todayInvoices = invoices.filter(i => i.invoiceDate === todayStr);
+  const todaySales = todayInvoices.reduce((acc, curr) => acc + (curr.totalInvoiceAmount || 0), 0);
 
-  const pendingReceivables = invoices
-    .reduce((acc, curr) => acc + curr.balanceAmount, 0);
+  const monthlySales = invoices.reduce((acc, curr) => acc + (curr.totalInvoiceAmount || 0), 0);
 
-  const pendingPayables = suppliers
-    .reduce((acc, curr) => acc + curr.outstandingBalance, 0);
+  const unpaidInvoices = invoices.filter(i => (i.balanceAmount || 0) > 0);
+  const pendingReceivables = invoices.reduce((acc, curr) => acc + (curr.balanceAmount || 0), 0);
+
+  const suppliersWithBalance = suppliers.filter(s => (s.outstandingBalance || 0) > 0);
+  const pendingPayables = suppliers.reduce((acc, curr) => acc + (curr.outstandingBalance || 0), 0);
 
   const totalRawMaterialMT = rawMaterials
     .filter(r => r.unit === 'MT')
-    .reduce((acc, curr) => acc + curr.currentStock, 0);
+    .reduce((acc, curr) => acc + (curr.currentStock || 0), 0);
 
   const totalFinishedGoodsMT = products
-    .reduce((acc, curr) => acc + curr.currentStockMT, 0);
+    .reduce((acc, curr) => acc + (curr.currentStockMT || 0), 0);
 
-  const productionTodayMT = productionBatches
-    .filter(b => b.productionDate >= '2026-09-26')
-    .reduce((acc, curr) => acc + curr.quantityProducedMT, 0);
+  const todayBatches = productionBatches.filter(b => b.productionDate === todayStr);
+  const productionTodayMT = todayBatches.reduce((acc, curr) => acc + (curr.quantityProducedMT || 0), 0);
 
-  const productionThisMonthMT = productionBatches
-    .reduce((acc, curr) => acc + curr.quantityProducedMT, 0);
+  const productionThisMonthMT = productionBatches.reduce((acc, curr) => acc + (curr.quantityProducedMT || 0), 0);
 
   const pendingProductionOrders = productionOrders
     .filter(p => p.status === 'Planned' || p.status === 'In Production' || p.status === 'Material Ready')
@@ -76,23 +74,48 @@ export const DashboardModule: React.FC = () => {
     .concat(products.filter(p => p.currentStockMT <= p.minimumStockMT) as any)
     .length;
 
-  const monthlyExpenses = expenses
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const monthlyExpenses = expenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   const kpis = [
-    { title: "Today's Sales", value: `₹${todaySales.toLocaleString('en-IN')}`, sub: '2 dispatches billed', icon: TrendingUp, color: 'text-emerald-700' },
-    { title: "Monthly Sales", value: `₹${monthlySales.toLocaleString('en-IN')}`, sub: '15 orders billed', icon: DollarSign, color: 'text-neutral-900' },
-    { title: 'Pending Receivables', value: `₹${pendingReceivables.toLocaleString('en-IN')}`, sub: '4 customer invoices', icon: Receipt, color: 'text-amber-800' },
-    { title: 'Pending Payables', value: `₹${pendingPayables.toLocaleString('en-IN')}`, sub: '8 mine suppliers', icon: Clock, color: 'text-neutral-700' },
-    { title: 'Raw Material Stock', value: `${totalRawMaterialMT.toFixed(1)} MT`, sub: 'Bentonite, Dolomite, Ore', icon: Boxes, color: 'text-neutral-900' },
-    { title: 'Finished Goods Stock', value: `${totalFinishedGoodsMT.toFixed(1)} MT`, sub: 'Ready in warehouse', icon: PackageCheck, color: 'text-emerald-700' },
-    { title: 'Production Today', value: `${productionTodayMT.toFixed(1)} MT`, sub: 'Granulation Line 1', icon: Factory, color: 'text-neutral-900' },
-    { title: 'Production Month', value: `${productionThisMonthMT.toFixed(1)} MT`, sub: 'Avg efficiency 98.1%', icon: Factory, color: 'text-neutral-900' },
-    { title: 'Pending Prod. Orders', value: `${pendingProductionOrders}`, sub: 'In pipeline & material check', icon: AlertTriangle, color: 'text-amber-700' },
-    { title: 'Pending Dispatches', value: `${pendingDispatches}`, sub: 'Awaiting truck loading', icon: Truck, color: 'text-neutral-900' },
-    { title: 'Low Stock Alert Items', value: `${lowStockItems}`, sub: 'Requires PO / batch run', icon: AlertTriangle, color: 'text-rose-700' },
-    { title: 'Monthly Expenses', value: `₹${monthlyExpenses.toLocaleString('en-IN')}`, sub: 'Power, diesel, wages', icon: Receipt, color: 'text-neutral-800' }
+    { title: "Today's Sales", value: `₹${todaySales.toLocaleString('en-IN')}`, sub: `${todayInvoices.length} invoices billed today`, icon: TrendingUp, color: 'text-emerald-700' },
+    { title: "Monthly Sales", value: `₹${monthlySales.toLocaleString('en-IN')}`, sub: `${invoices.length} total invoices`, icon: DollarSign, color: 'text-neutral-900' },
+    { title: 'Pending Receivables', value: `₹${pendingReceivables.toLocaleString('en-IN')}`, sub: `${unpaidInvoices.length} unpaid invoices`, icon: Receipt, color: 'text-amber-800' },
+    { title: 'Pending Payables', value: `₹${pendingPayables.toLocaleString('en-IN')}`, sub: `${suppliersWithBalance.length} mine suppliers with balance`, icon: Clock, color: 'text-neutral-700' },
+    { title: 'Raw Material Stock', value: `${totalRawMaterialMT.toFixed(1)} MT`, sub: `${rawMaterials.length} material items`, icon: Boxes, color: 'text-neutral-900' },
+    { title: 'Finished Goods Stock', value: `${totalFinishedGoodsMT.toFixed(1)} MT`, sub: `${products.length} product SKUs`, icon: PackageCheck, color: 'text-emerald-700' },
+    { title: 'Production Today', value: `${productionTodayMT.toFixed(1)} MT`, sub: `${todayBatches.length} batches logged today`, icon: Factory, color: 'text-neutral-900' },
+    { title: 'Production Month', value: `${productionThisMonthMT.toFixed(1)} MT`, sub: `${productionBatches.length} total batches`, icon: Factory, color: 'text-neutral-900' },
+    { title: 'Pending Prod. Orders', value: `${pendingProductionOrders}`, sub: `${pendingProductionOrders} in pipeline`, icon: AlertTriangle, color: 'text-amber-700' },
+    { title: 'Pending Dispatches', value: `${pendingDispatches}`, sub: `${pendingDispatches} dispatches pending`, icon: Truck, color: 'text-neutral-900' },
+    { title: 'Low Stock Alert Items', value: `${lowStockItems}`, sub: `${lowStockItems} items below reorder`, icon: AlertTriangle, color: 'text-rose-700' },
+    { title: 'Monthly Expenses', value: `₹${monthlyExpenses.toLocaleString('en-IN')}`, sub: `${expenses.length} expense records`, icon: Receipt, color: 'text-neutral-800' }
   ];
+
+  const nowMs = Date.now();
+
+  const receivables0To30 = invoices.reduce((sum, inv) => {
+    const bal = inv.balanceAmount || 0;
+    if (bal <= 0) return sum;
+    const invDate = inv.invoiceDate ? new Date(inv.invoiceDate).getTime() : nowMs;
+    const diffDays = Math.max(0, Math.floor((nowMs - invDate) / 86400000));
+    return diffDays <= 30 ? sum + bal : sum;
+  }, 0);
+
+  const receivables31To60 = invoices.reduce((sum, inv) => {
+    const bal = inv.balanceAmount || 0;
+    if (bal <= 0) return sum;
+    const invDate = inv.invoiceDate ? new Date(inv.invoiceDate).getTime() : nowMs;
+    const diffDays = Math.max(0, Math.floor((nowMs - invDate) / 86400000));
+    return (diffDays > 30 && diffDays <= 60) ? sum + bal : sum;
+  }, 0);
+
+  const receivables60Plus = invoices.reduce((sum, inv) => {
+    const bal = inv.balanceAmount || 0;
+    if (bal <= 0) return sum;
+    const invDate = inv.invoiceDate ? new Date(inv.invoiceDate).getTime() : nowMs;
+    const diffDays = Math.max(0, Math.floor((nowMs - invDate) / 86400000));
+    return diffDays > 60 ? sum + bal : sum;
+  }, 0);
 
   return (
     <div className="space-y-6">
@@ -297,15 +320,15 @@ export const DashboardModule: React.FC = () => {
             <div className="mt-3 space-y-2 text-xs">
               <div className="flex justify-between items-center py-1 border-b border-neutral-100">
                 <span className="text-neutral-600">Current (0–30 Days):</span>
-                <span className="font-mono font-semibold text-neutral-900">₹4,89,846</span>
+                <span className="font-mono font-semibold text-neutral-900">₹{receivables0To30.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-neutral-100">
                 <span className="text-neutral-600">31–60 Days:</span>
-                <span className="font-mono font-semibold text-neutral-900">₹3,81,938</span>
+                <span className="font-mono font-semibold text-neutral-900">₹{receivables31To60.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-neutral-100">
                 <span className="text-rose-700 font-medium">Overdue (60+ Days):</span>
-                <span className="font-mono font-bold text-rose-700">₹2,33,500</span>
+                <span className="font-mono font-bold text-rose-700">₹{receivables60Plus.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between items-center pt-2 font-bold text-neutral-900 text-xs">
                 <span>Total Outstanding:</span>

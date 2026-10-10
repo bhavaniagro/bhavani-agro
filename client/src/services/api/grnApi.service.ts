@@ -1,6 +1,5 @@
 import type { GRN } from "../../types/erp";
-
-const API_BASE_URL = "http://localhost:4000/api";
+import { API_BASE_URL } from "../../config/apiConfig";
 
 export async function getGRNsFromApi(): Promise<GRN[]> {
     const response = await fetch(`${API_BASE_URL}/grns`);

@@ -1,10 +1,11 @@
 import { ProductionBatch } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/production-batches';
+const ENDPOINT_URL = `${API_BASE_URL}/production-batches`;
 
 export async function fetchProductionBatchesFromApi(): Promise<ProductionBatch[]> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch production batches');
     return await res.json();
   } catch (err) {
@@ -15,7 +16,7 @@ export async function fetchProductionBatchesFromApi(): Promise<ProductionBatch[]
 
 export async function createProductionBatchInApi(batch: Partial<ProductionBatch>): Promise<ProductionBatch | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(batch),
@@ -30,7 +31,7 @@ export async function createProductionBatchInApi(batch: Partial<ProductionBatch>
 
 export async function updateProductionBatchInApi(id: string, updates: Partial<ProductionBatch>): Promise<ProductionBatch | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -45,7 +46,7 @@ export async function updateProductionBatchInApi(id: string, updates: Partial<Pr
 
 export async function deleteProductionBatchFromApi(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete production batch');

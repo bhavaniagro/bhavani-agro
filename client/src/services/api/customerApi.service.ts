@@ -1,6 +1,5 @@
 import type { Customer } from "../../types/erp";
-
-const API_BASE_URL = "http://localhost:4000/api";
+import { API_BASE_URL } from "../../config/apiConfig";
 
 export async function getCustomersFromApi(): Promise<Customer[]> {
     const response = await fetch(`${API_BASE_URL}/customers`);

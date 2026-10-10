@@ -1,10 +1,11 @@
 import { SalesInvoice } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/sales-invoices';
+const ENDPOINT_URL = `${API_BASE_URL}/sales-invoices`;
 
 export async function fetchSalesInvoicesFromApi(): Promise<SalesInvoice[]> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch sales invoices');
     return await res.json();
   } catch (err) {
@@ -15,7 +16,7 @@ export async function fetchSalesInvoicesFromApi(): Promise<SalesInvoice[]> {
 
 export async function createSalesInvoiceInApi(invoice: Partial<SalesInvoice>): Promise<SalesInvoice | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(invoice),
@@ -30,7 +31,7 @@ export async function createSalesInvoiceInApi(invoice: Partial<SalesInvoice>): P
 
 export async function updateSalesInvoiceInApi(id: string, updates: Partial<SalesInvoice>): Promise<SalesInvoice | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -45,7 +46,7 @@ export async function updateSalesInvoiceInApi(id: string, updates: Partial<Sales
 
 export async function deleteSalesInvoiceFromApi(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete sales invoice');

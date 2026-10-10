@@ -1,10 +1,11 @@
 import { ProductionOrder } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/production-orders';
+const ENDPOINT_URL = `${API_BASE_URL}/production-orders`;
 
 export async function fetchProductionOrdersFromApi(): Promise<ProductionOrder[]> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch production orders');
     return await res.json();
   } catch (err) {
@@ -15,7 +16,7 @@ export async function fetchProductionOrdersFromApi(): Promise<ProductionOrder[]>
 
 export async function createProductionOrderInApi(order: Partial<ProductionOrder>): Promise<ProductionOrder | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(order),
@@ -30,7 +31,7 @@ export async function createProductionOrderInApi(order: Partial<ProductionOrder>
 
 export async function updateProductionOrderInApi(id: string, updates: Partial<ProductionOrder>): Promise<ProductionOrder | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -45,7 +46,7 @@ export async function updateProductionOrderInApi(id: string, updates: Partial<Pr
 
 export async function deleteProductionOrderFromApi(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete production order');

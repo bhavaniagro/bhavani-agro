@@ -1,10 +1,11 @@
 import { PaymentTransaction } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/payments';
+const ENDPOINT_URL = `${API_BASE_URL}/payments`;
 
 export async function fetchPaymentsFromApi(): Promise<PaymentTransaction[]> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch payments');
     return await res.json();
   } catch (err) {
@@ -15,7 +16,7 @@ export async function fetchPaymentsFromApi(): Promise<PaymentTransaction[]> {
 
 export async function createPaymentInApi(payment: Partial<PaymentTransaction>): Promise<PaymentTransaction | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payment),
@@ -30,7 +31,7 @@ export async function createPaymentInApi(payment: Partial<PaymentTransaction>): 
 
 export async function updatePaymentInApi(id: string, updates: Partial<PaymentTransaction>): Promise<PaymentTransaction | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -45,7 +46,7 @@ export async function updatePaymentInApi(id: string, updates: Partial<PaymentTra
 
 export async function deletePaymentFromApi(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete payment');

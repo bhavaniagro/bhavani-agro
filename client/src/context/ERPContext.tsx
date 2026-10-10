@@ -289,14 +289,14 @@ interface ERPContextType {
   dismissToast: (id: string) => void;
 
   // Actions & Automations
-  addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => void;
+  addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<Lead>;
   updateLead: (id: string, data: Partial<Lead>) => Promise<void>;
   deleteLead: (id: string) => Promise<void>;
   convertLeadToCustomer: (leadId: string) => void;
-  addCustomer: (cust: Omit<Customer, 'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'>) => void;
+  addCustomer: (cust: Omit<Customer, 'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'>) => Promise<Customer>;
   updateCustomer: (id: string, data: Partial<Customer>) => Promise<void>;
   deleteCustomer: (id: string) => Promise<void>;
-  addSupplier: (supp: Omit<Supplier, 'id' | 'code' | 'totalPurchases' | 'outstandingBalance'>) => Promise<void>;
+  addSupplier: (supp: Omit<Supplier, 'id' | 'code' | 'totalPurchases' | 'outstandingBalance'>) => Promise<Supplier>;
   updateSupplier: (id: string, data: Partial<Supplier>) => Promise<void>;
   deleteSupplier: (id: string) => Promise<void>;
   updateRawMaterial: (id: string, data: Partial<RawMaterial>) => Promise<void>;
@@ -304,11 +304,11 @@ interface ERPContextType {
   addProduct: (prod: Omit<FinishedProduct, 'id' | 'currentStockMT' | 'reservedStockMT'>) => Promise<void>;
   updateProduct: (id: string, data: Partial<FinishedProduct>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
-  addSalesOrder: (so: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>) => void;
+  addSalesOrder: (so: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>) => Promise<SalesOrder>;
   updateSalesOrder: (id: string, data: Partial<SalesOrder>) => Promise<void>;
   deleteSalesOrder: (id: string) => Promise<void>;
   createProductionOrderFromSO: (salesOrderId: string) => void;
-  addPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'status'>) => void;
+  addPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'status'>) => Promise<PurchaseOrder>;
   updatePurchaseOrder: (id: string, data: Partial<PurchaseOrder>) => Promise<void>;
   deletePurchaseOrder: (id: string) => Promise<void>;
   addGRN: (grn: Omit<GRN, 'id' | 'grnNumber' | 'qcStatus' | 'enteredInventory'>) => void;
@@ -320,7 +320,7 @@ interface ERPContextType {
   deleteProductionBatch: (id: string) => Promise<void>;
   updateQCInspection: (id: string, data: Partial<QCInspection>) => Promise<void>;
   deleteQCInspection: (id: string) => Promise<void>;
-  addBOM: (bom: Omit<BOM, 'id'>) => Promise<void>;
+  addBOM: (bom: Omit<BOM, 'id'>) => Promise<BOM>;
   updateBOM: (id: string, data: Partial<BOM>) => Promise<void>;
   deleteBOM: (id: string) => Promise<void>;
   updateStockMovement: (id: string, data: Partial<StockMovement>) => Promise<void>;
@@ -342,7 +342,7 @@ interface ERPContextType {
   recordCustomerPayment: (invoiceId: string, amount: number, mode: 'NEFT/RTGS' | 'Cheque' | 'Cash' | 'UPI', reference: string) => void;
   updatePayment: (id: string, data: Partial<PaymentTransaction>) => Promise<void>;
   deletePayment: (id: string) => Promise<void>;
-  addExpense: (expense: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>) => void;
+  addExpense: (expense: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>) => Promise<ExpenseRecord>;
   updateExpense: (id: string, data: Partial<ExpenseRecord>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addEmployee: (employee: Omit<Employee, 'id'>) => Promise<void>;
@@ -398,39 +398,45 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [activeRole, setActiveRole] = useState<UserRole>('Owner / Admin');
 
-  // Load from LocalStorage if exists
-  const loadStored = <T,>(key: string, defaultVal: T): T => {
-    try {
-      const stored = localStorage.getItem(`bhavani_erp_${key}`);
-      return stored ? JSON.parse(stored) : defaultVal;
-    } catch {
-      return defaultVal;
-    }
+  const defaultCompanyProfile: CompanyProfile = {
+    id: 'profile',
+    name: 'Bhavani Agro & Minerals',
+    formation: 'Sole Proprietorship',
+    established: '1985',
+    gstin: '24AAAAA0000A1Z5',
+    pan: 'AAAAA0000A',
+    address: 'Plot 42-45, GIDC Metoda Industrial Estate',
+    city: 'Rajkot',
+    state: 'Gujarat',
+    pincode: '360021',
+    bankName: 'State Bank of India, Main Branch Rajkot',
+    accountNo: '38291048571',
+    ifscCode: 'SBIN0001234'
   };
 
-  const [company, setCompany] = useState<CompanyProfile>(() => loadStored('company', initialCompanyProfile));
-  const [customers, setCustomers] = useState<Customer[]>(() => loadStored('customers', []));
-  const [suppliers, setSuppliers] = useState<Supplier[]>(() => loadStored('suppliers', []));
-  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>(() => loadStored('rawMaterials', []));
-  const [products, setProducts] = useState<FinishedProduct[]>(() => loadStored('products', []));
-  const [boms, setBOMs] = useState<BOM[]>(() => loadStored('boms', []));
-  const [leads, setLeads] = useState<Lead[]>(() => loadStored('leads', []));
-  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(() => loadStored('salesOrders', []));
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => loadStored('purchaseOrders', []));
-  const [grns, setGRNs] = useState<GRN[]>(() => loadStored('grns', []));
-  const [qcInspections, setQCInspections] = useState<QCInspection[]>(() => loadStored('qcInspections', []));
-  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(() => loadStored('productionOrders', []));
-  const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>(() => loadStored('productionBatches', []));
-  const [vehicles, setVehicles] = useState<VehicleMaster[]>(() => loadStored('vehicles', []));
-  const [dispatches, setDispatches] = useState<DispatchChallan[]>(() => loadStored('dispatches', []));
-  const [invoices, setInvoices] = useState<SalesInvoice[]>(() => loadStored('invoices', []));
-  const [payments, setPayments] = useState<PaymentTransaction[]>(() => loadStored('payments', []));
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => loadStored('expenses', []));
-  const [machinery, setMachinery] = useState<Machinery[]>(() => loadStored('machinery', []));
-  const [employees, setEmployees] = useState<Employee[]>(() => loadStored('employees', []));
-  const [documents, setDocuments] = useState<ErpDocument[]>(() => loadStored('documents', []));
-  const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadStored('alerts', []));
-  const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => loadStored('stockMovements', []));
+  const [company, setCompany] = useState<CompanyProfile>(defaultCompanyProfile);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
+  const [products, setProducts] = useState<FinishedProduct[]>([]);
+  const [boms, setBOMs] = useState<BOM[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [grns, setGRNs] = useState<GRN[]>([]);
+  const [qcInspections, setQCInspections] = useState<QCInspection[]>([]);
+  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>([]);
+  const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
+  const [dispatches, setDispatches] = useState<DispatchChallan[]>([]);
+  const [invoices, setInvoices] = useState<SalesInvoice[]>([]);
+  const [payments, setPayments] = useState<PaymentTransaction[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
+  const [machinery, setMachinery] = useState<Machinery[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [documents, setDocuments] = useState<ErpDocument[]>([]);
+  const [alerts, setAlerts] = useState<ErpAlert[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
 
   // Load customers from API when the ERP starts
   useEffect(() => {
@@ -623,53 +629,20 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isDemoRunnerOpen, setIsDemoRunnerOpen] = useState(false);
   const [demoStep, setDemoStep] = useState(1);
 
-  // Sync to local storage
-  useEffect(() => {
-    try {
-      localStorage.setItem('bhavani_erp_customers', JSON.stringify(customers));
-      localStorage.setItem('bhavani_erp_rawMaterials', JSON.stringify(rawMaterials));
-      localStorage.setItem('bhavani_erp_products', JSON.stringify(products));
-      localStorage.setItem('bhavani_erp_salesOrders', JSON.stringify(salesOrders));
-      localStorage.setItem('bhavani_erp_purchaseOrders', JSON.stringify(purchaseOrders));
-      localStorage.setItem('bhavani_erp_productionOrders', JSON.stringify(productionOrders));
-      localStorage.setItem('bhavani_erp_productionBatches', JSON.stringify(productionBatches));
-      localStorage.setItem('bhavani_erp_dispatches', JSON.stringify(dispatches));
-      localStorage.setItem('bhavani_erp_invoices', JSON.stringify(invoices));
-      localStorage.setItem('bhavani_erp_expenses', JSON.stringify(expenses));
-      localStorage.setItem('bhavani_erp_alerts', JSON.stringify(alerts));
-    } catch (e) {
-      console.warn('Storage sync error', e);
-    }
-  }, [customers, rawMaterials, products, salesOrders, purchaseOrders, productionOrders, productionBatches, dispatches, invoices, expenses, alerts]);
+
 
   // Lead management
-  const addLead = (leadData: Omit<Lead, 'id' | 'createdAt'>) => {
-    const temporaryLead: Lead = {
-      ...leadData,
-      id: `lead-${Date.now()}`,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-
-    setLeads(prev => [temporaryLead, ...prev]);
-
-    createLeadFromApi(leadData)
-      .then((apiLead) => {
-        setLeads(prev =>
-          prev.map(lead =>
-            lead.id === temporaryLead.id
-              ? {
-                ...temporaryLead,
-                id: apiLead.id,
-              }
-              : lead
-          )
-        );
-        showToast("Lead created successfully", "success");
-      })
-      .catch((error) => {
-        console.error("Failed to save lead through API:", error);
-        showToast("Unable to create lead", "error");
-      });
+  const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt'>): Promise<Lead> => {
+    try {
+      const apiLead = await createLeadFromApi(leadData);
+      setLeads(prev => [apiLead, ...prev]);
+      showToast("Lead created successfully", "success");
+      return apiLead;
+    } catch (error) {
+      console.error("Failed to save lead through API:", error);
+      showToast("Unable to create lead", "error");
+      throw error;
+    }
   };
 
   const updateLead = async (id: string, data: Partial<Lead>) => {
@@ -694,31 +667,28 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const convertLeadToCustomer = (leadId: string) => {
+  const convertLeadToCustomer = async (leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
-    const newCustomer: Customer = {
-      id: `cust-${Date.now()}`,
-      code: `CUST-0${customers.length + 1}`,
+    
+    await addCustomer({
       customerName: lead.leadName,
       companyName: lead.company,
       contactPerson: lead.contactPerson,
       mobile: lead.mobile,
       email: lead.email,
-      billingAddress: `${lead.location}`,
-      shippingAddress: `${lead.location}`,
+      billingAddress: lead.location,
+      shippingAddress: lead.location,
       gstin: '24' + Math.random().toString(36).substring(2, 12).toUpperCase(),
       state: lead.location.split(',')[1]?.trim() || 'Gujarat',
       creditLimit: 2000000,
       paymentTerms: 'Net 30 Days',
       customerType: 'Distributor',
       assignedSalesperson: lead.salesperson,
-      totalSales: 0,
-      outstandingBalance: 0,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setCustomers(prev => [newCustomer, ...prev]);
-    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: 'Won' } : l));
+    });
+
+    await updateLead(leadId, { status: 'Won' });
+
     setAlerts(prev => [{
       id: `alt-${Date.now()}`,
       type: 'info',
@@ -735,7 +705,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       Customer,
       'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'
     >
-  ) => {
+  ): Promise<Customer> => {
     const customerCode = `CUST-${String(customers.length + 1).padStart(3, '0')}`;
 
     const customerData = {
@@ -750,9 +720,11 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const newCustomer: Customer = apiCustomer;
       setCustomers((prev) => [newCustomer, ...prev]);
       showToast("Customer created successfully", "success");
+      return newCustomer;
     } catch (error) {
       console.error('Failed to save customer to Firebase:', error);
       showToast("Unable to create customer", "error");
+      throw error;
     }
   };
 
@@ -844,7 +816,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Automation 1: Sales Order Stock Check
-  const addSalesOrder = (soData: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>) => {
+  const addSalesOrder = async (soData: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>): Promise<SalesOrder> => {
     const targetProduct = products.find(p => p.id === soData.productId);
     const availableStock = targetProduct ? targetProduct.currentStockMT - targetProduct.reservedStockMT : 0;
     const isStockAvailable = availableStock >= soData.quantityMT;
@@ -858,32 +830,32 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: isStockAvailable ? 'Ready' : 'Production Required'
     };
 
-    setSalesOrders(prev => [newOrder, ...prev]);
+    try {
+      const apiOrder = await createSalesOrderFromApi(newOrder);
+      const savedOrder = apiOrder || newOrder;
+      setSalesOrders(prev => [savedOrder, ...prev]);
+      showToast("Sales Order created successfully", "success");
 
-    createSalesOrderFromApi(newOrder)
-      .then((apiOrder) => {
-        setSalesOrders(prev => prev.map(o => o.id === newOrder.id ? { ...newOrder, id: apiOrder.id } : o));
-        showToast("Sales Order created successfully", "success");
-      })
-      .catch((err) => {
-        console.error("Failed to save sales order to API:", err);
-        showToast("Sales Order created successfully", "success");
-      });
+      // Update customer total sales
+      setCustomers(prev => prev.map(c => c.id === soData.customerId ? { ...c, totalSales: c.totalSales + soData.totalAmount } : c));
 
-    // Update customer total sales
-    setCustomers(prev => prev.map(c => c.id === soData.customerId ? { ...c, totalSales: c.totalSales + soData.totalAmount } : c));
-
-    if (!isStockAvailable) {
-      createProductionOrderFromSOObj(newOrder);
-      setAlerts(prev => [{
-        id: `alt-${Date.now()}`,
-        type: 'critical',
-        title: `Production Required: ${soData.productName}`,
-        description: `Order ${orderNum} for ${soData.quantityMT} MT exceeds free stock (${availableStock.toFixed(1)} MT). Production order planned.`,
-        timestamp: 'Just now',
-        module: 'Production',
-        read: false
-      }, ...prev]);
+      if (!isStockAvailable) {
+        createProductionOrderFromSOObj(savedOrder);
+        setAlerts(prev => [{
+          id: `alt-${Date.now()}`,
+          type: 'critical',
+          title: `Production Required: ${soData.productName}`,
+          description: `Order ${orderNum} for ${soData.quantityMT} MT exceeds free stock (${availableStock.toFixed(1)} MT). Production order planned.`,
+          timestamp: 'Just now',
+          module: 'Production',
+          read: false
+        }, ...prev]);
+      }
+      return savedOrder;
+    } catch (err) {
+      console.error("Failed to save sales order to API:", err);
+      showToast("Unable to create sales order", "error");
+      throw err;
     }
   };
 
@@ -1294,7 +1266,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Purchase Order & GRN
-  const addPurchaseOrder = (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'status'>) => {
+  const addPurchaseOrder = async (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'status'>): Promise<PurchaseOrder> => {
     const poNum = `PO-2609-0${purchaseOrders.length + 50}`;
     const newPO: PurchaseOrder = {
       ...poData,
@@ -1302,16 +1274,17 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       poNumber: poNum,
       status: 'Issued'
     };
-    setPurchaseOrders(prev => [newPO, ...prev]);
-    createPurchaseOrderFromApi(newPO)
-      .then((apiPO) => {
-        setPurchaseOrders(prev => prev.map(p => p.id === newPO.id ? { ...newPO, id: apiPO.id } : p));
-        showToast("Purchase Order created successfully", "success");
-      })
-      .catch((err) => {
-        console.error("Failed to save purchase order to API:", err);
-        showToast("Purchase Order created successfully", "success");
-      });
+    try {
+      const apiPO = await createPurchaseOrderFromApi(newPO);
+      const savedPO = apiPO || newPO;
+      setPurchaseOrders(prev => [savedPO, ...prev]);
+      showToast("Purchase Order created successfully", "success");
+      return savedPO;
+    } catch (err) {
+      console.error("Failed to save purchase order to API:", err);
+      showToast("Unable to create purchase order", "error");
+      throw err;
+    }
   };
 
   const updatePurchaseOrder = async (id: string, data: Partial<PurchaseOrder>) => {
@@ -1461,19 +1434,19 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addBOM = async (bomData: Omit<BOM, 'id'>) => {
+  const addBOM = async (bomData: Omit<BOM, 'id'>): Promise<BOM> => {
     try {
       const tempId = `bom-${Date.now()}`;
       const newBOM: BOM = { ...bomData, id: tempId };
-      setBOMs(prev => [newBOM, ...prev]);
       const created = await createBOMInApi(bomData);
-      if (created) {
-        setBOMs(prev => prev.map(b => b.id === tempId ? created : b));
-      }
+      const saved = created || newBOM;
+      setBOMs(prev => [saved, ...prev]);
       showToast("BOM added successfully", "success");
+      return saved;
     } catch (err) {
       console.error("Failed to add BOM:", err);
       showToast("Unable to add BOM", "error");
+      throw err;
     }
   };
 
@@ -1625,7 +1598,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addExpense = async (expData: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>) => {
+  const addExpense = async (expData: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>): Promise<ExpenseRecord> => {
     try {
       const expNum = `EXP-2609-0${expenses.length + 10}`;
       const tempId = `exp-${Date.now()}`;
@@ -1635,15 +1608,18 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         expenseNumber: expNum,
         status: 'Approved'
       };
-      setExpenses(prev => [newExp, ...prev]);
       const created = await createExpenseInApi(newExp);
       if (created) {
-        setExpenses(prev => prev.map(e => e.id === tempId ? created : e));
+        setExpenses(prev => [created, ...prev]);
+        showToast("Expense record added successfully", "success");
+        return created;
+      } else {
+        throw new Error("Failed to create expense in API");
       }
-      showToast("Expense record added successfully", "success");
     } catch (err) {
       console.error("Failed to add Expense:", err);
       showToast("Unable to add Expense", "error");
+      throw err;
     }
   };
 
@@ -1795,7 +1771,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Batch 2: Supplier CRUD
-  const addSupplier = async (suppData: Omit<Supplier, 'id' | 'code' | 'totalPurchases' | 'outstandingBalance'>) => {
+  const addSupplier = async (suppData: Omit<Supplier, 'id' | 'code' | 'totalPurchases' | 'outstandingBalance'>): Promise<Supplier> => {
     const code = `SUP-${String(suppliers.length + 1).padStart(3, '0')}`;
     const newSupp: Supplier = {
       ...suppData,
@@ -1809,10 +1785,11 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const apiSupp = await createSupplierFromApi(newSupp);
       setSuppliers(prev => [apiSupp, ...prev]);
       showToast("Supplier created successfully", "success");
+      return apiSupp;
     } catch (err) {
       console.error("Failed to add supplier:", err);
-      setSuppliers(prev => [newSupp, ...prev]);
-      showToast("Supplier created successfully", "success");
+      showToast("Unable to create supplier", "error");
+      throw err;
     }
   };
 

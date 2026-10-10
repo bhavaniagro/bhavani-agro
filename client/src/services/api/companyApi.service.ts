@@ -1,10 +1,11 @@
 import { CompanyProfile } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/company';
+const ENDPOINT_URL = `${API_BASE_URL}/company`;
 
 export async function fetchCompanyProfileFromApi(): Promise<CompanyProfile | null> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch company profile');
     const json = await res.json();
     return json.data || json;
@@ -16,7 +17,7 @@ export async function fetchCompanyProfileFromApi(): Promise<CompanyProfile | nul
 
 export async function updateCompanyProfileInApi(updates: Partial<CompanyProfile>): Promise<CompanyProfile | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),

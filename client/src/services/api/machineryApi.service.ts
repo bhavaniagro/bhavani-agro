@@ -1,10 +1,11 @@
 import { Machinery } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/machinery';
+const ENDPOINT_URL = `${API_BASE_URL}/machinery`;
 
 export async function fetchMachineryFromApi(): Promise<Machinery[]> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch machinery');
     const json = await res.json();
     return Array.isArray(json) ? json : (json.data || []);
@@ -16,7 +17,7 @@ export async function fetchMachineryFromApi(): Promise<Machinery[]> {
 
 export async function createMachineryInApi(machinery: Partial<Machinery>): Promise<Machinery | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(machinery),
@@ -32,7 +33,7 @@ export async function createMachineryInApi(machinery: Partial<Machinery>): Promi
 
 export async function updateMachineryInApi(id: string, updates: Partial<Machinery>): Promise<Machinery | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -48,7 +49,7 @@ export async function updateMachineryInApi(id: string, updates: Partial<Machiner
 
 export async function deleteMachineryFromApi(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete machinery');

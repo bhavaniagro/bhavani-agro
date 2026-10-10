@@ -1,10 +1,11 @@
 import { QCInspection } from '../../types/erp';
+import { API_BASE_URL } from '../../config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:4000/api/qc-inspections';
+const ENDPOINT_URL = `${API_BASE_URL}/qc-inspections`;
 
 export async function fetchQCInspectionsFromApi(): Promise<QCInspection[]> {
   try {
-    const res = await fetch(API_BASE_URL);
+    const res = await fetch(ENDPOINT_URL);
     if (!res.ok) throw new Error('Failed to fetch QC inspections');
     return await res.json();
   } catch (err) {
@@ -15,7 +16,7 @@ export async function fetchQCInspectionsFromApi(): Promise<QCInspection[]> {
 
 export async function createQCInspectionInApi(qc: Partial<QCInspection>): Promise<QCInspection | null> {
   try {
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(qc),
@@ -30,7 +31,7 @@ export async function createQCInspectionInApi(qc: Partial<QCInspection>): Promis
 
 export async function updateQCInspectionInApi(id: string, updates: Partial<QCInspection>): Promise<QCInspection | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -45,7 +46,7 @@ export async function updateQCInspectionInApi(id: string, updates: Partial<QCIns
 
 export async function deleteQCInspectionFromApi(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await fetch(`${ENDPOINT_URL}/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete QC inspection');

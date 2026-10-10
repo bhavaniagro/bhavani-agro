@@ -122,29 +122,35 @@ export const CustomersModule: React.FC = () => {
           </div>
 
           <div className="divide-y divide-neutral-100 max-h-[650px] overflow-y-auto">
-            {filteredCustomers.map(c => (
-              <div
-                key={c.id}
-                onClick={() => setSelectedCustomer(c)}
-                className={`p-3.5 cursor-pointer transition-colors text-xs space-y-1 ${
-                  activeCustomer?.id === c.id 
-                    ? 'bg-emerald-50/60 border-l-4 border-l-emerald-600' 
-                    : 'hover:bg-neutral-50/70'
-                }`}
-              >
-                <div className="flex items-center justify-between font-bold text-neutral-900">
-                  <span>{c.customerName}</span>
-                  <span className="font-mono text-neutral-500 font-semibold">{c.code}</span>
+            {filteredCustomers.length > 0 ? (
+              filteredCustomers.map(c => (
+                <div
+                  key={c.id}
+                  onClick={() => setSelectedCustomer(c)}
+                  className={`p-3.5 cursor-pointer transition-colors text-xs space-y-1 ${
+                    activeCustomer?.id === c.id 
+                      ? 'bg-emerald-50/60 border-l-4 border-l-emerald-600' 
+                      : 'hover:bg-neutral-50/70'
+                  }`}
+                >
+                  <div className="flex items-center justify-between font-bold text-neutral-900">
+                    <span>{c.customerName}</span>
+                    <span className="font-mono text-neutral-500 font-semibold">{c.code}</span>
+                  </div>
+                  <div className="text-[11px] text-neutral-500">{c.contactPerson} · {c.state}</div>
+                  <div className="text-[10px] text-neutral-400 font-mono flex items-center justify-between pt-1">
+                    <span>Sales: ₹{c.totalSales.toLocaleString('en-IN')}</span>
+                    <span className={c.outstandingBalance > 0 ? 'text-amber-800 font-bold' : 'text-emerald-700'}>
+                      Due: ₹{c.outstandingBalance.toLocaleString('en-IN')}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-[11px] text-neutral-500">{c.contactPerson} · {c.state}</div>
-                <div className="text-[10px] text-neutral-400 font-mono flex items-center justify-between pt-1">
-                  <span>Sales: ₹{c.totalSales.toLocaleString('en-IN')}</span>
-                  <span className={c.outstandingBalance > 0 ? 'text-amber-800 font-bold' : 'text-emerald-700'}>
-                    Due: ₹{c.outstandingBalance.toLocaleString('en-IN')}
-                  </span>
-                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-neutral-400 text-xs italic">
+                No customers found. Click "Add Customer" to create a record.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -512,6 +518,17 @@ export const CustomersModule: React.FC = () => {
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Assigned Sales Head / Executive</label>
+                <input
+                  type="text"
+                  value={editingCustomer.assignedSalesperson || ''}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, assignedSalesperson: e.target.value })}
+                  placeholder="e.g. Sales Executive"
+                  className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-200">
