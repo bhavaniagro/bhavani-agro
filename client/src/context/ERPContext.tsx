@@ -289,14 +289,14 @@ interface ERPContextType {
   dismissToast: (id: string) => void;
 
   // Actions & Automations
-  addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => void;
+  addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<Lead>;
   updateLead: (id: string, data: Partial<Lead>) => Promise<void>;
   deleteLead: (id: string) => Promise<void>;
   convertLeadToCustomer: (leadId: string) => void;
-  addCustomer: (cust: Omit<Customer, 'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'>) => void;
+  addCustomer: (cust: Omit<Customer, 'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'>) => Promise<Customer>;
   updateCustomer: (id: string, data: Partial<Customer>) => Promise<void>;
   deleteCustomer: (id: string) => Promise<void>;
-  addSupplier: (supp: Omit<Supplier, 'id' | 'code' | 'totalPurchases' | 'outstandingBalance'>) => Promise<void>;
+  addSupplier: (supp: Omit<Supplier, 'id' | 'code' | 'totalPurchases' | 'outstandingBalance'>) => Promise<Supplier>;
   updateSupplier: (id: string, data: Partial<Supplier>) => Promise<void>;
   deleteSupplier: (id: string) => Promise<void>;
   updateRawMaterial: (id: string, data: Partial<RawMaterial>) => Promise<void>;
@@ -304,11 +304,11 @@ interface ERPContextType {
   addProduct: (prod: Omit<FinishedProduct, 'id' | 'currentStockMT' | 'reservedStockMT'>) => Promise<void>;
   updateProduct: (id: string, data: Partial<FinishedProduct>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
-  addSalesOrder: (so: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>) => void;
+  addSalesOrder: (so: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>) => Promise<SalesOrder>;
   updateSalesOrder: (id: string, data: Partial<SalesOrder>) => Promise<void>;
   deleteSalesOrder: (id: string) => Promise<void>;
   createProductionOrderFromSO: (salesOrderId: string) => void;
-  addPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'status'>) => void;
+  addPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'status'>) => Promise<PurchaseOrder>;
   updatePurchaseOrder: (id: string, data: Partial<PurchaseOrder>) => Promise<void>;
   deletePurchaseOrder: (id: string) => Promise<void>;
   addGRN: (grn: Omit<GRN, 'id' | 'grnNumber' | 'qcStatus' | 'enteredInventory'>) => void;
@@ -320,7 +320,7 @@ interface ERPContextType {
   deleteProductionBatch: (id: string) => Promise<void>;
   updateQCInspection: (id: string, data: Partial<QCInspection>) => Promise<void>;
   deleteQCInspection: (id: string) => Promise<void>;
-  addBOM: (bom: Omit<BOM, 'id'>) => Promise<void>;
+  addBOM: (bom: Omit<BOM, 'id'>) => Promise<BOM>;
   updateBOM: (id: string, data: Partial<BOM>) => Promise<void>;
   deleteBOM: (id: string) => Promise<void>;
   updateStockMovement: (id: string, data: Partial<StockMovement>) => Promise<void>;
@@ -342,7 +342,7 @@ interface ERPContextType {
   recordCustomerPayment: (invoiceId: string, amount: number, mode: 'NEFT/RTGS' | 'Cheque' | 'Cash' | 'UPI', reference: string) => void;
   updatePayment: (id: string, data: Partial<PaymentTransaction>) => Promise<void>;
   deletePayment: (id: string) => Promise<void>;
-  addExpense: (expense: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>) => void;
+  addExpense: (expense: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>) => Promise<ExpenseRecord>;
   updateExpense: (id: string, data: Partial<ExpenseRecord>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addEmployee: (employee: Omit<Employee, 'id'>) => Promise<void>;
@@ -632,33 +632,17 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 
   // Lead management
-  const addLead = (leadData: Omit<Lead, 'id' | 'createdAt'>) => {
-    const temporaryLead: Lead = {
-      ...leadData,
-      id: `lead-${Date.now()}`,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-
-    setLeads(prev => [temporaryLead, ...prev]);
-
-    createLeadFromApi(leadData)
-      .then((apiLead) => {
-        setLeads(prev =>
-          prev.map(lead =>
-            lead.id === temporaryLead.id
-              ? {
-                ...temporaryLead,
-                id: apiLead.id,
-              }
-              : lead
-          )
-        );
-        showToast("Lead created successfully", "success");
-      })
-      .catch((error) => {
-        console.error("Failed to save lead through API:", error);
-        showToast("Unable to create lead", "error");
-      });
+  const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt'>): Promise<Lead> => {
+    try {
+      const apiLead = await createLeadFromApi(leadData);
+      setLeads(prev => [apiLead, ...prev]);
+      showToast("Lead created successfully", "success");
+      return apiLead;
+    } catch (error) {
+      console.error("Failed to save lead through API:", error);
+      showToast("Unable to create lead", "error");
+      throw error;
+    }
   };
 
   const updateLead = async (id: string, data: Partial<Lead>) => {
@@ -721,7 +705,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       Customer,
       'id' | 'code' | 'totalSales' | 'outstandingBalance' | 'createdAt'
     >
-  ) => {
+  ): Promise<Customer> => {
     const customerCode = `CUST-${String(customers.length + 1).padStart(3, '0')}`;
 
     const customerData = {
@@ -736,9 +720,11 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const newCustomer: Customer = apiCustomer;
       setCustomers((prev) => [newCustomer, ...prev]);
       showToast("Customer created successfully", "success");
+      return newCustomer;
     } catch (error) {
       console.error('Failed to save customer to Firebase:', error);
       showToast("Unable to create customer", "error");
+      throw error;
     }
   };
 
@@ -830,7 +816,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Automation 1: Sales Order Stock Check
-  const addSalesOrder = (soData: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>) => {
+  const addSalesOrder = async (soData: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>): Promise<SalesOrder> => {
     const targetProduct = products.find(p => p.id === soData.productId);
     const availableStock = targetProduct ? targetProduct.currentStockMT - targetProduct.reservedStockMT : 0;
     const isStockAvailable = availableStock >= soData.quantityMT;
@@ -844,32 +830,32 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: isStockAvailable ? 'Ready' : 'Production Required'
     };
 
-    setSalesOrders(prev => [newOrder, ...prev]);
+    try {
+      const apiOrder = await createSalesOrderFromApi(newOrder);
+      const savedOrder = apiOrder || newOrder;
+      setSalesOrders(prev => [savedOrder, ...prev]);
+      showToast("Sales Order created successfully", "success");
 
-    createSalesOrderFromApi(newOrder)
-      .then((apiOrder) => {
-        setSalesOrders(prev => prev.map(o => o.id === newOrder.id ? { ...newOrder, id: apiOrder.id } : o));
-        showToast("Sales Order created successfully", "success");
-      })
-      .catch((err) => {
-        console.error("Failed to save sales order to API:", err);
-        showToast("Sales Order created successfully", "success");
-      });
+      // Update customer total sales
+      setCustomers(prev => prev.map(c => c.id === soData.customerId ? { ...c, totalSales: c.totalSales + soData.totalAmount } : c));
 
-    // Update customer total sales
-    setCustomers(prev => prev.map(c => c.id === soData.customerId ? { ...c, totalSales: c.totalSales + soData.totalAmount } : c));
-
-    if (!isStockAvailable) {
-      createProductionOrderFromSOObj(newOrder);
-      setAlerts(prev => [{
-        id: `alt-${Date.now()}`,
-        type: 'critical',
-        title: `Production Required: ${soData.productName}`,
-        description: `Order ${orderNum} for ${soData.quantityMT} MT exceeds free stock (${availableStock.toFixed(1)} MT). Production order planned.`,
-        timestamp: 'Just now',
-        module: 'Production',
-        read: false
-      }, ...prev]);
+      if (!isStockAvailable) {
+        createProductionOrderFromSOObj(savedOrder);
+        setAlerts(prev => [{
+          id: `alt-${Date.now()}`,
+          type: 'critical',
+          title: `Production Required: ${soData.productName}`,
+          description: `Order ${orderNum} for ${soData.quantityMT} MT exceeds free stock (${availableStock.toFixed(1)} MT). Production order planned.`,
+          timestamp: 'Just now',
+          module: 'Production',
+          read: false
+        }, ...prev]);
+      }
+      return savedOrder;
+    } catch (err) {
+      console.error("Failed to save sales order to API:", err);
+      showToast("Unable to create sales order", "error");
+      throw err;
     }
   };
 
@@ -1280,7 +1266,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Purchase Order & GRN
-  const addPurchaseOrder = (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'status'>) => {
+  const addPurchaseOrder = async (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'status'>): Promise<PurchaseOrder> => {
     const poNum = `PO-2609-0${purchaseOrders.length + 50}`;
     const newPO: PurchaseOrder = {
       ...poData,
@@ -1288,16 +1274,17 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       poNumber: poNum,
       status: 'Issued'
     };
-    setPurchaseOrders(prev => [newPO, ...prev]);
-    createPurchaseOrderFromApi(newPO)
-      .then((apiPO) => {
-        setPurchaseOrders(prev => prev.map(p => p.id === newPO.id ? { ...newPO, id: apiPO.id } : p));
-        showToast("Purchase Order created successfully", "success");
-      })
-      .catch((err) => {
-        console.error("Failed to save purchase order to API:", err);
-        showToast("Purchase Order created successfully", "success");
-      });
+    try {
+      const apiPO = await createPurchaseOrderFromApi(newPO);
+      const savedPO = apiPO || newPO;
+      setPurchaseOrders(prev => [savedPO, ...prev]);
+      showToast("Purchase Order created successfully", "success");
+      return savedPO;
+    } catch (err) {
+      console.error("Failed to save purchase order to API:", err);
+      showToast("Unable to create purchase order", "error");
+      throw err;
+    }
   };
 
   const updatePurchaseOrder = async (id: string, data: Partial<PurchaseOrder>) => {
@@ -1447,19 +1434,19 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addBOM = async (bomData: Omit<BOM, 'id'>) => {
+  const addBOM = async (bomData: Omit<BOM, 'id'>): Promise<BOM> => {
     try {
       const tempId = `bom-${Date.now()}`;
       const newBOM: BOM = { ...bomData, id: tempId };
-      setBOMs(prev => [newBOM, ...prev]);
       const created = await createBOMInApi(bomData);
-      if (created) {
-        setBOMs(prev => prev.map(b => b.id === tempId ? created : b));
-      }
+      const saved = created || newBOM;
+      setBOMs(prev => [saved, ...prev]);
       showToast("BOM added successfully", "success");
+      return saved;
     } catch (err) {
       console.error("Failed to add BOM:", err);
       showToast("Unable to add BOM", "error");
+      throw err;
     }
   };
 
@@ -1611,7 +1598,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addExpense = async (expData: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>) => {
+  const addExpense = async (expData: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'status'>): Promise<ExpenseRecord> => {
     try {
       const expNum = `EXP-2609-0${expenses.length + 10}`;
       const tempId = `exp-${Date.now()}`;
@@ -1621,15 +1608,18 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         expenseNumber: expNum,
         status: 'Approved'
       };
-      setExpenses(prev => [newExp, ...prev]);
       const created = await createExpenseInApi(newExp);
       if (created) {
-        setExpenses(prev => prev.map(e => e.id === tempId ? created : e));
+        setExpenses(prev => [created, ...prev]);
+        showToast("Expense record added successfully", "success");
+        return created;
+      } else {
+        throw new Error("Failed to create expense in API");
       }
-      showToast("Expense record added successfully", "success");
     } catch (err) {
       console.error("Failed to add Expense:", err);
       showToast("Unable to add Expense", "error");
+      throw err;
     }
   };
 
@@ -1781,7 +1771,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Batch 2: Supplier CRUD
-  const addSupplier = async (suppData: Omit<Supplier, 'id' | 'code' | 'totalPurchases' | 'outstandingBalance'>) => {
+  const addSupplier = async (suppData: Omit<Supplier, 'id' | 'code' | 'totalPurchases' | 'outstandingBalance'>): Promise<Supplier> => {
     const code = `SUP-${String(suppliers.length + 1).padStart(3, '0')}`;
     const newSupp: Supplier = {
       ...suppData,
@@ -1795,10 +1785,11 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const apiSupp = await createSupplierFromApi(newSupp);
       setSuppliers(prev => [apiSupp, ...prev]);
       showToast("Supplier created successfully", "success");
+      return apiSupp;
     } catch (err) {
       console.error("Failed to add supplier:", err);
-      setSuppliers(prev => [newSupp, ...prev]);
-      showToast("Supplier created successfully", "success");
+      showToast("Unable to create supplier", "error");
+      throw err;
     }
   };
 

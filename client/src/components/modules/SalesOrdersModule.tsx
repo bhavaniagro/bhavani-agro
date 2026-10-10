@@ -181,12 +181,13 @@ export const SalesOrdersModule: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {filteredOrders.map(so => {
-                const prod = products.find(p => p.id === so.productId || p.productName === so.productName);
-                const freeStock = prod ? prod.currentStockMT - prod.reservedStockMT : 0;
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map(so => {
+                  const prod = products.find(p => p.id === so.productId || p.productName === so.productName);
+                  const freeStock = prod ? prod.currentStockMT - prod.reservedStockMT : 0;
 
-                return (
-                  <tr key={so.id} className="hover:bg-neutral-50/70 transition-colors">
+                  return (
+                    <tr key={so.id} className="hover:bg-neutral-50/70 transition-colors">
                     <td className="p-3">
                       <div className="font-mono font-bold text-neutral-900">{so.orderNumber}</div>
                       <div className="text-[11px] text-neutral-400">{so.orderDate} · Due {so.deliveryDate}</div>
@@ -320,7 +321,14 @@ export const SalesOrdersModule: React.FC = () => {
                     </td>
                   </tr>
                 );
-              })}
+              })
+            ) : (
+              <tr>
+                <td colSpan={9} className="p-8 text-center text-neutral-400 text-xs italic">
+                  No sales orders found in database.
+                </td>
+              </tr>
+            )}
             </tbody>
           </table>
         </div>

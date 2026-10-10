@@ -110,6 +110,11 @@ export const PurchaseModule: React.FC = () => {
       remarks: 'Goods received at factory weighbridge and accepted into raw stores.'
     });
 
+    setSelectedPO(null);
+    setReceivedQty(0);
+    setAcceptedQty(0);
+    setVehicleNo('');
+    setSupplierBatch('');
     setShowGRNModal(false);
     setActiveTab('grn');
   };

@@ -12,12 +12,18 @@ export async function getAllCustomers() {
 }
 
 export async function createCustomer(data: Record<string, unknown>) {
-    const docRef = await customersCollection.add({
+    const docRef = data.id
+        ? customersCollection.doc(String(data.id))
+        : customersCollection.doc();
+
+    const payload = {
         ...data,
+        id: docRef.id,
         createdAt: new Date(),
         updatedAt: new Date(),
-    });
+    };
 
+    await docRef.set(payload, { merge: true });
     const createdDoc = await docRef.get();
 
     return {
@@ -32,10 +38,13 @@ export async function updateCustomer(
 ) {
     const customerRef = customersCollection.doc(id);
 
-    await customerRef.update({
-        ...data,
-        updatedAt: new Date(),
-    });
+    await customerRef.set(
+        {
+            ...data,
+            updatedAt: new Date(),
+        },
+        { merge: true }
+    );
 
     const updatedDoc = await customerRef.get();
 
@@ -44,6 +53,7 @@ export async function updateCustomer(
         ...updatedDoc.data(),
     };
 }
+
 export async function deleteCustomer(id: string): Promise<void> {
     await customersCollection.doc(id).delete();
 }

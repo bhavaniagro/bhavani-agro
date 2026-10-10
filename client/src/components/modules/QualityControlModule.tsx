@@ -142,34 +142,40 @@ export const QualityControlModule: React.FC = () => {
           </div>
 
           <div className="divide-y divide-neutral-100 max-h-[600px] overflow-y-auto">
-            {filteredQC.map(q => (
-              <div
-                key={q.id}
-                onClick={() => setSelectedQC(q)}
-                className={`p-3.5 cursor-pointer transition-colors text-xs space-y-1 ${
-                  activeInspection?.id === q.id 
-                    ? 'bg-emerald-50/60 border-l-4 border-l-emerald-600' 
-                    : 'hover:bg-neutral-50/70'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-neutral-900">{q.qcNumber}</span>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
-                    q.overallStatus === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
-                    q.overallStatus === 'Pending' ? 'bg-amber-100 text-amber-800' :
-                    'bg-rose-100 text-rose-800'
-                  }`}>
-                    {q.overallStatus}
-                  </span>
+            {filteredQC.length > 0 ? (
+              filteredQC.map(q => (
+                <div
+                  key={q.id}
+                  onClick={() => setSelectedQC(q)}
+                  className={`p-3.5 cursor-pointer transition-colors text-xs space-y-1 ${
+                    activeInspection?.id === q.id 
+                      ? 'bg-emerald-50/60 border-l-4 border-l-emerald-600' 
+                      : 'hover:bg-neutral-50/70'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-neutral-900">{q.qcNumber}</span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
+                      q.overallStatus === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
+                      q.overallStatus === 'Pending' ? 'bg-amber-100 text-amber-800' :
+                      'bg-rose-100 text-rose-800'
+                    }`}>
+                      {q.overallStatus}
+                    </span>
+                  </div>
+                  <div className="font-semibold text-neutral-900">{q.itemName}</div>
+                  <div className="text-[11px] text-neutral-500 font-mono">Lot: {q.batchLotNumber} · {q.quantity} {q.unit}</div>
+                  <div className="text-[10px] text-neutral-400 flex justify-between pt-1">
+                    <span>{q.type}</span>
+                    <span>{q.inspectionDate}</span>
+                  </div>
                 </div>
-                <div className="font-semibold text-neutral-900">{q.itemName}</div>
-                <div className="text-[11px] text-neutral-500 font-mono">Lot: {q.batchLotNumber} · {q.quantity} {q.unit}</div>
-                <div className="text-[10px] text-neutral-400 flex justify-between pt-1">
-                  <span>{q.type}</span>
-                  <span>{q.inspectionDate}</span>
-                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-neutral-400 text-xs italic">
+                No QC inspections found in database.
               </div>
-            ))}
+            )}
           </div>
         </div>
 

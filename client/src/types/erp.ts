@@ -10,24 +10,25 @@ export type UserRole =
   | 'Dispatch';
 
 export interface CompanyProfile {
+  id?: string;
   name: string;
-  legalName: string;
+  legalName?: string;
   formation: string;
   established: string;
-  businessType: string;
-  industry: string;
+  businessType?: string;
+  industry?: string;
   gstin: string;
   pan: string;
   address: string;
   city: string;
   state: string;
   pincode: string;
-  phone: string;
-  email: string;
+  phone?: string;
+  email?: string;
   bankName: string;
   accountNo: string;
   ifscCode: string;
-  branch: string;
+  branch?: string;
 }
 
 export type LeadStage = 
@@ -514,7 +515,7 @@ export interface ExpenseRecord {
     | 'Miscellaneous';
   date: string;
   amount: number;
-  paidFromAccount: 'SBI Industrial Current A/c' | 'HDFC Cash Credit A/c' | 'Petty Cash';
+  paidFromAccount: string;
   vendorName: string;
   description: string;
   invoiceOrVoucherNo: string;

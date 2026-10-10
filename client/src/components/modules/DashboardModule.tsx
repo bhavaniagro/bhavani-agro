@@ -91,6 +91,32 @@ export const DashboardModule: React.FC = () => {
     { title: 'Monthly Expenses', value: `₹${monthlyExpenses.toLocaleString('en-IN')}`, sub: `${expenses.length} expense records`, icon: Receipt, color: 'text-neutral-800' }
   ];
 
+  const nowMs = Date.now();
+
+  const receivables0To30 = invoices.reduce((sum, inv) => {
+    const bal = inv.balanceAmount || 0;
+    if (bal <= 0) return sum;
+    const invDate = inv.invoiceDate ? new Date(inv.invoiceDate).getTime() : nowMs;
+    const diffDays = Math.max(0, Math.floor((nowMs - invDate) / 86400000));
+    return diffDays <= 30 ? sum + bal : sum;
+  }, 0);
+
+  const receivables31To60 = invoices.reduce((sum, inv) => {
+    const bal = inv.balanceAmount || 0;
+    if (bal <= 0) return sum;
+    const invDate = inv.invoiceDate ? new Date(inv.invoiceDate).getTime() : nowMs;
+    const diffDays = Math.max(0, Math.floor((nowMs - invDate) / 86400000));
+    return (diffDays > 30 && diffDays <= 60) ? sum + bal : sum;
+  }, 0);
+
+  const receivables60Plus = invoices.reduce((sum, inv) => {
+    const bal = inv.balanceAmount || 0;
+    if (bal <= 0) return sum;
+    const invDate = inv.invoiceDate ? new Date(inv.invoiceDate).getTime() : nowMs;
+    const diffDays = Math.max(0, Math.floor((nowMs - invDate) / 86400000));
+    return diffDays > 60 ? sum + bal : sum;
+  }, 0);
+
   return (
     <div className="space-y-6">
       {/* Top Banner with Quick Actions */}
@@ -294,15 +320,15 @@ export const DashboardModule: React.FC = () => {
             <div className="mt-3 space-y-2 text-xs">
               <div className="flex justify-between items-center py-1 border-b border-neutral-100">
                 <span className="text-neutral-600">Current (0–30 Days):</span>
-                <span className="font-mono font-semibold text-neutral-900">₹4,89,846</span>
+                <span className="font-mono font-semibold text-neutral-900">₹{receivables0To30.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-neutral-100">
                 <span className="text-neutral-600">31–60 Days:</span>
-                <span className="font-mono font-semibold text-neutral-900">₹3,81,938</span>
+                <span className="font-mono font-semibold text-neutral-900">₹{receivables31To60.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-neutral-100">
                 <span className="text-rose-700 font-medium">Overdue (60+ Days):</span>
-                <span className="font-mono font-bold text-rose-700">₹2,33,500</span>
+                <span className="font-mono font-bold text-rose-700">₹{receivables60Plus.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between items-center pt-2 font-bold text-neutral-900 text-xs">
                 <span>Total Outstanding:</span>

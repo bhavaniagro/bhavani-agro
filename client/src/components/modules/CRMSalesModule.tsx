@@ -331,26 +331,85 @@ export const CRMSalesModule: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white border border-neutral-200 rounded-xl p-4 space-y-3">
-              <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-900 border-b border-neutral-100 pb-2">
-                Sales Pipeline Stage Breakdown
-              </h3>
-              <div className="space-y-2">
-                {stages.map(st => {
-                  const stageCount = leads.filter(l => l.status === st).length;
-                  const pct = leads.length > 0 ? (stageCount / leads.length) * 100 : 0;
-                  return (
-                    <div key={st} className="space-y-1">
-                      <div className="flex justify-between text-xs font-medium text-neutral-700">
-                        <span>{st}</span>
-                        <span className="font-mono">{stageCount} leads ({pct.toFixed(0)}%)</span>
-                      </div>
-                      <div className="w-full h-2 bg-neutral-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-600 rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
+            <div className="bg-white border border-neutral-200 rounded-xl p-4 space-y-4">
+              <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+                <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-900">
+                  Sales Orders Summary
+                </h3>
+                <span className="text-[11px] font-mono text-neutral-500">
+                  {salesOrders.length} Total Orders
+                </span>
+              </div>
+
+              {/* Order status metrics grid */}
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="p-2 bg-neutral-50 rounded border border-neutral-200">
+                  <div className="text-[10px] text-neutral-500 font-medium">Recent (30 Days)</div>
+                  <div className="font-bold font-mono text-neutral-900 mt-0.5">
+                    {salesOrders.filter(so => {
+                      if (!so.orderDate) return true;
+                      const orderTime = new Date(so.orderDate).getTime();
+                      const thirtyDaysAgo = Date.now() - 30 * 86400000;
+                      return orderTime >= thirtyDaysAgo;
+                    }).length}
+                  </div>
+                </div>
+                <div className="p-2 bg-amber-50 rounded border border-amber-200 text-amber-900">
+                  <div className="text-[10px] text-amber-700 font-medium">Pending / Unfulfilled</div>
+                  <div className="font-bold font-mono text-amber-900 mt-0.5">
+                    {salesOrders.filter(so => ['Pending', 'Confirmed', 'Production Required', 'Ready'].includes(so.status)).length}
+                  </div>
+                </div>
+                <div className="p-2 bg-emerald-50 rounded border border-emerald-200 text-emerald-900">
+                  <div className="text-[10px] text-emerald-700 font-medium">Completed</div>
+                  <div className="font-bold font-mono text-emerald-900 mt-0.5">
+                    {salesOrders.filter(so => ['Dispatched', 'Completed'].includes(so.status)).length}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sales orders list table */}
+              <div className="border border-neutral-200 rounded-lg overflow-hidden">
+                {salesOrders.length > 0 ? (
+                  <div className="max-h-60 overflow-y-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+                          <th className="p-2">Order #</th>
+                          <th className="p-2">Customer</th>
+                          <th className="p-2">Date</th>
+                          <th className="p-2 text-right">Total (₹)</th>
+                          <th className="p-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-100">
+                        {salesOrders.slice(0, 10).map(so => (
+                          <tr key={so.id} className="hover:bg-neutral-50/50">
+                            <td className="p-2 font-mono font-bold text-neutral-900">{so.orderNumber}</td>
+                            <td className="p-2 text-neutral-800 truncate max-w-[120px]">{so.customerName}</td>
+                            <td className="p-2 text-neutral-500 font-mono text-[11px]">{so.orderDate}</td>
+                            <td className="p-2 text-right font-mono font-semibold">₹{(so.totalAmount || 0).toLocaleString('en-IN')}</td>
+                            <td className="p-2">
+                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase ${
+                                so.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
+                                so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                                so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
+                                so.status === 'Production Required' ? 'bg-amber-100 text-amber-900' :
+                                'bg-neutral-100 text-neutral-700'
+                              }`}>
+                                {so.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-neutral-400 italic text-xs">
+                    No sales orders available. Persisted orders will appear here.
+                  </div>
+                )}
               </div>
             </div>
 
