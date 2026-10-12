@@ -1006,16 +1006,20 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
 
         // Add to finished goods stock
-        setProducts(prev => prev.map(p => p.id === batch.productId ? {
-          ...p,
-          currentStockMT: Number((p.currentStockMT + batch.quantityProducedMT).toFixed(2))
-        } : p));
-
-        const product = products.find(p => p.id === batch.productId);
-        if (product) {
-          const newQty = Number((product.currentStockMT + batch.quantityProducedMT).toFixed(2));
-          updateProductFromApi(product.id, { currentStockMT: newQty }).catch(console.error);
-          persistFinishedProduct({ ...product, currentStockMT: newQty }).catch(console.error);
+        const targetProd = products.find(p => p.id === batch.productId || (p.productName && batch.productName && p.productName.toLowerCase().trim() === batch.productName.toLowerCase().trim()));
+        if (targetProd) {
+          const newQty = Number((targetProd.currentStockMT + batch.quantityProducedMT).toFixed(2));
+          setProducts(prev => prev.map(p => p.id === targetProd.id ? {
+            ...p,
+            currentStockMT: newQty
+          } : p));
+          updateProductFromApi(targetProd.id, { currentStockMT: newQty }).catch(console.error);
+          persistFinishedProduct({ ...targetProd, currentStockMT: newQty }).catch(console.error);
+        } else {
+          setProducts(prev => prev.map(p => p.id === batch.productId ? {
+            ...p,
+            currentStockMT: Number((p.currentStockMT + batch.quantityProducedMT).toFixed(2))
+          } : p));
         }
 
         // Mark associated production order completed
@@ -1023,34 +1027,10 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (po) {
           setProductionOrders(prev => prev.map(p => p.id === po.id ? { ...p, status: 'Completed' } : p));
           updateProductionOrderInApi(po.id, { status: 'Completed' }).catch(console.error);
-          // If generated from sales order, mark sales order Ready & auto-create Dispatch Challan!
+          // If generated from sales order, mark sales order Ready for dispatch (manual dispatch step in Dispatch module)
           if (po.salesOrderId) {
             setSalesOrders(prev => prev.map(so => so.id === po.salesOrderId ? { ...so, status: 'Ready', stockAvailable: true } : so));
             updateSalesOrderFromApi(po.salesOrderId, { status: 'Ready', stockAvailable: true }).catch(console.error);
-            const so = salesOrders.find(s => s.id === po.salesOrderId);
-            if (so) {
-              createDispatchChallan({
-                salesOrderId: so.id,
-                orderNumber: so.orderNumber,
-                customerId: so.customerId,
-                customerName: so.customerName,
-                productName: so.productName,
-                batchNumber: batch.batchNumber,
-                quantityMT: so.quantityMT,
-                bagsCount: so.quantityMT * 20,
-                vehicleNumber: 'GJ-12-BV-9908',
-                driverName: 'Ramesh Rabari',
-                driverMobile: '+91 98251 44556',
-                transporterName: 'Gujarat Freight Logistics',
-                dispatchDate: new Date().toISOString().split('T')[0],
-                destination: so.shippingAddress || 'Junagadh Godown',
-                eWayBillNumber: `2410${Math.floor(100000008 + Math.random() * 90000000)}`,
-                lrNumber: `LR-2609-${Math.floor(100 + Math.random() * 900)}`,
-                freightAmountRs: 12500,
-                freightPaidBy: 'Customer',
-                remarks: 'Dispatched in full under delivery challan.'
-              });
-            }
           }
         }
       }
@@ -1071,7 +1051,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `alt-${Date.now()}`,
       type: 'info',
       title: `QC Passed: ${qc.itemName}`,
-      description: `Batch ${qc.batchLotNumber} approved. Inventory updated & released.`,
+      description: `Batch ${qc.batchLotNumber} approved. Inventory updated & released for sale.`,
       timestamp: 'Just now',
       module: 'Quality Control',
       read: false
@@ -1103,21 +1083,21 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('Failed to save dispatch to Firebase:', error);
     });
 
-    // Deduct finished goods stock
+    // Deduct finished goods stock accurately
     const so = salesOrders.find(s => s.id === dispatchData.salesOrderId);
-    if (so) {
-      const newStock = Math.max(0, Number((so.quantityMT > 0 ? 0 : dispatchData.quantityMT).toFixed(2)));
-      setProducts(prev => prev.map(p => p.id === so.productId ? {
+    const targetProduct = products.find(p => (so && (p.id === so.productId || p.productName.toLowerCase().trim() === so.productName.toLowerCase().trim())) || (p.productName && dispatchData.productName && p.productName.toLowerCase().trim() === dispatchData.productName.toLowerCase().trim()));
+    if (targetProduct) {
+      const newStock = Math.max(0, Number((targetProduct.currentStockMT - dispatchData.quantityMT).toFixed(2)));
+      setProducts(prev => prev.map(p => p.id === targetProduct.id ? {
         ...p,
         currentStockMT: newStock
       } : p));
 
-      const product = products.find(p => p.id === so.productId);
-      if (product) {
-        updateProductFromApi(product.id, { currentStockMT: newStock }).catch(console.error);
-        persistFinishedProduct({ ...product, currentStockMT: newStock }).catch(console.error);
-      }
+      updateProductFromApi(targetProduct.id, { currentStockMT: newStock }).catch(console.error);
+      persistFinishedProduct({ ...targetProduct, currentStockMT: newStock }).catch(console.error);
+    }
 
+    if (so) {
       setSalesOrders(prev => prev.map(s => s.id === so.id ? {
         ...s,
         status: 'Dispatched',
