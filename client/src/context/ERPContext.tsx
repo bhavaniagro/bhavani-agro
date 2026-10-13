@@ -301,7 +301,7 @@ interface ERPContextType {
   deleteSupplier: (id: string) => Promise<void>;
   updateRawMaterial: (id: string, data: Partial<RawMaterial>) => Promise<void>;
   deleteRawMaterial: (id: string) => Promise<void>;
-  addProduct: (prod: Omit<FinishedProduct, 'id' | 'currentStockMT' | 'reservedStockMT'>) => Promise<void>;
+  addProduct: (prod: Omit<FinishedProduct, 'id'> & { currentStockMT?: number; reservedStockMT?: number }) => Promise<void>;
   updateProduct: (id: string, data: Partial<FinishedProduct>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   addSalesOrder: (so: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>) => Promise<SalesOrder>;
@@ -1839,12 +1839,12 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Batch 2: Product / Finished Goods CRUD
-  const addProduct = async (prodData: Omit<FinishedProduct, 'id' | 'currentStockMT' | 'reservedStockMT'>) => {
+  const addProduct = async (prodData: Omit<FinishedProduct, 'id'> & { currentStockMT?: number; reservedStockMT?: number }) => {
     const newProd: FinishedProduct = {
       ...prodData,
       id: `prod-${Date.now()}`,
-      currentStockMT: 0,
-      reservedStockMT: 0,
+      currentStockMT: prodData.currentStockMT ?? 0,
+      reservedStockMT: prodData.reservedStockMT ?? 0,
     };
     try {
       const apiProd = await createProductFromApi(newProd);

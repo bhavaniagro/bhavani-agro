@@ -133,20 +133,32 @@ export const DispatchLogisticsModule: React.FC = () => {
 
   const handleCreateVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addVehicle({
-      vehicleNumber: vehNumber,
-      vehicleType: (vehType || '10-Wheeler Truck (20 MT)') as any,
-      transporterName: vehTransporter,
-      driverName: vehDriver,
-      driverPhone: vehPhone,
-      capacityMT: Number(vehCapacity),
-      freightRatePerMTPerKM: 4.5,
-      pucExpiry: new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
-      fitnessExpiry: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
-      insuranceExpiry: new Date(Date.now() + 200 * 86400000).toISOString().split('T')[0],
-      status: 'Available'
-    });
-    setShowAddVehicleModal(false);
+    try {
+      await addVehicle({
+        vehicleNumber: vehNumber,
+        vehicleType: (vehType || '10-Wheeler Truck (20 MT)') as any,
+        transporterName: vehTransporter,
+        driverName: vehDriver,
+        driverPhone: vehPhone,
+        capacityMT: Number(vehCapacity),
+        freightRatePerMTPerKM: 4.5,
+        pucExpiry: new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
+        fitnessExpiry: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
+        insuranceExpiry: new Date(Date.now() + 200 * 86400000).toISOString().split('T')[0],
+        status: 'Available'
+      });
+      // Reset form fields and close modal only on success
+      setVehNumber('');
+      setVehType('');
+      setVehTransporter('');
+      setVehDriver('');
+      setVehPhone('');
+      setVehCapacity(30);
+      setShowAddVehicleModal(false);
+    } catch (err) {
+      console.error('Failed to add vehicle:', err);
+      // Keep modal open so the user can retry
+    }
   };
 
   return (
