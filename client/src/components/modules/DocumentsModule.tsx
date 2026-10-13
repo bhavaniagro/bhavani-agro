@@ -23,6 +23,14 @@ export const DocumentsModule: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const resetDocForm = () => {
+    setTitle('');
+    setDocType('GST & Statutory');
+    setRelatedEntity('');
+    setSelectedFile(null);
+    setUploadError(null);
+  };
+
   const docTypes = [
     'All',
     'GST & Statutory',
@@ -70,9 +78,7 @@ export const DocumentsModule: React.FC = () => {
       });
 
       setShowAddModal(false);
-      setTitle('');
-      setRelatedEntity('');
-      setSelectedFile(null);
+      resetDocForm();
     } catch (err: any) {
       setUploadError(err.message || 'An error occurred during file upload.');
     } finally {
@@ -113,7 +119,7 @@ export const DocumentsModule: React.FC = () => {
 
         <button
           onClick={() => {
-            setUploadError(null);
+            resetDocForm();
             setShowAddModal(true);
           }}
           className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap self-start md:self-auto"

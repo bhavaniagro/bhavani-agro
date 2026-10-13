@@ -5,7 +5,6 @@ import {
   ShoppingCart,
   Boxes,
   Factory,
-  FlaskConical,
   PackageCheck,
   Warehouse,
   Truck,
@@ -38,12 +37,10 @@ export const Sidebar: React.FC = () => {
     setActiveModule, 
     activeRole, 
     salesOrders, 
-    qcInspections, 
     rawMaterials, 
     dispatches 
   } = useERP();
 
-  const pendingQC = qcInspections.filter(q => q.overallStatus === 'Pending').length;
   const pendingOrders = salesOrders.filter(s => s.status === 'Production Required' || s.status === 'Pending').length;
   const lowStockRM = rawMaterials.filter(r => r.currentStock <= r.reorderLevel).length;
   const pendingDispatches = dispatches.filter(d => d.status === 'Ready' || d.status === 'Loaded').length;
@@ -54,7 +51,7 @@ export const Sidebar: React.FC = () => {
     { id: 'Purchase', label: 'Purchase', icon: ShoppingCart },
     { id: 'Raw Material', label: 'Raw Material', icon: Boxes, badge: lowStockRM > 0 ? lowStockRM : undefined },
     { id: 'Production', label: 'Production', icon: Factory },
-    { id: 'Quality Control', label: 'Quality Control', icon: FlaskConical, badge: pendingQC > 0 ? pendingQC : undefined },
+    // Quality Control removed from navigation per company request (Task 1)
     { id: 'Finished Goods', label: 'Finished Goods', icon: PackageCheck },
     { id: 'Inventory', label: 'Inventory', icon: Warehouse },
     { id: 'Dispatch & Logistics', label: 'Dispatch & Logistics', icon: Truck, badge: pendingDispatches > 0 ? pendingDispatches : undefined },
@@ -70,7 +67,9 @@ export const Sidebar: React.FC = () => {
   ];
 
   // Role visibility filter (Owner/Admin sees all; specific roles see pertinent items)
+  // Note: Quality Control is excluded from all role filters as it has been removed from navigation.
   const isItemVisible = (id: ERPModule): boolean => {
+    if (id === 'Quality Control') return false; // Always hide QC from navigation
     if (activeRole === 'Owner / Admin') return true;
     switch (activeRole) {
       case 'Sales':
@@ -78,9 +77,9 @@ export const Sidebar: React.FC = () => {
       case 'Purchase':
         return ['Dashboard', 'Purchase', 'Suppliers', 'Raw Material', 'Documents'].includes(id);
       case 'Production Manager':
-        return ['Dashboard', 'Production', 'Raw Material', 'Quality Control', 'Finished Goods', 'Maintenance', 'Reports & Analytics'].includes(id);
+        return ['Dashboard', 'Production', 'Raw Material', 'Finished Goods', 'Maintenance', 'Reports & Analytics'].includes(id);
       case 'Warehouse':
-        return ['Dashboard', 'Raw Material', 'Finished Goods', 'Inventory', 'Dispatch & Logistics', 'Quality Control'].includes(id);
+        return ['Dashboard', 'Raw Material', 'Finished Goods', 'Inventory', 'Dispatch & Logistics'].includes(id);
       case 'Accounts':
         return ['Dashboard', 'Customers', 'Suppliers', 'Finance & Accounts', 'Expenses', 'Reports & Analytics', 'Documents'].includes(id);
       case 'Dispatch':

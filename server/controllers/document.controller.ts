@@ -61,9 +61,12 @@ export async function uploadDocumentFile(req: Request, res: Response): Promise<v
         const filePath = path.join(uploadsDir, safeName);
         fs.writeFileSync(filePath, buffer);
 
-        const protocol = req.protocol;
-        const host = req.get("host") || "localhost:4000";
-        const fileUrl = `${protocol}://${host}/uploads/${safeName}`;
+        const forwardedProto = req.get("x-forwarded-proto")?.split(",")[0]?.trim() || req.protocol;
+        const forwardedHost = req.get("x-forwarded-host")?.split(",")[0]?.trim() || req.get("host") || "localhost:4000";
+        const baseUrl = process.env.SERVER_BASE_URL
+            ? process.env.SERVER_BASE_URL.replace(/\/$/, '')
+            : `${forwardedProto}://${forwardedHost}`;
+        const fileUrl = `${baseUrl}/uploads/${safeName}`;
 
         const sizeInKB = (buffer.length / 1024).toFixed(1);
         const fileSize = buffer.length > 1024 * 1024

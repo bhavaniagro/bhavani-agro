@@ -52,6 +52,22 @@ export const RawMaterialModule: React.FC = () => {
     reorderLevel: 0
   });
 
+  const resetRMForm = () => {
+    setNewRM({
+      sku: `RM-${Date.now().toString().slice(-4)}`,
+      materialName: '',
+      category: 'Mineral Ore',
+      unit: 'MT',
+      minimumStock: 0,
+      maximumStock: 0,
+      openingStock: 0,
+      averageCost: 0,
+      storageLocation: '',
+      primarySupplier: '',
+      reorderLevel: 0
+    });
+  };
+
   const categories = [
     'All',
     'Mineral Ore',
@@ -102,7 +118,7 @@ export const RawMaterialModule: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsAddOpen(true)}
+          onClick={() => { resetRMForm(); setIsAddOpen(true); }}
             className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -268,6 +284,7 @@ export const RawMaterialModule: React.FC = () => {
                     reorderLevel: Number(newRM.reorderLevel)
                   });
                   setIsAddOpen(false);
+                  resetRMForm();
                 } finally {
                   setIsSubmitting(false);
                 }

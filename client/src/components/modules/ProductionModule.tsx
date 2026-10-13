@@ -364,7 +364,6 @@ export const ProductionModule: React.FC = () => {
                         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
                           po.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
                           po.status === 'In Production' ? 'bg-amber-100 text-amber-800 animate-pulse' :
-                          po.status === 'QC' ? 'bg-blue-100 text-blue-800' :
                           'bg-neutral-100 text-neutral-700'
                         }`}>
                           {po.status}
@@ -562,14 +561,13 @@ export const ProductionModule: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-3 text-right">
-                      <button
-                        onClick={() => {
-                          setActiveModule('Quality Control');
-                        }}
-                        className="px-2.5 py-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-[11px] font-medium text-neutral-700 cursor-pointer"
-                      >
-                        Inspect QC
-                      </button>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
+                        b.qcStatus === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
+                        b.qcStatus === 'Pending' ? 'bg-amber-100 text-amber-800' :
+                        'bg-rose-100 text-rose-800'
+                      }`}>
+                        {b.qcStatus === 'Approved' ? '✓ Approved' : b.qcStatus === 'Pending' ? 'Pending Review' : 'Rejected'}
+                      </span>
                     </td>
                     <td className="p-3 text-center">
                       <div className="flex items-center justify-center gap-1.5">
@@ -648,7 +646,7 @@ export const ProductionModule: React.FC = () => {
               </div>
 
               <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-800">
-                <strong>Automation Note:</strong> Submitting will generate a new Production Batch and automatically create a <strong>Quality Control inspection record</strong>.
+                <strong>Automation Note:</strong> Submitting will generate a new Production Batch and update finished goods inventory automatically.
               </div>
 
               <div className="pt-2 flex justify-end gap-2 border-t border-neutral-200">
@@ -663,7 +661,7 @@ export const ProductionModule: React.FC = () => {
                   type="submit"
                   className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer"
                 >
-                  Generate Batch &amp; Send to QC
+                  Generate Batch &amp; Complete
                 </button>
               </div>
             </form>
@@ -730,7 +728,6 @@ export const ProductionModule: React.FC = () => {
                     <option value="Planned">Planned</option>
                     <option value="Material Ready">Material Ready</option>
                     <option value="In Production">In Production</option>
-                    <option value="QC">QC</option>
                     <option value="Completed">Completed</option>
                   </select>
                 </div>
@@ -917,7 +914,7 @@ export const ProductionModule: React.FC = () => {
                 </div>
               </div>
 
-              {/* Raw Material Component Row */}
+                {/* Raw Material Component Row - with column headers */}
               <div className="border border-neutral-200 rounded p-2 bg-neutral-50 space-y-2">
                 <div className="flex items-center justify-between font-semibold text-neutral-700 text-[11px]">
                   <span>Raw Material Inputs:</span>
@@ -939,6 +936,14 @@ export const ProductionModule: React.FC = () => {
                     + Add Component
                   </button>
                 </div>
+                {bomItems.length > 0 && (
+                  <div className="flex items-center gap-2 text-[10px] font-semibold text-neutral-500 border-b border-neutral-200 pb-1 mb-1">
+                    <span className="flex-1">Raw Material</span>
+                    <span className="w-24 text-center">Quantity Required (MT per MT of Output)</span>
+                    <span className="w-10 text-center">Unit</span>
+                    <span className="w-5"></span>
+                  </div>
+                )}
                 {bomItems.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     <select
@@ -964,6 +969,8 @@ export const ProductionModule: React.FC = () => {
                     <input
                       type="number"
                       placeholder="Qty/MT"
+                      title="Quantity required per 1 MT of finished output"
+                      aria-label="Raw material quantity required per MT of output"
                       value={item.quantityPerMT}
                       onChange={(e) => {
                         const updated = [...bomItems];
@@ -972,7 +979,7 @@ export const ProductionModule: React.FC = () => {
                       }}
                       className="w-20 border border-neutral-300 rounded p-1 font-mono"
                     />
-                    <span className="font-mono text-neutral-500">{item.unit || 'KG'}</span>
+                    <span className="font-mono text-neutral-500 w-10 text-center">{item.unit || 'KG'}</span>
                     <button
                       type="button"
                       onClick={() => setBomItems(prev => prev.filter((_, i) => i !== idx))}

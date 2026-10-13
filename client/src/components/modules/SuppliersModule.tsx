@@ -44,6 +44,23 @@ export const SuppliersModule: React.FC = () => {
     ifscCode: ''
   });
 
+  const resetSuppForm = () => {
+    setNewSupp({
+      supplierName: '',
+      contactPerson: '',
+      mobile: '',
+      email: '',
+      address: '',
+      gstin: '',
+      materialSupplied: '',
+      paymentTerms: 'Net 30 Days',
+      creditPeriodDays: 30,
+      bankName: '',
+      accountNo: '',
+      ifscCode: ''
+    });
+  };
+
   const filteredSuppliers = suppliers.filter(s => 
     s.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,7 +92,7 @@ export const SuppliersModule: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsAddOpen(true)}
+            onClick={() => { resetSuppForm(); setIsAddOpen(true); }}
             className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5" />

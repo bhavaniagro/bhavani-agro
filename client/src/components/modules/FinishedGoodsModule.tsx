@@ -50,8 +50,30 @@ export const FinishedGoodsModule: React.FC = () => {
     storageLocation: 'Warehouse Bay 1',
     taxRate: 5,
     hsnCode: '3105',
-    description: 'High-grade agro granule product'
+    description: 'High-grade agro granule product',
+    physicalStockMT: 0.0,
+    reservedStockMT: 0.0
   });
+
+  const resetNewProdForm = () => {
+    setNewProd({
+      sku: `FG-${Date.now().toString().slice(-4)}`,
+      productName: '',
+      category: 'Granules',
+      unit: 'MT',
+      sellingPricePerMT: 6500,
+      standardCostPerMT: 4200,
+      minimumStockMT: 20,
+      maximumStockMT: 200,
+      packagingType: '50kg HDPE Woven Bag',
+      storageLocation: 'Warehouse Bay 1',
+      taxRate: 5,
+      hsnCode: '3105',
+      description: 'High-grade agro granule product',
+      physicalStockMT: 0.0,
+      reservedStockMT: 0.0
+    });
+  };
 
   const filteredProducts = products.filter(p => 
     p.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -259,8 +281,11 @@ export const FinishedGoodsModule: React.FC = () => {
                     storageLocation: newProd.storageLocation,
                     taxRate: Number(newProd.taxRate),
                     hsnCode: newProd.hsnCode,
-                    description: newProd.description
+                    description: newProd.description,
+                    currentStockMT: Number(newProd.physicalStockMT) || 0,
+                    reservedStockMT: Number(newProd.reservedStockMT) || 0
                   });
+                  resetNewProdForm();
                   setIsAddOpen(false);
                 } finally {
                   setIsSubmitting(false);
@@ -335,6 +360,39 @@ export const FinishedGoodsModule: React.FC = () => {
                     onChange={(e) => setNewProd({ ...newProd, storageLocation: e.target.value })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Physical Stock (MT) <span className="text-neutral-400 font-normal">optional</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newProd.physicalStockMT}
+                    onChange={(e) => setNewProd({ ...newProd, physicalStockMT: Math.max(0, Number(e.target.value)) })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
+                    placeholder="0.0"
+                  />
+                  <div className="text-[10px] text-neutral-400 mt-0.5">Current physical inventory in warehouse</div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Reserved Stock (MT) <span className="text-neutral-400 font-normal">optional</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newProd.reservedStockMT}
+                    onChange={(e) => setNewProd({ ...newProd, reservedStockMT: Math.max(0, Number(e.target.value)) })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
+                    placeholder="0.0"
+                  />
+                  <div className="text-[10px] text-neutral-400 mt-0.5">Allocated to confirmed sales orders</div>
                 </div>
               </div>
 

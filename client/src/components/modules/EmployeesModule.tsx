@@ -23,6 +23,16 @@ export const EmployeesModule: React.FC = () => {
   const [empDate, setEmpDate] = useState(new Date().toISOString().split('T')[0]);
   const [empSalary, setEmpSalary] = useState<number | ''>('');
 
+  const resetEmployeeForm = () => {
+    setEmpCode(`EMP-2609-0${employees.length + 1}`);
+    setEmpName('');
+    setEmpDept('Production');
+    setEmpRole('');
+    setEmpMobile('');
+    setEmpDate(new Date().toISOString().split('T')[0]);
+    setEmpSalary('');
+  };
+
   const departments = ['All', 'Production', 'Sales', 'Purchase', 'Accounts', 'Warehouse', 'Dispatch', 'Administration'];
 
   const filteredEmployees = employees.filter(e => {
@@ -48,10 +58,7 @@ export const EmployeesModule: React.FC = () => {
       status: 'Active'
     });
     setShowAddModal(false);
-    setEmpName('');
-    setEmpRole('');
-    setEmpMobile('');
-    setEmpSalary('');
+    resetEmployeeForm();
   };
 
   const handleUpdateEmployee = async (e: React.FormEvent) => {
@@ -87,7 +94,7 @@ export const EmployeesModule: React.FC = () => {
 
         <button
           onClick={() => {
-            setEmpCode(`EMP-2609-0${employees.length + 1}`);
+            resetEmployeeForm();
             setShowAddModal(true);
           }}
           className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap self-start md:self-auto"

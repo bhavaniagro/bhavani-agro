@@ -20,6 +20,15 @@ export const MaintenanceModule: React.FC = () => {
   const [installDate, setInstallDate] = useState('2021-04-15');
   const [freqDays, setFreqDays] = useState(30);
 
+  const resetMachineForm = () => {
+    setCode(`MCH-2609-0${machinery.length + 1}`);
+    setName('');
+    setDept('Granulation & Drying');
+    setCapacity('15 MT/hr');
+    setInstallDate(new Date().toISOString().split('T')[0]);
+    setFreqDays(30);
+  };
+
   const totalMaintenanceCost = machinery.reduce((acc, curr) => acc + curr.totalMaintenanceCostThisYear, 0);
 
   const handleCreateMachinery = async (e: React.FormEvent) => {
@@ -40,8 +49,7 @@ export const MaintenanceModule: React.FC = () => {
       totalMaintenanceCostThisYear: 0
     });
     setShowAddModal(false);
-    setName('');
-    setCode('');
+    resetMachineForm();
   };
 
   const handleUpdateMachinery = async (e: React.FormEvent) => {
@@ -77,7 +85,7 @@ export const MaintenanceModule: React.FC = () => {
 
         <button
           onClick={() => {
-            setCode(`MCH-2609-0${machinery.length + 1}`);
+            resetMachineForm();
             setShowAddModal(true);
           }}
           className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap self-start md:self-auto"
