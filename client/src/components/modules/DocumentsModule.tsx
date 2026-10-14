@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FileText, Download, Eye, Plus, Search, CheckCircle2, Edit, Trash2, Upload, ExternalLink } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ErpDocument } from '../../types/erp';
 import { uploadDocumentFileInApi } from '../../services/api/documentApi.service';
+import { resolveDocumentUrl } from '../../config/apiConfig';
 
 export const DocumentsModule: React.FC = () => {
   const { documents, addDocument, updateDocument, deleteDocument } = useERP();
@@ -22,6 +23,7 @@ export const DocumentsModule: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetDocForm = () => {
     setTitle('');
@@ -29,6 +31,8 @@ export const DocumentsModule: React.FC = () => {
     setRelatedEntity('');
     setSelectedFile(null);
     setUploadError(null);
+    // Clear the file input element so it shows empty when the form reopens
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const docTypes = [
@@ -196,7 +200,7 @@ export const DocumentsModule: React.FC = () => {
               </span>
               {doc.fileUrl ? (
                 <a
-                  href={doc.fileUrl}
+                  href={resolveDocumentUrl(doc.fileUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-2.5 py-1 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 rounded text-[11px] font-medium text-emerald-800 flex items-center gap-1 cursor-pointer"
@@ -240,6 +244,7 @@ export const DocumentsModule: React.FC = () => {
                 <label className="block text-neutral-700 font-medium mb-1">Select File (PDF, Images, Office Docs)</label>
                 <input
                   type="file"
+                  ref={fileInputRef}
                   required
                   onChange={(e) => {
                     const f = e.target.files?.[0] || null;

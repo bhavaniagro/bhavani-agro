@@ -12,6 +12,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Printer,
   X
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
@@ -34,6 +35,10 @@ export const ProductionModule: React.FC = () => {
     deleteBOM,
     startProductionOrder, 
     completeProductionOrder,
+    approveQC,
+    approveProductionBatch,
+    qcInspections,
+    setPrintableDoc,
     setActiveModule,
     setIsDemoRunnerOpen
   } = useERP();
@@ -137,6 +142,15 @@ export const ProductionModule: React.FC = () => {
       storageLocation: editBatchStorage
     });
     setEditingBatch(null);
+  };
+
+  const handleApproveBatch = (batch: ProductionBatch) => {
+    const qc = qcInspections.find(q => q.batchLotNumber === batch.batchNumber || q.referenceId === batch.batchNumber);
+    if (qc) {
+      approveQC(qc.id);
+    } else {
+      approveProductionBatch(batch.id);
+    }
   };
 
   const handleDeleteBatchConfirm = async () => {
@@ -386,6 +400,25 @@ export const ProductionModule: React.FC = () => {
                             <CheckCircle2 className="w-3 h-3" />
                             <span>Log Entry</span>
                           </button>
+                        ) : po.status === 'QC' ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <span className="text-[11px] text-amber-700 font-mono font-medium">
+                              Batch {po.actualBatchNumber || 'Produced'}
+                            </span>
+                            <button
+                              onClick={() => {
+                                const batch = productionBatches.find(b => b.productionOrderId === po.id || b.batchNumber === po.actualBatchNumber);
+                                if (batch) {
+                                  handleApproveBatch(batch);
+                                }
+                              }}
+                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold flex items-center gap-1 cursor-pointer shadow-2xs transition-colors"
+                              title="Verify quality and release batch to Finished Goods"
+                            >
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>Approve &amp; Release</span>
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-[11px] text-emerald-700 font-mono font-medium">
                             Batch {po.actualBatchNumber || 'Produced'}
@@ -529,8 +562,8 @@ export const ProductionModule: React.FC = () => {
                   <th className="p-3 text-right">Produced Qty</th>
                   <th className="p-3 text-right">Std vs Actual Cost</th>
                   <th className="p-3">Storage Bay</th>
-                  <th className="p-3">QC Status</th>
-                  <th className="p-3 text-right">Traceability</th>
+                  <th className="p-3">Quality Status</th>
+                  <th className="p-3 text-right">Inventory Release</th>
                   <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -561,13 +594,29 @@ export const ProductionModule: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-3 text-right">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
-                        b.qcStatus === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
-                        b.qcStatus === 'Pending' ? 'bg-amber-100 text-amber-800' :
-                        'bg-rose-100 text-rose-800'
-                      }`}>
-                        {b.qcStatus === 'Approved' ? '✓ Approved' : b.qcStatus === 'Pending' ? 'Pending Review' : 'Rejected'}
-                      </span>
+                      {b.qcStatus === 'Pending' ? (
+                        <button
+                          onClick={() => handleApproveBatch(b)}
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer shadow-2xs transition-colors"
+                          title="Verify quality and release batch to Finished Goods inventory"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Approve &amp; Release</span>
+                        </button>
+                      ) : b.qcStatus === 'Approved' ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">✓ In Stock</span>
+                          <button
+                            onClick={() => setPrintableDoc({ type: 'qc_cert', data: b })}
+                            className="p-1 hover:bg-neutral-100 rounded text-neutral-500 hover:text-neutral-800 cursor-pointer"
+                            title="Print Batch Quality Certificate"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] font-medium text-rose-600">Rejected</span>
+                      )}
                     </td>
                     <td className="p-3 text-center">
                       <div className="flex items-center justify-center gap-1.5">
@@ -813,7 +862,7 @@ export const ProductionModule: React.FC = () => {
       {/* CREATE / EDIT BOM MODAL */}
       {(showAddBOMModal || editingBOM) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-xl p-5 text-xs">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 {editingBOM ? `Edit BOM Recipe (${editingBOM.productName})` : 'Create New BOM Recipe'}
@@ -914,10 +963,20 @@ export const ProductionModule: React.FC = () => {
                 </div>
               </div>
 
-                {/* Raw Material Component Row - with column headers */}
-              <div className="border border-neutral-200 rounded p-2 bg-neutral-50 space-y-2">
-                <div className="flex items-center justify-between font-semibold text-neutral-700 text-[11px]">
-                  <span>Raw Material Inputs:</span>
+              {/* Raw Material Component Section */}
+              <div className="border border-neutral-200 rounded-lg p-3 bg-neutral-50/70 space-y-2.5">
+                <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-neutral-800 text-xs">Raw Material Inputs</span>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-neutral-200 text-neutral-700 font-mono">
+                        {bomItems.length} {bomItems.length === 1 ? 'component' : 'components'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-neutral-500 block mt-0.5">
+                      Ingredients required per 1 MT of finished output
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -931,64 +990,118 @@ export const ProductionModule: React.FC = () => {
                         wastagePercent: 1.0
                       }]);
                     }}
-                    className="text-emerald-700 hover:underline flex items-center gap-1 font-semibold"
+                    className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-700 hover:text-emerald-800 border border-emerald-300 rounded text-[11px] font-semibold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
                   >
-                    + Add Component
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Component</span>
                   </button>
                 </div>
-                {bomItems.length > 0 && (
-                  <div className="flex items-center gap-2 text-[10px] font-semibold text-neutral-500 border-b border-neutral-200 pb-1 mb-1">
-                    <span className="flex-1">Raw Material</span>
-                    <span className="w-24 text-center">Quantity Required (MT per MT of Output)</span>
-                    <span className="w-10 text-center">Unit</span>
-                    <span className="w-5"></span>
+
+                {bomItems.length > 0 ? (
+                  <div className="space-y-2">
+                    {/* Column Headers for sm+ screens */}
+                    <div className="hidden sm:grid sm:grid-cols-12 gap-2 text-[10px] font-semibold text-neutral-500 px-1">
+                      <span className="col-span-6">Raw Material Component</span>
+                      <span className="col-span-5">Quantity Required (per MT Output)</span>
+                      <span className="col-span-1 text-center">Action</span>
+                    </div>
+
+                    {/* Component Row Items */}
+                    {bomItems.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-white border border-neutral-200 rounded-lg p-2.5 sm:p-2 sm:grid sm:grid-cols-12 gap-2 items-center shadow-2xs space-y-2 sm:space-y-0"
+                      >
+                        {/* Material Dropdown */}
+                        <div className="sm:col-span-6">
+                          <label className="block sm:hidden text-[10px] font-medium text-neutral-500 mb-1">
+                            Raw Material
+                          </label>
+                          <select
+                            value={item.rawMaterialId}
+                            onChange={(e) => {
+                              const rm = rawMaterials.find(r => r.id === e.target.value);
+                              const updated = [...bomItems];
+                              updated[idx] = {
+                                ...updated[idx],
+                                rawMaterialId: e.target.value,
+                                rawMaterialName: rm?.materialName || updated[idx].rawMaterialName,
+                                unit: rm?.unit || updated[idx].unit,
+                                costPerUnit: rm?.averageCost || updated[idx].costPerUnit
+                              };
+                              setBomItems(updated);
+                            }}
+                            className="w-full border border-neutral-300 rounded p-1.5 text-xs bg-white outline-none focus:border-neutral-900 transition-colors"
+                          >
+                            {rawMaterials.map(r => (
+                              <option key={r.id} value={r.id}>
+                                {r.materialName} ({r.sku})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Quantity Input with Integrated Unit Addon */}
+                        <div className="sm:col-span-5 flex items-center gap-1.5">
+                          <div className="flex-1">
+                            <label className="block sm:hidden text-[10px] font-medium text-neutral-500 mb-1">
+                              Quantity Required (per MT Output)
+                            </label>
+                            <div className="flex items-center border border-neutral-300 rounded overflow-hidden focus-within:border-neutral-900 bg-white">
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.0"
+                                title="Quantity required per 1 MT of finished output"
+                                aria-label="Raw material quantity required per MT of output"
+                                value={item.quantityPerMT}
+                                onChange={(e) => {
+                                  const updated = [...bomItems];
+                                  updated[idx].quantityPerMT = Math.max(0, parseFloat(e.target.value) || 0);
+                                  setBomItems(updated);
+                                }}
+                                className="w-full p-1.5 text-xs font-mono outline-none bg-transparent"
+                              />
+                              <span className="px-2 py-1.5 bg-neutral-100 border-l border-neutral-200 text-neutral-600 font-mono text-[10px] font-semibold select-none whitespace-nowrap">
+                                {item.unit || 'KG'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Mobile Remove Button */}
+                          <button
+                            type="button"
+                            onClick={() => setBomItems(prev => prev.filter((_, i) => i !== idx))}
+                            title="Remove component"
+                            aria-label="Remove component"
+                            className="sm:hidden mt-4 p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded border border-neutral-200 hover:border-rose-200 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Desktop Remove Button */}
+                        <div className="hidden sm:flex sm:col-span-1 justify-center">
+                          <button
+                            type="button"
+                            onClick={() => setBomItems(prev => prev.filter((_, i) => i !== idx))}
+                            title="Remove component"
+                            aria-label="Remove component"
+                            className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded border border-transparent hover:border-rose-200 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-5 px-3 border border-dashed border-neutral-300 rounded-lg bg-white/60">
+                    <p className="text-xs text-neutral-500 font-medium">No raw material components added yet.</p>
+                    <p className="text-[10px] text-neutral-400 mt-0.5">Click "+ Add Component" above to specify required ingredients.</p>
                   </div>
                 )}
-                {bomItems.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <select
-                      value={item.rawMaterialId}
-                      onChange={(e) => {
-                        const rm = rawMaterials.find(r => r.id === e.target.value);
-                        const updated = [...bomItems];
-                        updated[idx] = {
-                          ...updated[idx],
-                          rawMaterialId: e.target.value,
-                          rawMaterialName: rm?.materialName || updated[idx].rawMaterialName,
-                          unit: rm?.unit || updated[idx].unit,
-                          costPerUnit: rm?.averageCost || updated[idx].costPerUnit
-                        };
-                        setBomItems(updated);
-                      }}
-                      className="flex-1 border border-neutral-300 rounded p-1 bg-white"
-                    >
-                      {rawMaterials.map(r => (
-                        <option key={r.id} value={r.id}>{r.materialName}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="number"
-                      placeholder="Qty/MT"
-                      title="Quantity required per 1 MT of finished output"
-                      aria-label="Raw material quantity required per MT of output"
-                      value={item.quantityPerMT}
-                      onChange={(e) => {
-                        const updated = [...bomItems];
-                        updated[idx].quantityPerMT = Number(e.target.value);
-                        setBomItems(updated);
-                      }}
-                      className="w-20 border border-neutral-300 rounded p-1 font-mono"
-                    />
-                    <span className="font-mono text-neutral-500 w-10 text-center">{item.unit || 'KG'}</span>
-                    <button
-                      type="button"
-                      onClick={() => setBomItems(prev => prev.filter((_, i) => i !== idx))}
-                      className="text-rose-600 hover:text-rose-800 font-bold p-1 cursor-pointer"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
               </div>
 
               <div>

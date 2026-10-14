@@ -1492,6 +1492,6 @@ export const initialAlerts: ErpAlert[] = [
   { id: 'alt-1', type: 'critical', title: 'Bentonite Powder Stock Below Reorder Level', description: 'Current stock is 18.0 MT against minimum stock requirement of 30.0 MT.', timestamp: '10 mins ago', module: 'Inventory', read: false },
   { id: 'alt-2', type: 'warning', title: 'Customer Payment Overdue (Marwar Agro)', description: 'Invoice INV-2609-072 of ₹1,51,600 is 19 days overdue.', timestamp: '1 hour ago', module: 'Finance & Accounts', read: false },
   { id: 'alt-3', type: 'info', title: 'Sales Order SO-2609-083 Requires Production', description: 'Stock insufficient for 50 MT order. PO-MFG-091 scheduled.', timestamp: '3 hours ago', module: 'Production', read: false },
-  { id: 'alt-4', type: 'info', title: 'QC Inspection Pending for Incoming Dolomite', description: 'Upcoming truck arrival from Udaipur requires sampling upon weighbridge verification.', timestamp: 'Yesterday', module: 'Quality Control', read: true },
+  { id: 'alt-4', type: 'info', title: 'QC Inspection Pending for Incoming Dolomite', description: 'Upcoming truck arrival from Udaipur requires sampling upon weighbridge verification.', timestamp: 'Yesterday', module: 'Raw Material', read: true },
   { id: 'alt-5', type: 'warning', title: 'Machine Preventive Maintenance Due in 3 Days', description: 'Auto Rotary Bagging & Stitching Line MC-BAG-01 scheduled for check on Oct 5.', timestamp: 'Yesterday', module: 'Maintenance', read: true }
 ];

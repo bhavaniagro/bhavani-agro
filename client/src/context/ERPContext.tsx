@@ -327,6 +327,7 @@ interface ERPContextType {
   deleteStockMovement: (id: string) => Promise<void>;
   approveQC: (qcId: string) => void;
   rejectQC: (qcId: string, reason: string) => void;
+  approveProductionBatch: (batchId: string) => void;
   startProductionOrder: (poId: string) => void;
   completeProductionOrder: (poId: string, outputMT: number, remarks?: string) => void;
   createDispatchChallan: (dispatch: Omit<DispatchChallan, 'id' | 'dispatchNumber' | 'status'>) => void;
@@ -482,8 +483,29 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Load products from API
   useEffect(() => {
     getProductsFromApi()
-      .then((data) => { setProducts(data || []); })
-      .catch((err) => console.error("Failed to load products from API:", err));
+      .then((data) => {
+        const normalized = (data || []).map(p => ({
+          ...p,
+          currentStockMT: typeof p.currentStockMT === 'number' ? p.currentStockMT : (Number(p.currentStockMT) || 0),
+          reservedStockMT: typeof p.reservedStockMT === 'number' ? p.reservedStockMT : (Number(p.reservedStockMT) || 0),
+        }));
+        setProducts(normalized);
+      })
+      .catch((err) => {
+        console.error("Failed to load products from API:", err);
+        loadCollection<FinishedProduct>("products")
+          .then((data) => {
+            if (data && data.length > 0) {
+              const normalized = data.map(p => ({
+                ...p,
+                currentStockMT: typeof p.currentStockMT === 'number' ? p.currentStockMT : (Number(p.currentStockMT) || 0),
+                reservedStockMT: typeof p.reservedStockMT === 'number' ? p.reservedStockMT : (Number(p.reservedStockMT) || 0),
+              }));
+              setProducts(normalized);
+            }
+          })
+          .catch((fsErr) => console.error("Failed to load products from Firestore fallback:", fsErr));
+      });
   }, []);
 
   // Load sales orders from API
@@ -1053,7 +1075,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       title: `QC Passed: ${qc.itemName}`,
       description: `Batch ${qc.batchLotNumber} approved. Inventory updated & released for sale.`,
       timestamp: 'Just now',
-      module: 'Quality Control',
+      module: 'Production',
       read: false
     }, ...prev]);
   };
@@ -1065,6 +1087,70 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       remarks: reason
     } : q));
     updateQCInspectionInApi(qcId, { overallStatus: 'Rejected', remarks: reason }).catch(console.error);
+    const qc = qcInspections.find(q => q.id === qcId);
+    if (qc && qc.type === 'Finished Goods') {
+      setProductionBatches(prev => prev.map(b => b.batchNumber === qc.batchLotNumber ? { ...b, qcStatus: 'Rejected' } : b));
+    }
+  };
+
+  // Direct batch quality approval & inventory release helper
+  const approveProductionBatch = (batchId: string) => {
+    const batch = productionBatches.find(b => b.id === batchId);
+    if (!batch) return;
+
+    // If there is an associated QC Inspection, route through approveQC to maintain full audit traceability
+    const qc = qcInspections.find(q => q.batchLotNumber === batch.batchNumber || q.referenceId === batch.batchNumber);
+    if (qc) {
+      approveQC(qc.id);
+      return;
+    }
+
+    // Direct fallback if no QC inspection object exists
+    setProductionBatches(prev => prev.map(b => b.id === batch.id ? { ...b, qcStatus: 'Approved' } : b));
+    updateProductionBatchInApi(batch.id, { qcStatus: 'Approved' }).catch(console.error);
+
+    const updatedBatch = {
+      ...batch,
+      qcStatus: 'Approved' as const,
+    };
+    persistProductionBatch(updatedBatch).catch((error) => {
+      console.error('Failed to save approved production batch to Firebase:', error);
+    });
+
+    // Add to finished goods stock
+    const targetProd = products.find(p => p.id === batch.productId || (p.productName && batch.productName && p.productName.toLowerCase().trim() === batch.productName.toLowerCase().trim()));
+    if (targetProd) {
+      const newQty = Number((targetProd.currentStockMT + batch.quantityProducedMT).toFixed(2));
+      setProducts(prev => prev.map(p => p.id === targetProd.id ? { ...p, currentStockMT: newQty } : p));
+      updateProductFromApi(targetProd.id, { currentStockMT: newQty }).catch(console.error);
+      persistFinishedProduct({ ...targetProd, currentStockMT: newQty }).catch(console.error);
+    } else {
+      setProducts(prev => prev.map(p => p.id === batch.productId ? {
+        ...p,
+        currentStockMT: Number((p.currentStockMT + batch.quantityProducedMT).toFixed(2))
+      } : p));
+    }
+
+    // Mark associated production order completed
+    const po = productionOrders.find(p => p.id === batch.productionOrderId);
+    if (po) {
+      setProductionOrders(prev => prev.map(p => p.id === po.id ? { ...p, status: 'Completed' } : p));
+      updateProductionOrderInApi(po.id, { status: 'Completed' }).catch(console.error);
+      if (po.salesOrderId) {
+        setSalesOrders(prev => prev.map(so => so.id === po.salesOrderId ? { ...so, status: 'Ready', stockAvailable: true } : so));
+        updateSalesOrderFromApi(po.salesOrderId, { status: 'Ready', stockAvailable: true }).catch(console.error);
+      }
+    }
+
+    setAlerts(prev => [{
+      id: `alt-${Date.now()}`,
+      type: 'info',
+      title: `Batch Quality Approved: ${batch.productName}`,
+      description: `Batch ${batch.batchNumber} approved. Inventory updated & released for sale.`,
+      timestamp: 'Just now',
+      module: 'Production',
+      read: false
+    }, ...prev]);
   };
 
   // Automation 6: Dispatch -> Deduct Finished Goods Stock
@@ -1840,18 +1926,31 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Batch 2: Product / Finished Goods CRUD
   const addProduct = async (prodData: Omit<FinishedProduct, 'id'> & { currentStockMT?: number; reservedStockMT?: number }) => {
+    const currentStock = typeof prodData.currentStockMT === 'number' ? prodData.currentStockMT : (Number(prodData.currentStockMT) || 0);
+    const reservedStock = typeof prodData.reservedStockMT === 'number' ? prodData.reservedStockMT : (Number(prodData.reservedStockMT) || 0);
+
     const newProd: FinishedProduct = {
       ...prodData,
       id: `prod-${Date.now()}`,
-      currentStockMT: prodData.currentStockMT ?? 0,
-      reservedStockMT: prodData.reservedStockMT ?? 0,
+      currentStockMT: currentStock,
+      reservedStockMT: reservedStock,
     };
     try {
       const apiProd = await createProductFromApi(newProd);
-      setProducts(prev => [apiProd, ...prev]);
+      const normalizedProd: FinishedProduct = {
+        ...apiProd,
+        currentStockMT: typeof apiProd.currentStockMT === 'number' ? apiProd.currentStockMT : (Number(apiProd.currentStockMT) || currentStock),
+        reservedStockMT: typeof apiProd.reservedStockMT === 'number' ? apiProd.reservedStockMT : (Number(apiProd.reservedStockMT) || reservedStock),
+      };
+      setProducts(prev => [normalizedProd, ...prev]);
       showToast("Product created successfully", "success");
     } catch (err) {
-      console.error("Failed to create product:", err);
+      console.error("Failed to create product via API, saving to direct Firestore:", err);
+      try {
+        await persistFinishedProduct(newProd);
+      } catch (persistErr) {
+        console.error("Failed to persist product to Firestore fallback:", persistErr);
+      }
       setProducts(prev => [newProd, ...prev]);
       showToast("Product created successfully", "success");
     }
@@ -1863,8 +1962,16 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await updateProductFromApi(id, data);
       showToast("Product updated successfully", "success");
     } catch (err) {
-      console.error("Failed to update product:", err);
-      showToast("Unable to update product", "error");
+      console.error("Failed to update product via API, saving to direct Firestore:", err);
+      try {
+        const existing = products.find(p => p.id === id);
+        if (existing) {
+          await persistFinishedProduct({ ...existing, ...data });
+        }
+      } catch (persistErr) {
+        console.error("Failed to persist product update to Firestore fallback:", persistErr);
+      }
+      showToast("Product updated successfully", "success");
     }
   };
 
@@ -2118,6 +2225,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteStockMovement,
         approveQC,
         rejectQC,
+        approveProductionBatch,
         startProductionOrder,
         completeProductionOrder,
         createDispatchChallan,

@@ -112,11 +112,11 @@ export const DemoScenarioRunner: React.FC = () => {
     },
     {
       stepNumber: 9,
-      phase: 'Quality Control',
-      title: 'Lab Testing (Moisture 6.5%, Swell 28ml, 16-30 Mesh 94.2%)',
-      description: 'QC Chemist Manish Trivedi runs sieve retention, moisture analysis, and swelling index tests. All parameters pass standard.',
-      actionLabel: '9. Perform QC Lab Analysis',
-      moduleTarget: 'Quality Control',
+      phase: 'Batch Quality Review',
+      title: 'Batch Quality Verification (Moisture 6.5%, Swell 28ml, 16-30 Mesh 94.2%)',
+      description: 'QC Chemist Manish Trivedi verifies sieve retention, moisture analysis, and swelling index tests. All parameters pass standard.',
+      actionLabel: '9. Verify & Approve Batch',
+      moduleTarget: 'Production',
       metricChange: 'Inspection QC-2609-065: Approved'
     },
     {

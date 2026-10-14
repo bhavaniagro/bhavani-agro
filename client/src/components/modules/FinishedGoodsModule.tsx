@@ -32,27 +32,43 @@ export const FinishedGoodsModule: React.FC = () => {
 
   // Modal state
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<FinishedProduct | null>(null);
+  const [editingProduct, setEditingProduct] = useState<(Omit<FinishedProduct, 'currentStockMT' | 'reservedStockMT'> & { currentStockMT?: number | string; reservedStockMT?: number | string }) | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // New product state
-  const [newProd, setNewProd] = useState({
+  const [newProd, setNewProd] = useState<{
+    sku: string;
+    productName: string;
+    category: FinishedProduct['category'];
+    unit: FinishedProduct['unit'];
+    sellingPricePerMT: number;
+    standardCostPerMT: number;
+    minimumStockMT: number;
+    maximumStockMT: number;
+    packagingType: FinishedProduct['packagingType'];
+    storageLocation: string;
+    taxRate: number;
+    hsnCode: string;
+    description: string;
+    physicalStockMT: number | string;
+    reservedStockMT: number | string;
+  }>({
     sku: `FG-${Date.now().toString().slice(-4)}`,
     productName: '',
-    category: 'Granules' as FinishedProduct['category'],
-    unit: 'MT' as FinishedProduct['unit'],
+    category: 'Granules',
+    unit: 'MT',
     sellingPricePerMT: 6500,
     standardCostPerMT: 4200,
     minimumStockMT: 20,
     maximumStockMT: 200,
-    packagingType: '50kg HDPE Woven Bag' as FinishedProduct['packagingType'],
+    packagingType: '50kg HDPE Woven Bag',
     storageLocation: 'Warehouse Bay 1',
     taxRate: 5,
     hsnCode: '3105',
     description: 'High-grade agro granule product',
-    physicalStockMT: 0.0,
-    reservedStockMT: 0.0
+    physicalStockMT: '',
+    reservedStockMT: ''
   });
 
   const resetNewProdForm = () => {
@@ -70,8 +86,8 @@ export const FinishedGoodsModule: React.FC = () => {
       taxRate: 5,
       hsnCode: '3105',
       description: 'High-grade agro granule product',
-      physicalStockMT: 0.0,
-      reservedStockMT: 0.0
+      physicalStockMT: '',
+      reservedStockMT: ''
     });
   };
 
@@ -82,11 +98,11 @@ export const FinishedGoodsModule: React.FC = () => {
   );
 
   const totalFinishedValuation = products.reduce((acc, curr) => 
-    acc + (curr.currentStockMT * curr.standardCostPerMT), 0
+    acc + ((Number(curr.currentStockMT) || 0) * (Number(curr.standardCostPerMT) || 0)), 0
   );
 
   const totalFreeStockMT = products.reduce((acc, curr) => 
-    acc + Math.max(0, curr.currentStockMT - curr.reservedStockMT), 0
+    acc + Math.max(0, (Number(curr.currentStockMT) || 0) - (Number(curr.reservedStockMT) || 0)), 0
   );
 
   return (
@@ -109,7 +125,7 @@ export const FinishedGoodsModule: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsAddOpen(true)}
+            onClick={() => { resetNewProdForm(); setIsAddOpen(true); }}
             className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -130,7 +146,7 @@ export const FinishedGoodsModule: React.FC = () => {
         <div className="bg-white p-3 rounded-lg border border-neutral-200">
           <div className="text-neutral-500 text-[11px]">Total Physical Stock</div>
           <div className="font-bold text-base font-mono text-neutral-900 mt-1">
-            {products.reduce((acc, curr) => acc + curr.currentStockMT, 0).toFixed(1)} MT
+            {(products.reduce((acc, curr) => acc + (Number(curr.currentStockMT) || 0), 0)).toFixed(1)} MT
           </div>
           <div className="text-[10px] text-neutral-400">Warehouse Bays 1-5</div>
         </div>
@@ -146,7 +162,7 @@ export const FinishedGoodsModule: React.FC = () => {
         <div className="bg-white p-3 rounded-lg border border-neutral-200">
           <div className="text-neutral-500 text-[11px]">Committed / Reserved</div>
           <div className="font-bold text-base font-mono text-amber-800 mt-1">
-            {products.reduce((acc, curr) => acc + curr.reservedStockMT, 0).toFixed(1)} MT
+            {(products.reduce((acc, curr) => acc + (Number(curr.reservedStockMT) || 0), 0)).toFixed(1)} MT
           </div>
           <div className="text-[10px] text-neutral-400">Allocated to confirmed orders</div>
         </div>
@@ -193,8 +209,10 @@ export const FinishedGoodsModule: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {filteredProducts.map(p => {
-                const freeStock = Math.max(0, p.currentStockMT - p.reservedStockMT);
-                const isLow = p.currentStockMT <= p.minimumStockMT;
+                const currentStock = typeof p.currentStockMT === 'number' ? p.currentStockMT : (Number(p.currentStockMT) || 0);
+                const reservedStock = typeof p.reservedStockMT === 'number' ? p.reservedStockMT : (Number(p.reservedStockMT) || 0);
+                const freeStock = Math.max(0, currentStock - reservedStock);
+                const isLow = currentStock <= (Number(p.minimumStockMT) || 0);
 
                 return (
                   <tr key={p.id} className="hover:bg-neutral-50/70 transition-colors">
@@ -205,10 +223,10 @@ export const FinishedGoodsModule: React.FC = () => {
                     <td className="p-3 text-neutral-700">{p.category}</td>
                     <td className="p-3 text-neutral-700 font-medium">{p.storageLocation}</td>
                     <td className="p-3 text-right font-mono tabular-nums font-bold text-neutral-900">
-                      {p.currentStockMT.toFixed(1)} MT
+                      {currentStock.toFixed(1)} MT
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums text-neutral-500">
-                      {p.reservedStockMT.toFixed(1)} MT
+                      {reservedStock.toFixed(1)} MT
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums font-bold text-sm text-emerald-700">
                       {freeStock.toFixed(1)} MT
@@ -230,7 +248,11 @@ export const FinishedGoodsModule: React.FC = () => {
                     <td className="p-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={() => setEditingProduct(p)}
+                          onClick={() => setEditingProduct({
+                            ...p,
+                            currentStockMT: typeof p.currentStockMT === 'number' ? p.currentStockMT : (Number(p.currentStockMT) || 0),
+                            reservedStockMT: typeof p.reservedStockMT === 'number' ? p.reservedStockMT : (Number(p.reservedStockMT) || 0),
+                          })}
                           title="Edit"
                           className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer"
                         >
@@ -282,8 +304,8 @@ export const FinishedGoodsModule: React.FC = () => {
                     taxRate: Number(newProd.taxRate),
                     hsnCode: newProd.hsnCode,
                     description: newProd.description,
-                    currentStockMT: Number(newProd.physicalStockMT) || 0,
-                    reservedStockMT: Number(newProd.reservedStockMT) || 0
+                    currentStockMT: Math.max(0, parseFloat(String(newProd.physicalStockMT)) || 0),
+                    reservedStockMT: Math.max(0, parseFloat(String(newProd.reservedStockMT)) || 0)
                   });
                   resetNewProdForm();
                   setIsAddOpen(false);
@@ -373,7 +395,7 @@ export const FinishedGoodsModule: React.FC = () => {
                     step="0.01"
                     min="0"
                     value={newProd.physicalStockMT}
-                    onChange={(e) => setNewProd({ ...newProd, physicalStockMT: Math.max(0, Number(e.target.value)) })}
+                    onChange={(e) => setNewProd({ ...newProd, physicalStockMT: e.target.value })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
                     placeholder="0.0"
                   />
@@ -388,7 +410,7 @@ export const FinishedGoodsModule: React.FC = () => {
                     step="0.01"
                     min="0"
                     value={newProd.reservedStockMT}
-                    onChange={(e) => setNewProd({ ...newProd, reservedStockMT: Math.max(0, Number(e.target.value)) })}
+                    onChange={(e) => setNewProd({ ...newProd, reservedStockMT: e.target.value })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
                     placeholder="0.0"
                   />
@@ -422,7 +444,11 @@ export const FinishedGoodsModule: React.FC = () => {
                 e.preventDefault();
                 setIsSubmitting(true);
                 try {
-                  await updateProduct(editingProduct.id, editingProduct);
+                  await updateProduct(editingProduct.id, {
+                    ...editingProduct,
+                    currentStockMT: Math.max(0, parseFloat(String(editingProduct.currentStockMT)) || 0),
+                    reservedStockMT: Math.max(0, parseFloat(String(editingProduct.reservedStockMT)) || 0)
+                  });
                   setEditingProduct(null);
                 } finally {
                   setIsSubmitting(false);
@@ -470,6 +496,39 @@ export const FinishedGoodsModule: React.FC = () => {
                     onChange={(e) => setEditingProduct({ ...editingProduct, storageLocation: e.target.value })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Physical Stock (MT) <span className="text-neutral-400 font-normal">optional</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editingProduct.currentStockMT ?? ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, currentStockMT: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
+                    placeholder="0.0"
+                  />
+                  <div className="text-[10px] text-neutral-400 mt-0.5">Current physical inventory in warehouse</div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Reserved Stock (MT) <span className="text-neutral-400 font-normal">optional</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editingProduct.reservedStockMT ?? ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, reservedStockMT: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
+                    placeholder="0.0"
+                  />
+                  <div className="text-[10px] text-neutral-400 mt-0.5">Allocated to confirmed sales orders</div>
                 </div>
               </div>
 
