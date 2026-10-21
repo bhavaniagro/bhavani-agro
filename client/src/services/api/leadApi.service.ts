@@ -28,7 +28,8 @@ export async function createLeadFromApi(
     });
 
     if (!response.ok) {
-        throw new Error("Failed to create lead");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to create lead");
     }
 
     const result: {
@@ -52,7 +53,8 @@ export async function updateLeadFromApi(
     });
 
     if (!response.ok) {
-        throw new Error("Failed to update lead");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to update lead");
     }
 
     const result: {

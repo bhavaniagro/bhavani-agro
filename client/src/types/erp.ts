@@ -48,14 +48,17 @@ export interface Lead {
   mobile: string;
   email: string;
   location: string;
+  address?: string;
   productInterested: string;
   expectedQuantityMT: number;
   leadSource: string;
   estimatedValue: number;
   followUpDate: string;
+  followUpTime?: string;
   salesperson: string;
   status: LeadStage;
   notes?: string;
+  lostReason?: string;
   createdAt: string;
 }
 

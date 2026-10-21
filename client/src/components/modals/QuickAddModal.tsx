@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Check } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { LeadFormFields, LeadFormState, validateLeadForm } from '../crm/LeadFormFields';
 
 export const QuickAddModal: React.FC = () => {
   const { 
@@ -39,15 +40,28 @@ export const QuickAddModal: React.FC = () => {
   const [expDesc, setExpDesc] = useState('');
   const [expPaidFrom, setExpPaidFrom] = useState('SBI Current Account');
 
-  const [leadName, setLeadName] = useState('');
-  const [leadCompany, setLeadCompany] = useState('');
-  const [leadMobile, setLeadMobile] = useState('');
-  const [leadEmail, setLeadEmail] = useState('');
-  const [leadLocation, setLeadLocation] = useState('');
-  const [leadProduct, setLeadProduct] = useState('');
-  const [leadQty, setLeadQty] = useState(10);
-  const [leadEstVal, setLeadEstVal] = useState(62000);
-  const [leadSalesperson, setLeadSalesperson] = useState('Sales Executive');
+  const getInitialLeadState = (): LeadFormState => ({
+    leadName: '',
+    company: '',
+    contactPerson: '',
+    mobile: '',
+    email: '',
+    address: '',
+    location: '',
+    productInterested: products[0]?.productName || '',
+    expectedQuantityMT: 10,
+    estimatedValue: 62000,
+    followUpDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+    followUpTime: '',
+    salesperson: 'Sales Executive',
+    leadSource: 'Direct Enquiry',
+    status: 'New',
+    notes: '',
+    lostReason: ''
+  });
+
+  const [leadFormData, setLeadFormData] = useState<LeadFormState>(getInitialLeadState);
+  const [leadErrors, setLeadErrors] = useState<Record<string, string>>({});
 
   const [custName, setCustName] = useState('');
   const [custCompany, setCustCompany] = useState('');
@@ -73,15 +87,8 @@ export const QuickAddModal: React.FC = () => {
     setExpVendor('');
     setExpDesc('');
     setExpPaidFrom('SBI Industrial Current A/c');
-    setLeadName('');
-    setLeadCompany('');
-    setLeadMobile('');
-    setLeadEmail('');
-    setLeadLocation('');
-    setLeadProduct('');
-    setLeadQty(10);
-    setLeadEstVal(62000);
-    setLeadSalesperson('Sales Executive');
+    setLeadFormData(getInitialLeadState());
+    setLeadErrors({});
     setCustName('');
     setCustCompany('');
     setCustMobile('');
@@ -161,20 +168,30 @@ export const QuickAddModal: React.FC = () => {
           invoiceOrVoucherNo: `VCH-${Math.floor(1000 + Math.random() * 9000)}`
         });
       } else if (currentType === 'Lead') {
+        const errs = validateLeadForm(leadFormData);
+        if (Object.keys(errs).length > 0) {
+          setLeadErrors(errs);
+          return;
+        }
+
         await addLead({
-          leadName: leadName,
-          company: leadCompany,
-          contactPerson: leadName,
-          mobile: leadMobile,
-          email: leadEmail,
-          location: leadLocation,
-          productInterested: leadProduct || (products[0]?.productName || ''),
-          expectedQuantityMT: Number(leadQty || 10),
-          leadSource: 'Direct Enquiry',
-          estimatedValue: Number(leadEstVal || 0),
-          followUpDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-          salesperson: leadSalesperson || 'Sales Executive',
-          status: 'New'
+          leadName: leadFormData.leadName.trim(),
+          company: leadFormData.company.trim(),
+          contactPerson: leadFormData.contactPerson.trim() || leadFormData.leadName.trim(),
+          mobile: leadFormData.mobile.trim(),
+          email: leadFormData.email.trim(),
+          address: leadFormData.address.trim() || leadFormData.location.trim(),
+          location: leadFormData.location.trim() || leadFormData.address.trim(),
+          productInterested: leadFormData.productInterested.trim(),
+          expectedQuantityMT: Number(leadFormData.expectedQuantityMT || 0),
+          estimatedValue: Number(leadFormData.estimatedValue || 0),
+          leadSource: leadFormData.leadSource || 'Direct Enquiry',
+          followUpDate: leadFormData.followUpDate,
+          followUpTime: leadFormData.followUpTime,
+          salesperson: leadFormData.salesperson || 'Sales Executive',
+          status: leadFormData.status || 'New',
+          notes: leadFormData.notes,
+          lostReason: leadFormData.lostReason
         });
       } else if (currentType === 'Customer') {
         const fullBilling = custBillingAddress || (custCity ? `${custCity}, ${custState}` : '');
@@ -214,7 +231,9 @@ export const QuickAddModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-xl overflow-hidden flex flex-col">
+      <div className={`bg-white rounded-xl shadow-2xl border border-neutral-200 w-full overflow-hidden flex flex-col max-h-[90vh] ${
+        currentType === 'Lead' ? 'max-w-2xl' : 'max-w-xl'
+      }`}>
         {/* Header */}
         <div className="p-4 border-b border-neutral-200 flex items-center justify-between bg-neutral-50">
           <div className="font-bold text-sm text-neutral-900 flex items-center gap-2">
@@ -249,7 +268,7 @@ export const QuickAddModal: React.FC = () => {
         )}
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs overflow-y-auto max-h-[calc(90vh-130px)]">
           {currentType === 'Sales Order' && (
             <>
               <div>
@@ -441,75 +460,14 @@ export const QuickAddModal: React.FC = () => {
           )}
 
           {currentType === 'Lead' && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Lead Contact Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={leadName}
-                    onChange={(e) => setLeadName(e.target.value)}
-                    placeholder="e.g. Anand Sharma"
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Company Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={leadCompany}
-                    onChange={(e) => setLeadCompany(e.target.value)}
-                    placeholder="e.g. Gujarat Crop Sciences"
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Mobile</label>
-                  <input
-                    type="text"
-                    value={leadMobile}
-                    onChange={(e) => setLeadMobile(e.target.value)}
-                    placeholder="+91 98250 12345"
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Expected Qty (MT)</label>
-                  <input
-                    type="number"
-                    value={leadQty}
-                    onChange={(e) => setLeadQty(Number(e.target.value))}
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Est. Value (₹)</label>
-                  <input
-                    type="number"
-                    value={leadEstVal}
-                    onChange={(e) => setLeadEstVal(Number(e.target.value))}
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-neutral-700 font-medium mb-1">Product Interested</label>
-                <select
-                  value={leadProduct}
-                  onChange={(e) => setLeadProduct(e.target.value)}
-                  className="w-full border border-neutral-300 rounded p-2 bg-white"
-                >
-                  {products.map(p => (
-                    <option key={p.id} value={p.productName}>{p.productName}</option>
-                  ))}
-                </select>
-              </div>
-            </>
+            <LeadFormFields
+              formData={leadFormData}
+              setFormData={setLeadFormData}
+              errors={leadErrors}
+              setErrors={setLeadErrors}
+              products={products}
+              isEdit={false}
+            />
           )}
 
           {currentType === 'Customer' && (

@@ -660,21 +660,22 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLeads(prev => [apiLead, ...prev]);
       showToast("Lead created successfully", "success");
       return apiLead;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save lead through API:", error);
-      showToast("Unable to create lead", "error");
+      showToast(error?.message || "Unable to create lead", "error");
       throw error;
     }
   };
 
-  const updateLead = async (id: string, data: Partial<Lead>) => {
+  const updateLead = async (id: string, data: Partial<Lead>): Promise<void> => {
     try {
-      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, ...data } : l)));
-      await updateLeadFromApi(id, data);
+      const updated = await updateLeadFromApi(id, data);
+      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, ...updated, ...data } : l)));
       showToast("Lead updated successfully", "success");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update lead:", error);
-      showToast("Unable to update lead", "error");
+      showToast(error?.message || "Unable to update lead", "error");
+      throw error;
     }
   };
 
