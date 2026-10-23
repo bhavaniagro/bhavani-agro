@@ -488,11 +488,14 @@ export const CustomersModule: React.FC = () => {
                     onChange={(e) => setEditingCustomer({ ...editingCustomer, customerType: e.target.value as any })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   >
-                    <option value="Distributor">Distributor</option>
                     <option value="Dealer">Dealer</option>
-                    <option value="Fertilizer Blender">Fertilizer Blender</option>
-                    <option value="Cooperative">Cooperative</option>
-                    <option value="Institutional Buyer">Institutional Buyer</option>
+                    <option value="Supplier">Supplier</option>
+                    <option value="Vendor">Vendor</option>
+                    <option value="End User">End User</option>
+                    <option value="Fertilizer">Fertilizer</option>
+                    {editingCustomer.customerType && !['Dealer', 'Supplier', 'Vendor', 'End User', 'Fertilizer'].includes(editingCustomer.customerType) && (
+                      <option value={editingCustomer.customerType}>{editingCustomer.customerType}</option>
+                    )}
                   </select>
                 </div>
               </div>

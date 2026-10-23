@@ -568,11 +568,11 @@ export const QuickAddModal: React.FC = () => {
                     onChange={(e) => setCustType(e.target.value)}
                     className="w-full border border-neutral-300 rounded p-2 bg-white"
                   >
-                    <option value="Distributor">Distributor</option>
                     <option value="Dealer">Dealer</option>
-                    <option value="Fertilizer Blender">Fertilizer Blender</option>
-                    <option value="Cooperative">Cooperative</option>
-                    <option value="Institutional Buyer">Institutional Buyer</option>
+                    <option value="Supplier">Supplier</option>
+                    <option value="Vendor">Vendor</option>
+                    <option value="End User">End User</option>
+                    <option value="Fertilizer">Fertilizer</option>
                   </select>
                 </div>
               </div>

@@ -76,7 +76,7 @@ export interface Customer {
   state: string;
   creditLimit: number;
   paymentTerms: string; // e.g. "Net 30 Days", "Immediate", "50% Advance"
-  customerType: 'Distributor' | 'Dealer' | 'Fertilizer Blender' | 'Cooperative' | 'Institutional Buyer';
+  customerType: 'Dealer' | 'Supplier' | 'Vendor' | 'End User' | 'Fertilizer' | 'Distributor' | 'Fertilizer Blender' | 'Cooperative' | 'Institutional Buyer';
   assignedSalesperson: string;
   totalSales: number;
   outstandingBalance: number;

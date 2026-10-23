@@ -706,7 +706,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       state: lead.location.split(',')[1]?.trim() || 'Gujarat',
       creditLimit: 2000000,
       paymentTerms: 'Net 30 Days',
-      customerType: 'Distributor',
+      customerType: 'Dealer',
       assignedSalesperson: lead.salesperson,
     });
 
