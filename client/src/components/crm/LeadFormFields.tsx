@@ -109,11 +109,6 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 
   return (
     <div className="space-y-4 text-xs">
-      {/* Required fields notice */}
-      <div className="text-[11px] text-neutral-500 bg-neutral-50 border border-neutral-200 rounded-lg p-2.5 flex items-center justify-between">
-        <span>Fields marked with <span className="text-rose-600 font-bold">*</span> are required</span>
-        <span className="text-[10px] text-neutral-400">4 compulsory fields</span>
-      </div>
 
       {/* SECTION 1: Primary Contact & Company */}
       <div className="space-y-2.5">
