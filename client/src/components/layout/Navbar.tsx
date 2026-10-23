@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
   Plus, 
@@ -27,6 +27,37 @@ export const Navbar: React.FC = () => {
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showAlertMenu, setShowAlertMenu] = useState(false);
+
+  const alertMenuRef = useRef<HTMLDivElement>(null);
+  const roleMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showAlertMenu) setShowAlertMenu(false);
+        if (showRoleMenu) setShowRoleMenu(false);
+      }
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showAlertMenu && alertMenuRef.current && !alertMenuRef.current.contains(e.target as Node)) {
+        setShowAlertMenu(false);
+      }
+      if (showRoleMenu && roleMenuRef.current && !roleMenuRef.current.contains(e.target as Node)) {
+        setShowRoleMenu(false);
+      }
+    };
+
+    if (showAlertMenu || showRoleMenu) {
+      window.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAlertMenu, showRoleMenu]);
 
   const unreadAlerts = alerts.filter(a => !a.read);
 
@@ -76,7 +107,7 @@ export const Navbar: React.FC = () => {
         </button>
 
         {/* Notification Bell */}
-        <div className="relative">
+        <div ref={alertMenuRef} className="relative">
           <button
             onClick={() => setShowAlertMenu(!showAlertMenu)}
             className="relative p-1.5 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors cursor-pointer"
@@ -117,7 +148,7 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Role Selector Dropdown */}
-        <div className="relative">
+        <div ref={roleMenuRef} className="relative">
           <button
             onClick={() => setShowRoleMenu(!showRoleMenu)}
             className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200/80 rounded border border-neutral-200 cursor-pointer"
