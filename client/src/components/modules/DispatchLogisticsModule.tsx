@@ -171,12 +171,12 @@ export const DispatchLogisticsModule: React.FC = () => {
           setEditingVehicle(null);
         }
         if (deletingDispatch) setDeletingDispatch(null);
-        if (deletingVehicleId) setDeletingVehicleId(null);
+        if (deletingVehicle) setDeletingVehicle(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editingDispatch, showAddVehicleModal, editingVehicle, deletingDispatch, deletingVehicleId]);
+  }, [editingDispatch, showAddVehicleModal, editingVehicle, deletingDispatch, deletingVehicle]);
 
   return (
     <div className="space-y-6">

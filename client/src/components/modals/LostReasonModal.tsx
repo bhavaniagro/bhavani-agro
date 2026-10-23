@@ -16,14 +16,14 @@ export const LostReasonModal: React.FC<LostReasonModalProps> = ({
   onClose,
   onConfirm
 }) => {
+  const [lostReason, setLostReason] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
     isOpen && !!lead && !isSubmitting,
     onClose
   );
-
-  const [lostReason, setLostReason] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen && lead) {

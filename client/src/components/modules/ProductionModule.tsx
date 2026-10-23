@@ -274,13 +274,13 @@ export const ProductionModule: React.FC = () => {
           resetBOMForm();
         }
         if (deletingOrder) setDeletingOrder(null);
-        if (deletingBatchId) setDeletingBatchId(null);
-        if (deletingBOMId) setDeletingBOMId(null);
+        if (deletingBatch) setDeletingBatch(null);
+        if (deletingBOM) setDeletingBOM(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showLogEntryModal, editingOrder, editingBatch, showAddBOMModal, editingBOM, deletingOrder, deletingBatchId, deletingBOMId]);
+  }, [showLogEntryModal, editingOrder, editingBatch, showAddBOMModal, editingBOM, deletingOrder, deletingBatch, deletingBOM]);
 
   return (
     <div className="space-y-6">

@@ -25,10 +25,6 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({
   onClose,
   onSubmit
 }) => {
-  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
-    isOpen && !isSubmitting,
-    onClose
-  );
   const getDefaultState = (): LeadFormState => ({
     leadName: '',
     company: '',
@@ -53,6 +49,11 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    isOpen && !isSubmitting,
+    onClose
+  );
 
   useEffect(() => {
     if (!isOpen) return;
