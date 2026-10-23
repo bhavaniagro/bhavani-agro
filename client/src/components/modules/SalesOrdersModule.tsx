@@ -107,7 +107,36 @@ export const SalesOrdersModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <ModuleHeader>
+      <ModuleHeader
+        tabs={
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
+            <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
+              {['All', 'Pending', 'Production Required', 'Ready', 'Dispatched', 'Completed'].map(st => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                    statusFilter === st ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full sm:w-64">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search order #, customer, product..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -135,34 +164,6 @@ export const SalesOrdersModule: React.FC = () => {
           </button>
         </div>
       </ModuleHeader>
-
-      {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
-        <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
-          {['All', 'Pending', 'Production Required', 'Ready', 'Dispatched', 'Completed'].map(st => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                statusFilter === st ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-              }`}
-            >
-              {st}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search order #, customer, product..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
-          />
-        </div>
-      </div>
 
       {/* Sales Orders Table */}
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">

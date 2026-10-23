@@ -194,7 +194,41 @@ export const PurchaseModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <ModuleHeader>
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Purchase Orders ({purchaseOrders.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('grn')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'grn' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Goods Receipt Notes (GRN) ({grns.length})
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
+              <input
+                type="text"
+                placeholder="Search PO #, supplier, material..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -222,39 +256,6 @@ export const PurchaseModule: React.FC = () => {
           </button>
         </div>
       </ModuleHeader>
-
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Purchase Orders ({purchaseOrders.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('grn')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'grn' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Goods Receipt Notes (GRN) ({grns.length})
-          </button>
-        </div>
-
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
-          <input
-            type="text"
-            placeholder="Search PO #, supplier, material..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
-          />
-        </div>
-      </div>
 
       {/* TAB 1: PURCHASE ORDERS */}
       {activeTab === 'orders' && (

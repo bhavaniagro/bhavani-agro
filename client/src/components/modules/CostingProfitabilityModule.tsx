@@ -19,7 +19,38 @@ export const CostingProfitabilityModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <ModuleHeader>
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'products' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Product-Wise Margins &amp; ROI
+              </button>
+              <button
+                onClick={() => setActiveTab('costing_breakdown')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'costing_breakdown' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Standard vs Actual Cost per MT / Bag
+              </button>
+              <button
+                onClick={() => setActiveTab('customers')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'customers' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Customer-Wise Profit Contribution
+              </button>
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -34,36 +65,6 @@ export const CostingProfitabilityModule: React.FC = () => {
           </p>
         </div>
       </ModuleHeader>
-
-      {/* Segmented Tab Controls */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
-          <button
-            onClick={() => setActiveTab('products')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'products' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Product-Wise Margins &amp; ROI
-          </button>
-          <button
-            onClick={() => setActiveTab('costing_breakdown')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'costing_breakdown' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Standard vs Actual Cost per MT / Bag
-          </button>
-          <button
-            onClick={() => setActiveTab('customers')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'customers' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Customer-Wise Profit Contribution
-          </button>
-        </div>
-      </div>
 
       {/* TAB 1: PRODUCT-WISE PROFIT MARGINS */}
       {activeTab === 'products' && (

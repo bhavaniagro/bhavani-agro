@@ -119,7 +119,54 @@ export const ReportsAnalyticsModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <ModuleHeader>
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg overflow-x-auto">
+              <button
+                onClick={() => setActiveReport('sales')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                  activeReport === 'sales' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Sales Register
+              </button>
+              <button
+                onClick={() => setActiveReport('production')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                  activeReport === 'production' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Production &amp; Yield Report
+              </button>
+              <button
+                onClick={() => setActiveReport('inventory')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                  activeReport === 'inventory' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Stock Valuation Report
+              </button>
+              <button
+                onClick={() => setActiveReport('finance')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                  activeReport === 'finance' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Expense Audit Report
+              </button>
+              <button
+                onClick={() => setActiveReport('dispatch')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                  activeReport === 'dispatch' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Dispatch &amp; Freight Report
+              </button>
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -144,52 +191,6 @@ export const ReportsAnalyticsModule: React.FC = () => {
           </button>
         </div>
       </ModuleHeader>
-
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg overflow-x-auto">
-          <button
-            onClick={() => setActiveReport('sales')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeReport === 'sales' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Sales Register
-          </button>
-          <button
-            onClick={() => setActiveReport('production')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeReport === 'production' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Production &amp; Yield Report
-          </button>
-          <button
-            onClick={() => setActiveReport('inventory')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeReport === 'inventory' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Stock Valuation Report
-          </button>
-          <button
-            onClick={() => setActiveReport('finance')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeReport === 'finance' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Expense Audit Report
-          </button>
-          <button
-            onClick={() => setActiveReport('dispatch')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeReport === 'dispatch' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Dispatch &amp; Freight Report
-          </button>
-        </div>
-      </div>
 
       {/* Report Data Preview Table */}
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">

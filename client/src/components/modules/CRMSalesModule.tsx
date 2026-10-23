@@ -173,7 +173,161 @@ export const CRMSalesModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <ModuleHeader>
+      <ModuleHeader
+        tabs={
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg overflow-x-auto">
+              <button
+                onClick={() => setActiveTab('pipeline')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                  activeTab === 'pipeline' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Pipeline Stages ({filteredLeads.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('leads')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                  activeTab === 'leads' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Lead Directory ({filteredLeads.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                  activeTab === 'analytics' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Sales Analytics
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
+                <input
+                  type="text"
+                  placeholder="Search leads..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="text-xs pl-8 pr-7 py-1 bg-white border border-neutral-200 rounded-md w-44 sm:w-52 outline-none text-neutral-800 focus:border-neutral-400 transition-colors"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-2 top-1.5 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                    title="Clear search"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
+              {/* Compact Filter Button & Dropdown Popover */}
+              <div className="relative" ref={filterRef}>
+                <button
+                  type="button"
+                  id="product-lead-filter-btn"
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md flex items-center gap-1.5 border transition-all cursor-pointer ${
+                    isFilterActive
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs font-semibold'
+                      : 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300'
+                  }`}
+                  title="Filter leads by product"
+                >
+                  <Filter className={`w-3.5 h-3.5 ${isFilterActive ? 'text-emerald-700' : 'text-neutral-500'}`} />
+                  <span>Filter</span>
+                  {isFilterActive && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-emerald-200" title="Active filters applied" />
+                  )}
+                </button>
+
+                {/* Dropdown Popover */}
+                {isFilterOpen && (
+                  <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-xl border border-neutral-200 p-4 z-40 space-y-3.5 text-xs">
+                    <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
+                      <div className="flex items-center gap-1.5 font-semibold text-neutral-900">
+                        <Filter className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Filter Leads</span>
+                      </div>
+                      {isFilterActive && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedProduct('All');
+                            setStageFilter('All');
+                          }}
+                          className="text-[11px] text-neutral-500 hover:text-rose-600 cursor-pointer transition-colors"
+                        >
+                          Reset All
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Product Filter Dropdown */}
+                    <div className="space-y-1.5">
+                      <label htmlFor="lead-product-filter" className="block text-[11px] font-medium text-neutral-700">
+                        Product Interested
+                      </label>
+                      <select
+                        id="lead-product-filter"
+                        value={selectedProduct}
+                        onChange={(e) => setSelectedProduct(e.target.value)}
+                        className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-md text-xs text-neutral-800 outline-none focus:border-neutral-900 transition-colors"
+                      >
+                        <option value="All">All Products (Show All Leads)</option>
+                        {products.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.productName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Lead Stage Filter */}
+                    <div className="space-y-1.5">
+                      <label htmlFor="lead-stage-filter" className="block text-[11px] font-medium text-neutral-700">
+                        Lead Stage
+                      </label>
+                      <select
+                        id="lead-stage-filter"
+                        value={stageFilter}
+                        onChange={(e) => setStageFilter(e.target.value)}
+                        className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-md text-xs text-neutral-800 outline-none focus:border-neutral-900 transition-colors"
+                      >
+                        <option value="All">All Stages</option>
+                        {stages.map(st => (
+                          <option key={st} value={st}>
+                            {st}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Popover footer */}
+                    <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+                      <span className="text-[10px] text-neutral-500">
+                        Showing {filteredLeads.length} of {leads.length} leads
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsFilterOpen(false)}
+                        className="px-3 py-1 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-xs font-semibold cursor-pointer"
+                      >
+                        Done
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -204,159 +358,6 @@ export const CRMSalesModule: React.FC = () => {
           </button>
         </div>
       </ModuleHeader>
-
-      {/* Segmented Tab Controls & Filter / Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('pipeline')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-              activeTab === 'pipeline' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Pipeline Stages ({filteredLeads.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('leads')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-              activeTab === 'leads' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Lead Directory ({filteredLeads.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-              activeTab === 'analytics' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Sales Analytics
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
-            <input
-              type="text"
-              placeholder="Search leads..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="text-xs pl-8 pr-7 py-1 bg-white border border-neutral-200 rounded-md w-44 sm:w-52 outline-none text-neutral-800 focus:border-neutral-400 transition-colors"
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="absolute right-2 top-1.5 text-neutral-400 hover:text-neutral-600 cursor-pointer"
-                title="Clear search"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-
-          {/* Compact Filter Button & Dropdown Popover */}
-          <div className="relative" ref={filterRef}>
-            <button
-              type="button"
-              id="product-lead-filter-btn"
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`px-3 py-1 text-xs font-medium rounded-md flex items-center gap-1.5 border transition-all cursor-pointer ${
-                isFilterActive
-                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs font-semibold'
-                  : 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300'
-              }`}
-              title="Filter leads by product"
-            >
-              <Filter className={`w-3.5 h-3.5 ${isFilterActive ? 'text-emerald-700' : 'text-neutral-500'}`} />
-              <span>Filter</span>
-              {isFilterActive && (
-                <span className="w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-emerald-200" title="Active filters applied" />
-              )}
-            </button>
-
-            {/* Dropdown Popover */}
-            {isFilterOpen && (
-              <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-xl border border-neutral-200 p-4 z-40 space-y-3.5 text-xs">
-                <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
-                  <div className="flex items-center gap-1.5 font-semibold text-neutral-900">
-                    <Filter className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>Filter Leads</span>
-                  </div>
-                  {isFilterActive && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedProduct('All');
-                        setStageFilter('All');
-                      }}
-                      className="text-[11px] text-neutral-500 hover:text-rose-600 cursor-pointer transition-colors"
-                    >
-                      Reset All
-                    </button>
-                  )}
-                </div>
-
-                {/* Product Filter Dropdown */}
-                <div className="space-y-1.5">
-                  <label htmlFor="lead-product-filter" className="block text-[11px] font-medium text-neutral-700">
-                    Product Interested
-                  </label>
-                  <select
-                    id="lead-product-filter"
-                    value={selectedProduct}
-                    onChange={(e) => setSelectedProduct(e.target.value)}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-md text-xs text-neutral-800 outline-none focus:border-neutral-900 transition-colors"
-                  >
-                    <option value="All">All Products (Show All Leads)</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.productName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Lead Stage Filter */}
-                <div className="space-y-1.5">
-                  <label htmlFor="lead-stage-filter" className="block text-[11px] font-medium text-neutral-700">
-                    Lead Stage
-                  </label>
-                  <select
-                    id="lead-stage-filter"
-                    value={stageFilter}
-                    onChange={(e) => setStageFilter(e.target.value)}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-md text-xs text-neutral-800 outline-none focus:border-neutral-900 transition-colors"
-                  >
-                    <option value="All">All Stages</option>
-                    {stages.map(st => (
-                      <option key={st} value={st}>
-                        {st}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Popover footer */}
-                <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
-                  <span className="text-[10px] text-neutral-500">
-                    Showing {filteredLeads.length} of {leads.length} leads
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsFilterOpen(false)}
-                    className="px-3 py-1 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-xs font-semibold cursor-pointer"
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Active Filter Chips Bar */}
       {isFilterActive && (

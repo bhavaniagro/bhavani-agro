@@ -262,7 +262,49 @@ export const ProductionModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <ModuleHeader>
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Production Orders ({productionOrders.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('boms')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'boms' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Bill of Materials (BOM Recipes) ({boms.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('batches')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'batches' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Produced Batches &amp; Yield ({productionBatches.length})
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
+              <input
+                type="text"
+                placeholder="Search orders, line, product..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -277,47 +319,6 @@ export const ProductionModule: React.FC = () => {
           </p>
         </div>
       </ModuleHeader>
-
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Production Orders ({productionOrders.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('boms')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'boms' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Bill of Materials (BOM Recipes) ({boms.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('batches')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'batches' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Produced Batches &amp; Yield ({productionBatches.length})
-          </button>
-        </div>
-
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
-          <input
-            type="text"
-            placeholder="Search orders, line, product..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
-          />
-        </div>
-      </div>
 
       {/* TAB 1: PRODUCTION ORDERS */}
       {activeTab === 'orders' && (

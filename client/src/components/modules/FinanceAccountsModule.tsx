@@ -117,7 +117,49 @@ export const FinanceAccountsModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <ModuleHeader>
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setActiveTab('receivables')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'receivables' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Customer Invoices &amp; Aging ({invoices.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('payables')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'payables' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Supplier Payables ({suppliers.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('payments')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'payments' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Bank Receipts &amp; Ledger ({payments.length})
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
+              <input
+                type="text"
+                placeholder="Search invoice #, customer..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -165,47 +207,6 @@ export const FinanceAccountsModule: React.FC = () => {
             ₹{totalPayables.toLocaleString('en-IN')}
           </div>
           <div className="text-[10px] text-neutral-400 mt-1">Mine ores &amp; packaging balance</div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
-          <button
-            onClick={() => setActiveTab('receivables')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'receivables' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Customer Invoices &amp; Aging ({invoices.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('payables')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'payables' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Supplier Payables ({suppliers.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('payments')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'payments' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Bank Receipts &amp; Ledger ({payments.length})
-          </button>
-        </div>
-
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
-          <input
-            type="text"
-            placeholder="Search invoice #, customer..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
-          />
         </div>
       </div>
 
