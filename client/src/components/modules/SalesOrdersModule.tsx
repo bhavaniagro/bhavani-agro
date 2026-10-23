@@ -122,7 +122,7 @@ export const SalesOrdersModule: React.FC = () => {
         tabs={
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
             <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
-              {['All', 'Pending', 'Production Required', 'Ready', 'Dispatched', 'Completed'].map(st => (
+              {['All', 'Pending', 'Production Required', 'Ready', 'Dispatched', 'Completed', 'Rejected'].map(st => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
@@ -243,6 +243,7 @@ export const SalesOrdersModule: React.FC = () => {
                         so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                         so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
                         so.status === 'Production Required' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
+                        so.status === 'Rejected' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
                         'bg-neutral-100 text-neutral-800'
                       }`}>
                         {so.status}

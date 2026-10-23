@@ -86,6 +86,10 @@ export const CustomersModule: React.FC = () => {
   const custInvoices = activeCustomer ? invoices.filter(i => isCustomerMatch(i.customerId, i.customerName, activeCustomer)) : [];
   const custDispatches = activeCustomer ? dispatches.filter(d => isCustomerMatch(d.customerId, d.customerName, activeCustomer)) : [];
 
+  const activeCustOrders = custOrders.filter(o => o.status !== 'Cancelled' && o.status !== 'Rejected');
+  const usedCustCredit = activeCustOrders.reduce((acc, curr) => acc + curr.totalAmount, 0);
+  const availableCustCredit = activeCustomer ? Math.max(0, activeCustomer.creditLimit - usedCustCredit) : 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -192,7 +196,11 @@ export const CustomersModule: React.FC = () => {
                     <div className="font-mono font-bold text-sm text-neutral-900">
                       ₹{activeCustomer.creditLimit.toLocaleString('en-IN')}
                     </div>
-                    <div className="text-[10px] font-mono text-neutral-400">Terms: {activeCustomer.paymentTerms}</div>
+                    <div className="text-[11px] text-neutral-500 mt-1">Available Credit:</div>
+                    <div className={`font-mono font-bold text-sm ${availableCustCredit > 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      ₹{availableCustCredit.toLocaleString('en-IN')}
+                    </div>
+                    <div className="text-[10px] font-mono text-neutral-400">Utilized: ₹{usedCustCredit.toLocaleString('en-IN')} · {activeCustomer.paymentTerms}</div>
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
                     <button
@@ -223,10 +231,11 @@ export const CustomersModule: React.FC = () => {
                 </div>
 
                 <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-200">
-                  <div className="text-neutral-500 text-[10px]">Outstanding Balance</div>
-                  <div className="font-mono font-bold text-sm text-amber-800 mt-1">
-                    ₹{custInvoices.reduce((acc, curr) => acc + curr.balanceAmount, 0).toLocaleString('en-IN')}
+                  <div className="text-neutral-500 text-[10px]">Available Credit Limit</div>
+                  <div className={`font-mono font-bold text-sm mt-1 ${availableCustCredit > 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    ₹{availableCustCredit.toLocaleString('en-IN')}
                   </div>
+                  <div className="text-[9px] text-neutral-400">of ₹{activeCustomer.creditLimit.toLocaleString('en-IN')}</div>
                 </div>
 
                 <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-200">
@@ -234,6 +243,7 @@ export const CustomersModule: React.FC = () => {
                   <div className="font-mono font-bold text-sm text-neutral-900 mt-1">
                     {custOrders.length} Bookings
                   </div>
+                  <div className="text-[9px] text-neutral-400">{activeCustOrders.length} active</div>
                 </div>
 
                 <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-200">

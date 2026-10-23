@@ -198,7 +198,8 @@ export type SalesOrderStatus =
   | 'Ready'
   | 'Dispatched'
   | 'Completed'
-  | 'Cancelled';
+  | 'Cancelled'
+  | 'Rejected';
 
 export interface SalesOrder {
   id: string;

@@ -235,6 +235,52 @@ interface PrintableDoc {
   data: any;
 }
 
+export interface CustomerCreditSummary {
+  creditLimit: number;
+  usedCredit: number;
+  availableCredit: number;
+  utilizationPercent: number;
+  orderCount: number;
+  activeOrders: SalesOrder[];
+}
+
+export const getCustomerCreditSummary = (
+  customer: Customer | null | undefined,
+  salesOrders: SalesOrder[]
+): CustomerCreditSummary => {
+  if (!customer) {
+    return {
+      creditLimit: 0,
+      usedCredit: 0,
+      availableCredit: 0,
+      utilizationPercent: 0,
+      orderCount: 0,
+      activeOrders: []
+    };
+  }
+
+  const activeOrders = (salesOrders || []).filter(so => {
+    if (so.status === 'Cancelled' || so.status === 'Rejected') return false;
+    if (so.customerId && (so.customerId === customer.id || so.customerId === customer.code)) return true;
+    if (so.customerName && customer.customerName && so.customerName.toLowerCase().trim() === customer.customerName.toLowerCase().trim()) return true;
+    return false;
+  });
+
+  const usedCredit = activeOrders.reduce((sum, so) => sum + (Number(so.totalAmount) || 0), 0);
+  const creditLimit = Number(customer.creditLimit) || 0;
+  const availableCredit = creditLimit > 0 ? Math.max(0, creditLimit - usedCredit) : 0;
+  const utilizationPercent = creditLimit > 0 ? Math.min(100, Math.round((usedCredit / creditLimit) * 100)) : 0;
+
+  return {
+    creditLimit,
+    usedCredit,
+    availableCredit,
+    utilizationPercent,
+    orderCount: activeOrders.length,
+    activeOrders
+  };
+};
+
 interface ERPContextType {
   activeModule: ERPModule;
   setActiveModule: (module: ERPModule) => void;
@@ -360,6 +406,7 @@ interface ERPContextType {
   markAlertRead: (alertId: string) => void;
   resetAllData: () => void;
   runDemoStepAction: (step: number) => void;
+  getCustomerCredit: (customer: Customer | null | undefined) => CustomerCreditSummary;
 }
 
 const ERPContext = createContext<ERPContextType | undefined>(undefined);
@@ -838,8 +885,35 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (so) createProductionOrderFromSOObj(so);
   };
 
-  // Automation 1: Sales Order Stock Check
+  // Automation 1: Sales Order Stock Check & Credit Limit Validation
   const addSalesOrder = async (soData: Omit<SalesOrder, 'id' | 'orderNumber' | 'stockAvailable'>): Promise<SalesOrder> => {
+    // 1. Credit Limit Verification
+    const targetCustomer = customers.find(c => 
+      c.id === soData.customerId || 
+      (c.customerName && soData.customerName && c.customerName.toLowerCase().trim() === soData.customerName.toLowerCase().trim())
+    );
+
+    if (targetCustomer && Number(targetCustomer.creditLimit) > 0) {
+      const creditInfo = getCustomerCreditSummary(targetCustomer, salesOrders);
+
+      if (soData.totalAmount > creditInfo.availableCredit) {
+        const errorMsg = `Order Rejected: Credit limit exceeded for ${targetCustomer.customerName}. Available credit limit is ₹${creditInfo.availableCredit.toLocaleString('en-IN')}, but order amount is ₹${soData.totalAmount.toLocaleString('en-IN')}. (Total Credit Limit: ₹${creditInfo.creditLimit.toLocaleString('en-IN')}, Already Utilized: ₹${creditInfo.usedCredit.toLocaleString('en-IN')}).`;
+
+        showToast(errorMsg, "error");
+        setAlerts(prev => [{
+          id: `alt-${Date.now()}`,
+          type: 'critical',
+          title: `Sales Order Rejected: Credit Limit Exceeded`,
+          description: errorMsg,
+          timestamp: 'Just now',
+          module: 'CRM & Sales',
+          read: false
+        }, ...prev]);
+
+        throw new Error(errorMsg);
+      }
+    }
+
     const targetProduct = products.find(p => p.id === soData.productId);
     const availableStock = targetProduct ? targetProduct.currentStockMT - targetProduct.reservedStockMT : 0;
     const isStockAvailable = availableStock >= soData.quantityMT;
@@ -2258,7 +2332,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addRawMaterial,
         markAlertRead,
         resetAllData,
-        runDemoStepAction
+        runDemoStepAction,
+        getCustomerCredit: (customer: Customer | null | undefined) => getCustomerCreditSummary(customer, salesOrders),
       }}
     >
       {children}
