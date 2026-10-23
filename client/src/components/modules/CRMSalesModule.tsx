@@ -12,11 +12,14 @@ import {
   Download,
   Edit,
   Trash2,
-  X
+  X,
+  AlertCircle
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { LeadStage, Lead } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
+import { LostReasonModal } from '../modals/LostReasonModal';
+import { LeadFormModal } from '../crm/LeadFormModal';
 
 export const CRMSalesModule: React.FC = () => {
   const {
@@ -29,6 +32,7 @@ export const CRMSalesModule: React.FC = () => {
     customers,
     setActiveModule,
     products,
+    addLead,
     updateLead,
     deleteLead
   } = useERP();
@@ -55,10 +59,70 @@ export const CRMSalesModule: React.FC = () => {
     };
   }, [isFilterOpen]);
 
-  // Edit & Delete state
+  // Edit, Create, Delete & Lost Reason modal states
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [isCreateLeadOpen, setIsCreateLeadOpen] = useState(false);
+  const [leadForLostReason, setLeadForLostReason] = useState<Lead | null>(null);
   const [deletingLeadId, setDeletingLeadId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
+  const [dragOverStage, setDragOverStage] = useState<LeadStage | null>(null);
+
+  const handleStageChangeRequest = async (lead: Lead, targetStage: LeadStage) => {
+    if (lead.status === targetStage) return;
+
+    if (targetStage === 'Lost') {
+      // Must prompt for Lost Reason dialog before completing transition
+      setLeadForLostReason(lead);
+      return;
+    }
+
+    try {
+      await updateLead(lead.id, { status: targetStage });
+    } catch (err) {
+      console.error('Failed to change lead stage:', err);
+    }
+  };
+
+  const handleConfirmLost = async (reason: string) => {
+    if (!leadForLostReason) return;
+    await updateLead(leadForLostReason.id, {
+      status: 'Lost',
+      lostReason: reason
+    });
+    setLeadForLostReason(null);
+  };
+
+  const handleDragStart = (e: React.DragEvent, leadId: string) => {
+    e.dataTransfer.setData('text/plain', leadId);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedLeadId(leadId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, stage: LeadStage) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverStage !== stage) {
+      setDragOverStage(stage);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetStage: LeadStage) => {
+    e.preventDefault();
+    setDragOverStage(null);
+    const leadId = e.dataTransfer.getData('text/plain') || draggedLeadId;
+    setDraggedLeadId(null);
+    if (!leadId) return;
+
+    const lead = leads.find((l) => l.id === leadId);
+    if (!lead) return;
+
+    handleStageChangeRequest(lead, targetStage);
+  };
 
   const stages: LeadStage[] = [
     'New',
@@ -125,10 +189,7 @@ export const CRMSalesModule: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              setQuickAddType('Lead');
-              setIsQuickAddOpen(true);
-            }}
+            onClick={() => setIsCreateLeadOpen(true)}
             className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -347,7 +408,17 @@ export const CRMSalesModule: React.FC = () => {
             const stageTotal = stageLeads.reduce((acc, curr) => acc + (curr.estimatedValue || 0), 0);
 
             return (
-              <div key={st} className="bg-neutral-100/70 border border-neutral-200 rounded-xl p-3 flex flex-col w-64 min-w-[250px] shrink-0">
+              <div
+                key={st}
+                onDragOver={(e) => handleDragOver(e, st)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, st)}
+                className={`border rounded-xl p-3 flex flex-col w-64 min-w-[250px] shrink-0 transition-all ${
+                  dragOverStage === st
+                    ? 'bg-neutral-200/90 border-neutral-400 ring-2 ring-neutral-400/40 shadow-xs'
+                    : 'bg-neutral-100/70 border-neutral-200'
+                }`}
+              >
                 <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
                   <div className="font-semibold text-xs text-neutral-900">{st}</div>
                   <span className="text-[10px] font-mono bg-white px-1.5 py-0.2 rounded border border-neutral-200 font-bold">
@@ -359,10 +430,17 @@ export const CRMSalesModule: React.FC = () => {
                 </div>
 
                 <div className="space-y-2 mt-3 flex-1 overflow-y-auto max-h-[500px]">
-                  {stageLeads.map(lead => (
-                    <div key={lead.id} className="bg-white border border-neutral-200 rounded-lg p-3 hover:border-neutral-300 shadow-2xs text-xs space-y-1.5 relative group">
+                  {stageLeads.map((lead) => (
+                    <div
+                      key={lead.id}
+                      draggable={true}
+                      onDragStart={(e) => handleDragStart(e, lead.id)}
+                      className="bg-white border border-neutral-200 rounded-lg p-3 hover:border-neutral-300 shadow-2xs text-xs space-y-1.5 relative group cursor-grab active:cursor-grabbing transition-all hover:shadow-xs"
+                    >
                       <div className="flex items-start justify-between">
-                        <div className="font-bold text-neutral-900 truncate pr-2">{lead.company}</div>
+                        <div className="font-bold text-neutral-900 truncate pr-2" title={lead.company}>
+                          {lead.company}
+                        </div>
                         <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 shrink-0">
                           <button
                             onClick={() => setEditingLead(lead)}
@@ -380,12 +458,24 @@ export const CRMSalesModule: React.FC = () => {
                           </button>
                         </div>
                       </div>
-                      <div className="text-[11px] text-neutral-600 truncate">{lead.contactPerson} · {lead.location}</div>
-                      <div className="text-[11px] text-emerald-800 font-medium truncate">{lead.productInterested}</div>
+                      <div className="text-[11px] text-neutral-600 truncate" title={`${lead.contactPerson || lead.leadName} · ${lead.address || lead.location}`}>
+                        {lead.contactPerson || lead.leadName} · {lead.address || lead.location || 'Location not set'}
+                      </div>
+                      {lead.email && (
+                        <div className="text-[10px] text-neutral-400 truncate" title={lead.email}>
+                          {lead.email}
+                        </div>
+                      )}
+                      <div className="text-[11px] text-emerald-800 font-medium truncate" title={lead.productInterested}>
+                        {lead.productInterested}
+                      </div>
                       <div className="flex justify-between items-center text-[10px] font-mono text-neutral-500 pt-1 border-t border-neutral-100">
                         <span>{lead.expectedQuantityMT} MT</span>
-                        <span className="font-bold text-neutral-900">₹{(lead.estimatedValue || 0).toLocaleString('en-IN')}</span>
+                        <span className="font-bold text-neutral-900">
+                          ₹{(lead.estimatedValue || 0).toLocaleString('en-IN')}
+                        </span>
                       </div>
+
                       {lead.status === 'Won' ? (
                         <button
                           onClick={() => convertLeadToCustomer(lead.id)}
@@ -394,9 +484,32 @@ export const CRMSalesModule: React.FC = () => {
                           <UserPlus className="w-3 h-3" />
                           <span>Convert to Customer</span>
                         </button>
+                      ) : lead.status === 'Lost' ? (
+                        <div className="mt-1.5 p-1.5 bg-rose-50 border border-rose-200 rounded text-[10px] text-rose-800 space-y-0.5">
+                          <div className="font-semibold flex items-center justify-between">
+                            <span>Lost Reason:</span>
+                            <button
+                              type="button"
+                              onClick={() => setLeadForLostReason(lead)}
+                              className="text-[9px] underline hover:text-rose-950 cursor-pointer"
+                            >
+                              Update
+                            </button>
+                          </div>
+                          <div className="truncate text-rose-900 font-normal" title={lead.lostReason}>
+                            {lead.lostReason || <span className="italic text-rose-400">No reason recorded</span>}
+                          </div>
+                        </div>
                       ) : (
-                        <div className="text-[10px] text-neutral-400 mt-1 truncate">
-                          Rep: {(lead.salesperson || '').split(' ')[0]} · Next: {lead.followUpDate}
+                        <div className="flex items-center justify-between text-[10px] text-neutral-400 mt-1 pt-1 border-t border-neutral-50">
+                          <span className="truncate">
+                            Rep: {(lead.salesperson || 'Unassigned').split(' ')[0]}
+                          </span>
+                          <span className="truncate text-neutral-500 font-mono text-[9.5px]">
+                            {lead.followUpDate
+                              ? `Next: ${lead.followUpDate}${lead.followUpTime ? ` @ ${lead.followUpTime}` : ''}`
+                              : 'No date'}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -422,44 +535,96 @@ export const CRMSalesModule: React.FC = () => {
                 <thead>
                   <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
                     <th className="p-3">Company &amp; Contact</th>
-                    <th className="p-3">Location</th>
+                    <th className="p-3">Address / Location</th>
                     <th className="p-3">Product Required</th>
                     <th className="p-3 text-right">Qty (MT)</th>
                     <th className="p-3 text-right">Est. Value (₹)</th>
-                    <th className="p-3">Salesperson</th>
+                    <th className="p-3">Follow-up</th>
                     <th className="p-3">Stage</th>
                     <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
-                  {filteredLeads.map(l => (
+                  {filteredLeads.map((l) => (
                     <tr key={l.id} className="hover:bg-neutral-50/70 transition-colors">
                       <td className="p-3">
                         <div className="font-bold text-neutral-900">{l.company}</div>
-                        <div className="text-[11px] text-neutral-500">{l.contactPerson} · {l.mobile}</div>
+                        <div className="text-[11px] text-neutral-500">
+                          {l.contactPerson || l.leadName} · {l.mobile}
+                        </div>
+                        {l.email && (
+                          <div className="text-[10px] text-neutral-400 font-mono">
+                            {l.email}
+                          </div>
+                        )}
                       </td>
-                      <td className="p-3 text-neutral-700">{l.location}</td>
+                      <td className="p-3 text-neutral-700 max-w-[160px] truncate" title={l.address || l.location}>
+                        {l.address || l.location || '-'}
+                      </td>
                       <td className="p-3 font-medium text-neutral-900">{l.productInterested}</td>
                       <td className="p-3 text-right font-mono tabular-nums">{l.expectedQuantityMT} MT</td>
                       <td className="p-3 text-right font-mono tabular-nums font-bold text-neutral-900">
                         ₹{l.estimatedValue.toLocaleString('en-IN')}
                       </td>
-                      <td className="p-3 text-neutral-700">{l.salesperson}</td>
+                      <td className="p-3 text-neutral-600 text-[11px]">
+                        {l.followUpDate ? (
+                          <div className="font-mono">
+                            <div>{l.followUpDate}</div>
+                            {l.followUpTime && (
+                              <div className="text-[10px] text-neutral-400">@ {l.followUpTime}</div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-neutral-400">-</span>
+                        )}
+                      </td>
                       <td className="p-3">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
-                          l.status === 'Won' ? 'bg-emerald-100 text-emerald-800' :
-                          l.status === 'Negotiation' ? 'bg-blue-100 text-blue-800' :
-                          l.status === 'Lost' ? 'bg-neutral-200 text-neutral-600' :
-                          'bg-amber-100 text-amber-800'
-                        }`}>
-                          {l.status}
-                        </span>
+                        <div className="flex flex-col gap-1 items-start">
+                          <select
+                            value={l.status}
+                            onChange={(e) => handleStageChangeRequest(l, e.target.value as LeadStage)}
+                            className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider border cursor-pointer outline-none transition-colors ${
+                              l.status === 'Won'
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                : l.status === 'Negotiation'
+                                ? 'bg-blue-100 text-blue-800 border-blue-300'
+                                : l.status === 'Lost'
+                                ? 'bg-rose-100 text-rose-800 border-rose-300'
+                                : 'bg-amber-100 text-amber-800 border-amber-300'
+                            }`}
+                          >
+                            {stages.map((st) => (
+                              <option key={st} value={st}>
+                                {st}
+                              </option>
+                            ))}
+                          </select>
+                          {l.status === 'Lost' && (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <span
+                                className="text-[10px] text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200 max-w-[140px] truncate"
+                                title={l.lostReason || 'No reason recorded'}
+                              >
+                                {l.lostReason || 'Reason not recorded'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setLeadForLostReason(l)}
+                                className="text-[9px] text-rose-600 hover:text-rose-800 underline cursor-pointer"
+                                title="Edit lost reason"
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setEditingLead(l)}
                             className="px-2 py-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-[11px] font-medium text-neutral-700 flex items-center gap-1 cursor-pointer"
+                            title="Edit Lead Details"
                           >
                             <Edit className="w-3 h-3" />
                             <span>Edit</span>
@@ -468,13 +633,24 @@ export const CRMSalesModule: React.FC = () => {
                             <button
                               onClick={() => convertLeadToCustomer(l.id)}
                               className="px-2 py-1 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 rounded text-[11px] font-medium text-emerald-800 cursor-pointer"
+                              title="Convert to Customer Master"
                             >
                               Convert
+                            </button>
+                          )}
+                          {l.status !== 'Lost' && (
+                            <button
+                              onClick={() => setLeadForLostReason(l)}
+                              className="px-2 py-1 bg-neutral-50 border border-neutral-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 rounded text-[11px] font-medium text-neutral-600 cursor-pointer transition-colors"
+                              title="Move to Lost"
+                            >
+                              Mark Lost
                             </button>
                           )}
                           <button
                             onClick={() => setDeletingLeadId(l.id)}
                             className="px-2 py-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-[11px] font-medium text-rose-700 cursor-pointer"
+                            title="Delete Lead"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -654,167 +830,37 @@ export const CRMSalesModule: React.FC = () => {
         </div>
       )}
 
+      {/* Create Lead Modal */}
+      <LeadFormModal
+        isOpen={isCreateLeadOpen}
+        mode="create"
+        products={products}
+        onClose={() => setIsCreateLeadOpen(false)}
+        onSubmit={async (leadData) => {
+          await addLead(leadData);
+        }}
+      />
+
       {/* Edit Lead Modal */}
-      {editingLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
-            <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
-              <div className="font-bold text-neutral-900">Edit Lead: {editingLead.company}</div>
-              <button
-                onClick={() => setEditingLead(null)}
-                className="text-neutral-400 hover:text-neutral-600 cursor-pointer p-1"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      <LeadFormModal
+        isOpen={Boolean(editingLead)}
+        mode="edit"
+        initialLead={editingLead}
+        products={products}
+        onClose={() => setEditingLead(null)}
+        onSubmit={async (leadData) => {
+          if (!editingLead) return;
+          await updateLead(editingLead.id, leadData);
+        }}
+      />
 
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setIsSubmitting(true);
-                try {
-                  await updateLead(editingLead.id, editingLead);
-                  setEditingLead(null);
-                } finally {
-                  setIsSubmitting(false);
-                }
-              }}
-              className="p-4 space-y-3 max-h-[75vh] overflow-y-auto"
-            >
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Lead Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingLead.leadName}
-                    onChange={(e) => setEditingLead({ ...editingLead, leadName: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Company</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingLead.company}
-                    onChange={(e) => setEditingLead({ ...editingLead, company: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Contact Person</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingLead.contactPerson}
-                    onChange={(e) => setEditingLead({ ...editingLead, contactPerson: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Mobile</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingLead.mobile}
-                    onChange={(e) => setEditingLead({ ...editingLead, mobile: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Location</label>
-                  <input
-                    type="text"
-                    value={editingLead.location}
-                    onChange={(e) => setEditingLead({ ...editingLead, location: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Product Interested</label>
-                  <input
-                    type="text"
-                    value={editingLead.productInterested}
-                    onChange={(e) => setEditingLead({ ...editingLead, productInterested: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Qty Expected (MT)</label>
-                  <input
-                    type="number"
-                    value={editingLead.expectedQuantityMT}
-                    onChange={(e) => setEditingLead({ ...editingLead, expectedQuantityMT: Number(e.target.value) })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Est. Value (₹)</label>
-                  <input
-                    type="number"
-                    value={editingLead.estimatedValue}
-                    onChange={(e) => setEditingLead({ ...editingLead, estimatedValue: Number(e.target.value) })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Stage</label>
-                  <select
-                    value={editingLead.status}
-                    onChange={(e) => setEditingLead({ ...editingLead, status: e.target.value as LeadStage })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  >
-                    {stages.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Salesperson</label>
-                  <input
-                    type="text"
-                    value={editingLead.salesperson}
-                    onChange={(e) => setEditingLead({ ...editingLead, salesperson: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-200">
-                <button
-                  type="button"
-                  onClick={() => setEditingLead(null)}
-                  className="px-3 py-1.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded text-xs font-medium cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-xs font-semibold cursor-pointer"
-                >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Lost Reason Transition Modal */}
+      <LostReasonModal
+        isOpen={Boolean(leadForLostReason)}
+        lead={leadForLostReason}
+        onClose={() => setLeadForLostReason(null)}
+        onConfirm={handleConfirmLost}
+      />
 
       {/* Delete Lead Confirm Modal */}
       <ConfirmModal

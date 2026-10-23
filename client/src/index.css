@@ -9,8 +9,8 @@
 
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    font-size: 0.8125rem;
-    line-height: 1.45;
+    font-size: 0.9375rem; /* 15px (was 13px) */
+    line-height: 1.5;
   }
   
   .font-mono, .tabular-nums {
@@ -25,27 +25,27 @@
 
 /* Typography scale enhancements for enterprise ERP readability */
 @theme {
-  --text-xs: 0.8125rem; /* 13px (was 12px) */
-  --text-xs--line-height: 1.25rem;
-  --text-sm: 0.9375rem; /* 15px (was 14px) */
-  --text-sm--line-height: 1.375rem;
-  --text-base: 1.0625rem; /* 17px (was 16px) */
-  --text-base--line-height: 1.625rem;
-  --text-lg: 1.1875rem; /* 19px (was 18px) */
-  --text-lg--line-height: 1.75rem;
-  --text-xl: 1.3125rem; /* 21px (was 20px) */
-  --text-xl--line-height: 1.875rem;
+  --text-xs: 0.9375rem; /* 15px (was 13px, originally 12px) */
+  --text-xs--line-height: 1.375rem;
+  --text-sm: 1.03125rem; /* 16.5px (was 15px, originally 14px) */
+  --text-sm--line-height: 1.5rem;
+  --text-base: 1.15625rem; /* 18.5px (was 17px, originally 16px) */
+  --text-base--line-height: 1.75rem;
+  --text-lg: 1.28125rem; /* 20.5px (was 19px, originally 18px) */
+  --text-lg--line-height: 1.875rem;
+  --text-xl: 1.4375rem; /* 23px (was 21px, originally 20px) */
+  --text-xl--line-height: 2rem;
 }
 
 /* Modest readability elevation for hardcoded micro-text utilities */
 .text-\[10px\] {
-  font-size: 0.72rem !important; /* ~11.5px (was 10px) */
-  line-height: 1.05rem !important;
+  font-size: 0.8125rem !important; /* 13px (was ~11.5px, originally 10px) */
+  line-height: 1.15rem !important;
 }
 
 .text-\[11px\] {
-  font-size: 0.785rem !important; /* ~12.5px (was 11px) */
-  line-height: 1.15rem !important;
+  font-size: 0.875rem !important; /* 14px (was ~12.5px, originally 11px) */
+  line-height: 1.25rem !important;
 }
 
 @media print {
