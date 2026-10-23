@@ -45,38 +45,40 @@ const RouteSyncHandler: React.FC = () => {
 
 const MainContent: React.FC = () => {
   return (
-    <div className="min-h-screen bg-neutral-100 flex flex-col font-sans">
+    <div className="h-screen bg-neutral-100 flex flex-col font-sans overflow-hidden">
       <RouteSyncHandler />
       <Navbar />
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         <Sidebar />
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto max-w-[1600px] w-full mx-auto">
-          <Routes>
-            <Route path="/" element={<DashboardModule />} />
-            <Route path="/dashboard" element={<Navigate to="/" replace />} />
-            <Route path="/sales" element={<CRMSalesModule />} />
-            <Route path="/crm-sales" element={<Navigate to="/sales" replace />} />
-            <Route path="/purchase" element={<PurchaseModule />} />
-            <Route path="/raw-material" element={<RawMaterialModule />} />
-            <Route path="/production" element={<ProductionModule />} />
-            <Route path="/quality-control" element={<Navigate to="/production" replace />} />
-            <Route path="/finished-goods" element={<FinishedGoodsModule />} />
-            <Route path="/inventory" element={<InventoryModule />} />
-            <Route path="/dispatch" element={<DispatchLogisticsModule />} />
-            <Route path="/dispatch-logistics" element={<Navigate to="/dispatch" replace />} />
-            <Route path="/customers" element={<CustomersModule />} />
-            <Route path="/suppliers" element={<SuppliersModule />} />
-            <Route path="/finance" element={<FinanceAccountsModule />} />
-            <Route path="/finance-accounts" element={<Navigate to="/finance" replace />} />
-            <Route path="/expenses" element={<ExpensesModule />} />
-            <Route path="/employees" element={<EmployeesModule />} />
-            <Route path="/maintenance" element={<MaintenanceModule />} />
-            <Route path="/documents" element={<DocumentsModule />} />
-            <Route path="/reports" element={<ReportsAnalyticsModule />} />
-            <Route path="/reports-analytics" element={<Navigate to="/reports" replace />} />
-            <Route path="/settings" element={<SettingsModule />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+        <main className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-4 sm:p-6 max-w-[1600px] w-full mx-auto">
+            <Routes>
+              <Route path="/" element={<DashboardModule />} />
+              <Route path="/dashboard" element={<Navigate to="/" replace />} />
+              <Route path="/sales" element={<CRMSalesModule />} />
+              <Route path="/crm-sales" element={<Navigate to="/sales" replace />} />
+              <Route path="/purchase" element={<PurchaseModule />} />
+              <Route path="/raw-material" element={<RawMaterialModule />} />
+              <Route path="/production" element={<ProductionModule />} />
+              <Route path="/quality-control" element={<Navigate to="/production" replace />} />
+              <Route path="/finished-goods" element={<FinishedGoodsModule />} />
+              <Route path="/inventory" element={<InventoryModule />} />
+              <Route path="/dispatch" element={<DispatchLogisticsModule />} />
+              <Route path="/dispatch-logistics" element={<Navigate to="/dispatch" replace />} />
+              <Route path="/customers" element={<CustomersModule />} />
+              <Route path="/suppliers" element={<SuppliersModule />} />
+              <Route path="/finance" element={<FinanceAccountsModule />} />
+              <Route path="/finance-accounts" element={<Navigate to="/finance" replace />} />
+              <Route path="/expenses" element={<ExpensesModule />} />
+              <Route path="/employees" element={<EmployeesModule />} />
+              <Route path="/maintenance" element={<MaintenanceModule />} />
+              <Route path="/documents" element={<DocumentsModule />} />
+              <Route path="/reports" element={<ReportsAnalyticsModule />} />
+              <Route path="/reports-analytics" element={<Navigate to="/reports" replace />} />
+              <Route path="/settings" element={<SettingsModule />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
         </main>
       </div>
 

@@ -90,9 +90,9 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-60 bg-white border-r border-neutral-200 flex flex-col shrink-0 min-h-[calc(100vh-3.5rem)]">
+    <aside className="w-60 bg-white border-r border-neutral-200 flex flex-col shrink-0 h-full overflow-hidden">
       {/* Plant quick identity */}
-      <div className="p-3 border-b border-neutral-100 flex items-center justify-between">
+      <div className="p-3 border-b border-neutral-100 flex items-center justify-between shrink-0">
         <div className="text-xs">
           <div className="font-semibold text-neutral-900 truncate">Plant 1 · Bhavnagar GIDC</div>
           <div className="text-[11px] text-neutral-500">Sole Prop · Est. 1985</div>
@@ -101,7 +101,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation List */}
-      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto min-h-0">
         {navItems.filter(item => isItemVisible(item.id)).map(item => {
           const Icon = item.icon;
           const isActive = activeModule === item.id;
@@ -135,7 +135,7 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       {/* Role Notice */}
-      <div className="p-3 border-t border-neutral-200 bg-neutral-50/70 text-[11px] text-neutral-600">
+      <div className="p-3 border-t border-neutral-200 bg-neutral-50/70 text-[11px] text-neutral-600 shrink-0">
         <div className="flex items-center justify-between">
           <span className="font-medium text-neutral-800">Active View</span>
           <span className="font-mono text-[10px] text-neutral-500">{activeRole}</span>
