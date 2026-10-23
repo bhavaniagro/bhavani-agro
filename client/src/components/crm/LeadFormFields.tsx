@@ -295,37 +295,6 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-              Assigned Salesperson <span className="text-neutral-400 text-[10px] font-normal">(Optional)</span>
-            </label>
-            <input
-              type="text"
-              value={formData.salesperson}
-              onChange={(e) => handleChange('salesperson', e.target.value)}
-              placeholder="e.g. Rajesh Shah"
-              className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 focus:bg-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-              Lead Source <span className="text-neutral-400 text-[10px] font-normal">(Optional)</span>
-            </label>
-            <select
-              value={formData.leadSource}
-              onChange={(e) => handleChange('leadSource', e.target.value)}
-              className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 focus:bg-white"
-            >
-              {LEAD_SOURCES.map((src) => (
-                <option key={src} value={src}>
-                  {src}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
       </div>
 
       {/* SECTION 3: Pipeline, Follow-up & Lost Reason */}
