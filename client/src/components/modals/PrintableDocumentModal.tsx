@@ -1,9 +1,14 @@
 import React from 'react';
 import { X, Printer, Download, Share2 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 export const PrintableDocumentModal: React.FC = () => {
   const { printableDoc, setPrintableDoc, company } = useERP();
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    !!printableDoc,
+    () => setPrintableDoc(null)
+  );
 
   if (!printableDoc) return null;
 
@@ -14,9 +19,16 @@ export const PrintableDocumentModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/80 backdrop-blur-xs py-8 sm:py-12 px-4 sm:px-6 md:px-8 animate-in fade-in duration-150">
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/80 backdrop-blur-xs py-8 sm:py-12 px-4 sm:px-6 md:px-8 animate-in fade-in duration-150"
+    >
       <div className="min-h-full flex items-start justify-center">
-        <div className="bg-white rounded-xl shadow-2xl border border-neutral-300 w-full max-w-3xl my-auto overflow-hidden flex flex-col ring-1 ring-black/10">
+        <div
+          ref={contentRef}
+          className="bg-white rounded-xl shadow-2xl border border-neutral-300 w-full max-w-3xl my-auto overflow-hidden flex flex-col ring-1 ring-black/10"
+        >
           {/* Top Control Bar */}
           <div className="p-3.5 bg-neutral-900 text-white flex items-center justify-between no-print sticky top-0 z-10 border-b border-neutral-800 shadow-xs">
             <div className="font-semibold text-xs flex items-center gap-2">

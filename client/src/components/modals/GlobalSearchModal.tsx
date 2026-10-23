@@ -12,6 +12,7 @@ import {
   Building 
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 export const GlobalSearchModal: React.FC = () => {
   const { 
@@ -31,6 +32,11 @@ export const GlobalSearchModal: React.FC = () => {
     setActiveModule,
     setPrintableDoc
   } = useERP();
+
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    isSearchOpen,
+    () => setIsSearchOpen(false)
+  );
 
   const [selectedBatch, setSelectedBatch] = useState<any | null>(null);
 
@@ -74,8 +80,15 @@ export const GlobalSearchModal: React.FC = () => {
   const batchDispatches = activeBatch ? dispatches.filter(d => d.batchNumber === activeBatch.batchNumber) : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-20 bg-neutral-900/60 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-4xl overflow-hidden flex flex-col max-h-[85vh]">
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-20 bg-neutral-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+    >
+      <div
+        ref={contentRef}
+        className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-4xl overflow-hidden flex flex-col max-h-[85vh]"
+      >
         {/* Search Input Bar */}
         <div className="p-4 border-b border-neutral-200 flex items-center gap-3 bg-neutral-50">
           <Search className="w-5 h-5 text-neutral-400 shrink-0" />

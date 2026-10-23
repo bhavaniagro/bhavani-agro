@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle } from 'lucide-react';
 import { Lead } from '../../types/erp';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 interface LostReasonModalProps {
   isOpen: boolean;
@@ -15,6 +16,11 @@ export const LostReasonModal: React.FC<LostReasonModalProps> = ({
   onClose,
   onConfirm
 }) => {
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    isOpen && !!lead && !isSubmitting,
+    onClose
+  );
+
   const [lostReason, setLostReason] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,8 +56,15 @@ export const LostReasonModal: React.FC<LostReasonModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-2xs p-4 animate-in fade-in duration-150">
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-2xl max-w-md w-full overflow-hidden text-xs">
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-2xs p-4 animate-in fade-in duration-150"
+    >
+      <div
+        ref={contentRef}
+        className="bg-white border border-neutral-200 rounded-xl shadow-2xl max-w-md w-full overflow-hidden text-xs"
+      >
         <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-rose-50/50">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">

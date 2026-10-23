@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   ShoppingCart, 
@@ -190,6 +190,23 @@ export const PurchaseModule: React.FC = () => {
     await deleteGRN(deletingGRN.id);
     setDeletingGRN(null);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showGRNModal) {
+          setShowGRNModal(false);
+          setSelectedPO(null);
+        }
+        if (editingPO) setEditingPO(null);
+        if (editingGRN) setEditingGRN(null);
+        if (deletingPO) setDeletingPO(null);
+        if (deletingGRN) setDeletingGRN(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showGRNModal, editingPO, editingGRN, deletingPO, deletingGRN]);
 
   return (
     <div className="space-y-6">
@@ -430,8 +447,14 @@ export const PurchaseModule: React.FC = () => {
 
       {/* CREATE GRN MODAL */}
       {showGRNModal && selectedPO && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowGRNModal(false); setSelectedPO(null); } }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-1">
               Create Goods Receipt Note (GRN) for {selectedPO.poNumber}
             </h3>
@@ -512,8 +535,14 @@ export const PurchaseModule: React.FC = () => {
 
       {/* EDIT PO MODAL */}
       {editingPO && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingPO(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit Purchase Order ({editingPO.poNumber})
@@ -639,8 +668,14 @@ export const PurchaseModule: React.FC = () => {
 
       {/* EDIT GRN MODAL */}
       {editingGRN && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingGRN(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit GRN ({editingGRN.grnNumber})

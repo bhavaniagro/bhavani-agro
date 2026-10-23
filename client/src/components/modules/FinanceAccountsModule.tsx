@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Landmark, 
   Receipt, 
@@ -113,6 +113,23 @@ export const FinanceAccountsModule: React.FC = () => {
     await deletePayment(deletePaymentId);
     setDeletePaymentId(null);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showPaymentModal) {
+          setShowPaymentModal(false);
+          setSelectedInvoice(null);
+        }
+        if (editingInvoice) setEditingInvoice(null);
+        if (editingPayment) setEditingPayment(null);
+        if (deleteInvoiceId) setDeleteInvoiceId(null);
+        if (deletePaymentId) setDeletePaymentId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showPaymentModal, editingInvoice, editingPayment, deleteInvoiceId, deletePaymentId]);
 
   return (
     <div className="space-y-6">
@@ -415,8 +432,14 @@ export const FinanceAccountsModule: React.FC = () => {
 
       {/* RECORD PAYMENT MODAL */}
       {showPaymentModal && selectedInvoice && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowPaymentModal(false); setSelectedInvoice(null); } }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-1">
               Record Customer Receipt for {selectedInvoice.invoiceNumber}
             </h3>
@@ -486,8 +509,14 @@ export const FinanceAccountsModule: React.FC = () => {
 
       {/* EDIT INVOICE MODAL */}
       {editingInvoice && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingInvoice(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">
               Edit Sales Invoice {editingInvoice.invoiceNumber}
             </h3>
@@ -569,8 +598,14 @@ export const FinanceAccountsModule: React.FC = () => {
 
       {/* EDIT PAYMENT MODAL */}
       {editingPayment && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingPayment(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">
               Edit Payment Voucher {editingPayment.transactionNumber}
             </h3>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wrench, AlertTriangle, CheckCircle2, Clock, Calendar, Plus, Edit, Trash2 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
@@ -29,6 +29,21 @@ export const MaintenanceModule: React.FC = () => {
     setInstallDate(new Date().toISOString().split('T')[0]);
     setFreqDays(30);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showAddModal) {
+          setShowAddModal(false);
+          resetMachineForm();
+        }
+        if (editingMachine) setEditingMachine(null);
+        if (deletingMachineId) setDeletingMachineId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAddModal, editingMachine, deletingMachineId]);
 
   const totalMaintenanceCost = machinery.reduce((acc, curr) => acc + curr.totalMaintenanceCostThisYear, 0);
 
@@ -164,8 +179,19 @@ export const MaintenanceModule: React.FC = () => {
 
       {/* ADD MACHINE MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddModal(false);
+              resetMachineForm();
+            }
+          }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Add New Machine / Equipment</h3>
             <form onSubmit={handleCreateMachinery} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -255,8 +281,14 @@ export const MaintenanceModule: React.FC = () => {
 
       {/* EDIT MACHINE MODAL */}
       {editingMachine && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingMachine(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Edit Machine {editingMachine.machineCode}</h3>
             <form onSubmit={handleUpdateMachinery} className="space-y-3">
               <div>

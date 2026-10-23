@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   PackageCheck, 
   Boxes, 
@@ -36,6 +36,18 @@ export const FinishedGoodsModule: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<(Omit<FinishedProduct, 'currentStockMT' | 'reservedStockMT'> & { currentStockMT?: number | string; reservedStockMT?: number | string }) | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isAddOpen) setIsAddOpen(false);
+        if (editingProduct) setEditingProduct(null);
+        if (deletingProductId) setDeletingProductId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAddOpen, editingProduct, deletingProductId]);
 
   // New product state
   const [newProd, setNewProd] = useState<{
@@ -278,8 +290,14 @@ export const FinishedGoodsModule: React.FC = () => {
 
       {/* Add Product Modal */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setIsAddOpen(false); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Add Finished Product</div>
               <button onClick={() => setIsAddOpen(false)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">
@@ -432,8 +450,14 @@ export const FinishedGoodsModule: React.FC = () => {
 
       {/* Edit Product Modal */}
       {editingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingProduct(null); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Edit Product: {editingProduct.sku}</div>
               <button onClick={() => setEditingProduct(null)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">

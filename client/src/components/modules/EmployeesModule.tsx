@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserCheck, Plus, Search, Phone, Briefcase, Edit, Trash2 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
@@ -33,6 +33,18 @@ export const EmployeesModule: React.FC = () => {
     setEmpDate(new Date().toISOString().split('T')[0]);
     setEmpSalary('');
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showAddModal) setShowAddModal(false);
+        if (editingEmployee) setEditingEmployee(null);
+        if (deletingEmployeeId) setDeletingEmployeeId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAddModal, editingEmployee, deletingEmployeeId]);
 
   const departments = ['All', 'Production', 'Sales', 'Purchase', 'Accounts', 'Warehouse', 'Dispatch', 'Administration'];
 
@@ -192,8 +204,14 @@ export const EmployeesModule: React.FC = () => {
 
       {/* ADD EMPLOYEE MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAddModal(false); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Add New Employee</h3>
             <form onSubmit={handleCreateEmployee} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -289,8 +307,14 @@ export const EmployeesModule: React.FC = () => {
 
       {/* EDIT EMPLOYEE MODAL */}
       {editingEmployee && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingEmployee(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Edit Employee {editingEmployee.employeeCode}</h3>
             <form onSubmit={handleUpdateEmployee} className="space-y-3">
               <div>

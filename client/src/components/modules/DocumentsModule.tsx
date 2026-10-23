@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Download, Eye, Plus, Search, CheckCircle2, Edit, Trash2, Upload, ExternalLink } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
@@ -35,6 +35,21 @@ export const DocumentsModule: React.FC = () => {
     // Clear the file input element so it shows empty when the form reopens
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showAddModal) {
+          setShowAddModal(false);
+          resetDocForm();
+        }
+        if (editingDoc) setEditingDoc(null);
+        if (deletingDocId) setDeletingDocId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAddModal, editingDoc, deletingDocId]);
 
   const docTypes = [
     'All',
@@ -231,8 +246,19 @@ export const DocumentsModule: React.FC = () => {
 
       {/* UPLOAD MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddModal(false);
+              resetDocForm();
+            }
+          }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Upload Real Document File</h3>
             
             {uploadError && (
@@ -325,8 +351,14 @@ export const DocumentsModule: React.FC = () => {
 
       {/* EDIT MODAL */}
       {editingDoc && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingDoc(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Edit Document Details</h3>
             <form onSubmit={handleUpdateDocument} className="space-y-3">
               <div>

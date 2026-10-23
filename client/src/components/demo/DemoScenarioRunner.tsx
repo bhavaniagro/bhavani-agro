@@ -11,6 +11,7 @@ import {
   ChevronRight 
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 interface ScenarioStep {
   stepNumber: number;
@@ -32,6 +33,11 @@ export const DemoScenarioRunner: React.FC = () => {
     setActiveModule, 
     resetAllData 
   } = useERP();
+
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    isDemoRunnerOpen,
+    () => setIsDemoRunnerOpen(false)
+  );
 
   const [isRunningAll, setIsRunningAll] = useState(false);
 
@@ -200,8 +206,15 @@ export const DemoScenarioRunner: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/70 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+    >
+      <div
+        ref={contentRef}
+        className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+      >
         {/* Header */}
         <div className="p-4 border-b border-neutral-200 bg-neutral-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">

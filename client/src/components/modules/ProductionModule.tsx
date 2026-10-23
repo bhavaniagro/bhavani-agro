@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Factory, 
   Layers, 
@@ -258,6 +258,29 @@ export const ProductionModule: React.FC = () => {
       console.error("Failed to create BOM:", err);
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showLogEntryModal) {
+          setShowLogEntryModal(false);
+          setSelectedOrder(null);
+        }
+        if (editingOrder) setEditingOrder(null);
+        if (editingBatch) setEditingBatch(null);
+        if (showAddBOMModal || editingBOM) {
+          setShowAddBOMModal(false);
+          setEditingBOM(null);
+          resetBOMForm();
+        }
+        if (deletingOrder) setDeletingOrder(null);
+        if (deletingBatchId) setDeletingBatchId(null);
+        if (deletingBOMId) setDeletingBOMId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showLogEntryModal, editingOrder, editingBatch, showAddBOMModal, editingBOM, deletingOrder, deletingBatchId, deletingBOMId]);
 
   return (
     <div className="space-y-6">
@@ -646,8 +669,14 @@ export const ProductionModule: React.FC = () => {
 
       {/* PRODUCTION ENTRY MODAL */}
       {showLogEntryModal && selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowLogEntryModal(false); setSelectedOrder(null); } }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-1">
               Log Production Entry for {selectedOrder.productionOrderNumber}
             </h3>
@@ -720,8 +749,14 @@ export const ProductionModule: React.FC = () => {
 
       {/* EDIT PRODUCTION ORDER MODAL */}
       {editingOrder && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingOrder(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit Production Order ({editingOrder.productionOrderNumber})
@@ -804,8 +839,14 @@ export const ProductionModule: React.FC = () => {
 
       {/* EDIT PRODUCTION BATCH MODAL */}
       {editingBatch && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingBatch(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit Production Batch ({editingBatch.batchNumber})
@@ -861,8 +902,20 @@ export const ProductionModule: React.FC = () => {
 
       {/* CREATE / EDIT BOM MODAL */}
       {(showAddBOMModal || editingBOM) && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-xl p-5 text-xs my-auto">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddBOMModal(false);
+              setEditingBOM(null);
+              resetBOMForm();
+            }
+          }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-xl p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 {editingBOM ? `Edit BOM Recipe (${editingBOM.productName})` : 'Create New BOM Recipe'}

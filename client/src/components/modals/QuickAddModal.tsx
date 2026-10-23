@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Check } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { LeadFormFields, LeadFormState, validateLeadForm } from '../crm/LeadFormFields';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 export const QuickAddModal: React.FC = () => {
   const { 
@@ -20,6 +21,11 @@ export const QuickAddModal: React.FC = () => {
     addGRN,
     addExpense
   } = useERP();
+
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    isQuickAddOpen,
+    () => setIsQuickAddOpen(false)
+  );
 
   const [activeType, setActiveType] = useState<string>(quickAddType || 'Sales Order');
 
@@ -230,10 +236,17 @@ export const QuickAddModal: React.FC = () => {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-      <div className={`bg-white rounded-xl shadow-2xl border border-neutral-200 w-full overflow-hidden flex flex-col max-h-[90vh] ${
-        currentType === 'Lead' ? 'max-w-2xl' : 'max-w-xl'
-      }`}>
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+    >
+      <div
+        ref={contentRef}
+        className={`bg-white rounded-xl shadow-2xl border border-neutral-200 w-full overflow-hidden flex flex-col max-h-[90vh] ${
+          currentType === 'Lead' ? 'max-w-2xl' : 'max-w-xl'
+        }`}
+      >
         {/* Header */}
         <div className="p-4 border-b border-neutral-200 flex items-center justify-between bg-neutral-50">
           <div className="font-bold text-sm text-neutral-900 flex items-center gap-2">

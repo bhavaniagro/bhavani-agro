@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Receipt, 
   Plus, 
@@ -62,6 +62,17 @@ export const ExpensesModule: React.FC = () => {
     await deleteExpense(deletingExpenseId);
     setDeletingExpenseId(null);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (editingExpense) setEditingExpense(null);
+        if (deletingExpenseId) setDeletingExpenseId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingExpense, deletingExpenseId]);
 
   return (
     <div className="space-y-6">
@@ -188,8 +199,14 @@ export const ExpensesModule: React.FC = () => {
 
       {/* EDIT EXPENSE MODAL */}
       {editingExpense && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingExpense(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">
               Edit Expense Voucher {editingExpense.expenseNumber}
             </h3>

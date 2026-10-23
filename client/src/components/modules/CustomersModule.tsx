@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   Plus, 
@@ -40,6 +40,17 @@ export const CustomersModule: React.FC = () => {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (editingCustomer) setEditingCustomer(null);
+        if (deletingCustomerId) setDeletingCustomerId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingCustomer, deletingCustomerId]);
 
   const filteredCustomers = customers.filter(c => 
     c.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -362,8 +373,14 @@ export const CustomersModule: React.FC = () => {
 
       {/* Edit Customer Modal */}
       {editingCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingCustomer(null); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Edit Customer: {editingCustomer.code}</div>
               <button

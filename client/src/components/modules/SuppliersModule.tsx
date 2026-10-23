@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, 
   Plus, 
@@ -28,6 +28,18 @@ export const SuppliersModule: React.FC = () => {
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [deletingSupplierId, setDeletingSupplierId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isAddOpen) setIsAddOpen(false);
+        if (editingSupplier) setEditingSupplier(null);
+        if (deletingSupplierId) setDeletingSupplierId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAddOpen, editingSupplier, deletingSupplierId]);
 
   // Add Supplier form state
   const [newSupp, setNewSupp] = useState({
@@ -295,8 +307,14 @@ export const SuppliersModule: React.FC = () => {
 
       {/* Add Supplier Modal */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setIsAddOpen(false); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Add New Supplier</div>
               <button onClick={() => setIsAddOpen(false)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">
@@ -482,8 +500,14 @@ export const SuppliersModule: React.FC = () => {
 
       {/* Edit Supplier Modal */}
       {editingSupplier && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingSupplier(null); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Edit Supplier: {editingSupplier.code}</div>
               <button onClick={() => setEditingSupplier(null)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">

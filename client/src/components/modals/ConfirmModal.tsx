@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -24,11 +25,23 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   onClose,
 }) => {
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    isOpen && !isLoading,
+    onClose
+  );
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-md w-full overflow-hidden text-xs">
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-150"
+    >
+      <div
+        ref={contentRef}
+        className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-md w-full overflow-hidden text-xs"
+      >
         <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
           <div className="flex items-center gap-2 font-bold text-neutral-900">
             {isDangerous && <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />}
