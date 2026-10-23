@@ -231,8 +231,8 @@ export const DocumentsModule: React.FC = () => {
 
       {/* UPLOAD MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto">
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Upload Real Document File</h3>
             
             {uploadError && (
@@ -325,8 +325,8 @@ export const DocumentsModule: React.FC = () => {
 
       {/* EDIT MODAL */}
       {editingDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto">
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Edit Document Details</h3>
             <form onSubmit={handleUpdateDocument} className="space-y-3">
               <div>

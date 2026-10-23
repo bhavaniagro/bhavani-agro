@@ -14,34 +14,36 @@ export const PrintableDocumentModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/70 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl border border-neutral-300 w-full max-w-3xl my-8 overflow-hidden flex flex-col">
-        {/* Top Control Bar */}
-        <div className="p-3 bg-neutral-900 text-white flex items-center justify-between no-print">
-          <div className="font-semibold text-xs flex items-center gap-2">
-            <span className="uppercase tracking-wider text-emerald-400">Document Preview:</span>
-            <span>
-              {type === 'invoice' ? `GST Tax Invoice #${data.invoiceNumber}` :
-               type === 'challan' ? `Delivery Challan #${data.dispatchNumber}` :
-               `QC Test Analysis Report #${data.batchNumber || data.referenceId}`}
-            </span>
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/80 backdrop-blur-xs py-8 sm:py-12 px-4 sm:px-6 md:px-8 animate-in fade-in duration-150">
+      <div className="min-h-full flex items-start justify-center">
+        <div className="bg-white rounded-xl shadow-2xl border border-neutral-300 w-full max-w-3xl my-auto overflow-hidden flex flex-col ring-1 ring-black/10">
+          {/* Top Control Bar */}
+          <div className="p-3.5 bg-neutral-900 text-white flex items-center justify-between no-print sticky top-0 z-10 border-b border-neutral-800 shadow-xs">
+            <div className="font-semibold text-xs flex items-center gap-2">
+              <span className="uppercase tracking-wider text-emerald-400 font-bold">Document Preview:</span>
+              <span className="text-neutral-200">
+                {type === 'invoice' ? `GST Tax Invoice #${data.invoiceNumber}` :
+                 type === 'challan' ? `Delivery Challan #${data.dispatchNumber}` :
+                 `QC Test Analysis Report #${data.batchNumber || data.referenceId}`}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrint}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print / Save PDF</span>
+              </button>
+              <button
+                onClick={() => setPrintableDoc(null)}
+                className="p-1 hover:bg-neutral-800 rounded text-neutral-300 hover:text-white transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrint}
-              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-medium flex items-center gap-1.5 cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print / Save PDF</span>
-            </button>
-            <button
-              onClick={() => setPrintableDoc(null)}
-              className="p-1 hover:bg-neutral-800 rounded text-neutral-300"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
 
         {/* Printable Sheet */}
         <div id="printable-document" className="p-8 bg-white text-neutral-900 text-xs font-sans leading-relaxed">
@@ -300,7 +302,7 @@ export const PrintableDocumentModal: React.FC = () => {
           )}
 
           {/* Signatures */}
-          <div className="pt-12 grid grid-cols-2 gap-8 text-[11px]">
+          <div className="pt-12 pb-4 grid grid-cols-2 gap-8 text-[11px]">
             <div>
               <div className="h-8 border-b border-dashed border-neutral-400 w-48 mb-1"></div>
               <div className="font-semibold text-neutral-800">Receiver / Driver Signature</div>
@@ -315,5 +317,6 @@ export const PrintableDocumentModal: React.FC = () => {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };

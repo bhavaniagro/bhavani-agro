@@ -338,8 +338,8 @@ export const SalesOrdersModule: React.FC = () => {
 
       {/* EDIT SALES ORDER MODAL */}
       {editingOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center">
+          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit Sales Order ({editingOrder.orderNumber})
