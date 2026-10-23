@@ -1,26 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Search, 
-  Plus, 
-  Bell, 
-  Sparkles, 
-  ShieldCheck, 
-  Check, 
-  Layers, 
-  ExternalLink 
+import {
+  Search,
+  Plus,
+  Bell,
+  Sparkles,
+  ShieldCheck,
+  Check,
+  Layers,
+  ExternalLink
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { UserRole } from '../../types/erp';
 
 export const Navbar: React.FC = () => {
-  const { 
-    activeModule, 
-    activeRole, 
-    setActiveRole, 
-    alerts, 
-    markAlertRead, 
-    setIsQuickAddOpen, 
-    setQuickAddType, 
+  const {
+    activeModule,
+    activeRole,
+    setActiveRole,
+    alerts,
+    markAlertRead,
+    setIsQuickAddOpen,
+    setQuickAddType,
     setIsSearchOpen,
     setIsDemoRunnerOpen
   } = useERP();
@@ -75,8 +75,8 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 sm:px-6 bg-white border-b border-neutral-200 shrink-0">
       {/* Zone 1: Single text element wordmark */}
       <div className="flex items-center gap-3">
-        <a 
-          href="#dashboard" 
+        <a
+          href="#dashboard"
           className="text-base sm:text-lg font-bold tracking-tight text-neutral-900 flex items-center gap-2 whitespace-nowrap"
         >
           <span className="w-2.5 h-2.5 rounded-sm bg-emerald-600 inline-block"></span>
@@ -127,7 +127,7 @@ export const Navbar: React.FC = () => {
               </div>
               <div className="max-h-72 overflow-y-auto divide-y divide-neutral-100 py-1">
                 {alerts.map(alert => (
-                  <div 
+                  <div
                     key={alert.id}
                     onClick={() => markAlertRead(alert.id)}
                     className={`p-2.5 hover:bg-neutral-50 rounded cursor-pointer transition-colors ${!alert.read ? 'bg-amber-50/40' : ''}`}
