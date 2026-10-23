@@ -9,6 +9,7 @@ import {
   Save
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ModuleHeader } from '../common/ModuleHeader';
 
 export const SettingsModule: React.FC = () => {
   const { company, setCompany, updateCompanyProfile, resetAllData, activeRole, setActiveRole } = useERP();
@@ -26,7 +27,7 @@ export const SettingsModule: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -54,7 +55,7 @@ export const SettingsModule: React.FC = () => {
             <span>Reset Demo DB</span>
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Form */}
       <form onSubmit={handleSave} className="bg-white border border-neutral-200 rounded-xl p-6 space-y-5 text-xs shadow-2xs">

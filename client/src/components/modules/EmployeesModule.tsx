@@ -3,6 +3,7 @@ import { UserCheck, Plus, Search, Phone, Briefcase, Edit, Trash2 } from 'lucide-
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Employee } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
 
 export const EmployeesModule: React.FC = () => {
   const { employees, addEmployee, updateEmployee, deleteEmployee } = useERP();
@@ -77,7 +78,7 @@ export const EmployeesModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -102,7 +103,7 @@ export const EmployeesModule: React.FC = () => {
           <Plus className="w-3.5 h-3.5" />
           <span>Add Employee</span>
         </button>
-      </div>
+      </ModuleHeader>
 
       {/* Dept filter */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">

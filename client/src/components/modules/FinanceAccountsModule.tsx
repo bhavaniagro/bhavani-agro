@@ -17,6 +17,7 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { SalesInvoice, PaymentTransaction } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
 
 export const FinanceAccountsModule: React.FC = () => {
   const { 
@@ -116,7 +117,7 @@ export const FinanceAccountsModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -130,7 +131,7 @@ export const FinanceAccountsModule: React.FC = () => {
             Real-time customer receivables aging, automated payment reconciliation, and supplier accounts payable.
           </p>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">

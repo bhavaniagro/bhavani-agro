@@ -3,6 +3,7 @@ import { FileText, Download, Eye, Plus, Search, CheckCircle2, Edit, Trash2, Uplo
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ErpDocument } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
 import { uploadDocumentFileInApi } from '../../services/api/documentApi.service';
 import { resolveDocumentUrl } from '../../config/apiConfig';
 
@@ -106,7 +107,7 @@ export const DocumentsModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -131,7 +132,7 @@ export const DocumentsModule: React.FC = () => {
           <Upload className="w-3.5 h-3.5" />
           <span>Upload Document</span>
         </button>
-      </div>
+      </ModuleHeader>
 
       {/* Filter tabs */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">

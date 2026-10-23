@@ -16,6 +16,7 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { Supplier } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
+import { ModuleHeader } from '../common/ModuleHeader';
 
 export const SuppliersModule: React.FC = () => {
   const { suppliers, rawMaterials, purchaseOrders, setActiveModule, setIsQuickAddOpen, setQuickAddType, addSupplier, updateSupplier, deleteSupplier } = useERP();
@@ -75,7 +76,7 @@ export const SuppliersModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -109,7 +110,7 @@ export const SuppliersModule: React.FC = () => {
             <span>New Purchase Order</span>
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Split view */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

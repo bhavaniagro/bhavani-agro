@@ -10,6 +10,7 @@ import {
   Download
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ModuleHeader } from '../common/ModuleHeader';
 
 export const CostingProfitabilityModule: React.FC = () => {
   const { products, boms, customers, salesOrders } = useERP();
@@ -18,7 +19,7 @@ export const CostingProfitabilityModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -32,7 +33,7 @@ export const CostingProfitabilityModule: React.FC = () => {
             <strong>Manufacturing Formula:</strong> Raw Material Cost + Labour + Electricity + Packaging + Overheads = Cost / MT &amp; Cost / 50kg Bag.
           </p>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Segmented Tab Controls */}
       <div className="flex items-center justify-between border-b border-neutral-200 pb-2">

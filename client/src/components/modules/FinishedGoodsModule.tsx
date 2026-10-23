@@ -16,6 +16,7 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { FinishedProduct } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
+import { ModuleHeader } from '../common/ModuleHeader';
 
 export const FinishedGoodsModule: React.FC = () => {
   const { 
@@ -108,7 +109,7 @@ export const FinishedGoodsModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -139,7 +140,7 @@ export const FinishedGoodsModule: React.FC = () => {
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Summary Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">

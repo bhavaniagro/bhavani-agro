@@ -20,6 +20,7 @@ import { LeadStage, Lead } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { LostReasonModal } from '../modals/LostReasonModal';
 import { LeadFormModal } from '../crm/LeadFormModal';
+import { ModuleHeader } from '../common/ModuleHeader';
 
 export const CRMSalesModule: React.FC = () => {
   const {
@@ -172,7 +173,7 @@ export const CRMSalesModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -202,7 +203,7 @@ export const CRMSalesModule: React.FC = () => {
             Customer Master
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Segmented Tab Controls & Filter / Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-200 pb-2">

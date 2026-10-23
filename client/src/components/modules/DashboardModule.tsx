@@ -16,6 +16,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ModuleHeader } from '../common/ModuleHeader';
 
 export const DashboardModule: React.FC = () => {
   const {
@@ -120,7 +121,7 @@ export const DashboardModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner with Quick Actions */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -136,7 +137,6 @@ export const DashboardModule: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-
           <button
             onClick={() => {
               setQuickAddType('Sales Order');
@@ -147,7 +147,7 @@ export const DashboardModule: React.FC = () => {
             + New Sales Order
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* 12 Top KPI Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">

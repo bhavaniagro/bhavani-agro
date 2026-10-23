@@ -17,6 +17,7 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ExpenseRecord } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
 
 export const ExpensesModule: React.FC = () => {
   const { expenses, addExpense, updateExpense, deleteExpense, setIsQuickAddOpen, setQuickAddType } = useERP();
@@ -65,7 +66,7 @@ export const ExpensesModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -92,7 +93,7 @@ export const ExpensesModule: React.FC = () => {
             <span>Record Expense</span>
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Category Pills & Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">

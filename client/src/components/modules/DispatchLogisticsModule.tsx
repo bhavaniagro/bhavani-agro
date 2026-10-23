@@ -17,6 +17,7 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { DispatchChallan, VehicleMaster, DispatchStatus } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
 
 export const DispatchLogisticsModule: React.FC = () => {
   const { 
@@ -164,7 +165,7 @@ export const DispatchLogisticsModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -187,7 +188,7 @@ export const DispatchLogisticsModule: React.FC = () => {
             + Dispatch from Sales Order
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Tabs */}
       <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
