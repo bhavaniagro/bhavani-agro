@@ -331,7 +331,7 @@ interface ERPContextType {
 
   // Toast Notifications
   toasts: ToastMessage[];
-  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
   dismissToast: (id: string) => void;
 
   // Actions & Automations
@@ -677,7 +677,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Toast Notification state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
@@ -1002,7 +1002,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setProductionOrders(prev => prev.map(p => p.id === poId ? { ...p, status: 'In Production' } : p));
     updateProductionOrderInApi(poId, { status: 'In Production' }).catch(console.error);
-    showToast(`Production Order ${po.orderNumber} started`, 'info');
+    showToast(`Production Order ${po.productionOrderNumber} started`, 'info');
   };
 
   // Automation 4: Complete Production -> Create Batch & Send to QC
