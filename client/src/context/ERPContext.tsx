@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { MODULE_PATHS, PATH_TO_MODULE } from '../config/routes';
 import { sortByLatest } from '../utils/sortUtils';
 import {
