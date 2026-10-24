@@ -690,10 +690,19 @@ export const ProductionModule: React.FC = () => {
 
             <form onSubmit={submitProductionEntry} className="space-y-3">
               {(() => {
-                const totalFeed = Number(entryOutputMT || 0) + Number(entryLossMT || 0);
-                const yieldPercent = totalFeed > 0 ? ((Number(entryOutputMT || 0) / totalFeed) * 100).toFixed(1) : '0.0';
-                const lossPercent = totalFeed > 0 ? ((Number(entryLossMT || 0) / totalFeed) * 100).toFixed(1) : '0.0';
-                const efficiencyPercent = selectedOrder?.targetQuantityMT > 0 ? ((Number(entryOutputMT || 0) / selectedOrder.targetQuantityMT) * 100).toFixed(1) : '0.0';
+                const output = Number(entryOutputMT) || 0;
+                const loss = Number(entryLossMT) || 0;
+                const totalFeed = output + loss;
+
+                const yieldVal = totalFeed > 0 ? (output / totalFeed) * 100 : 0;
+                const lossVal = totalFeed > 0 ? (loss / totalFeed) * 100 : 0;
+                const target = Number(selectedOrder?.targetQuantityMT) || 0;
+                const efficiencyVal = target > 0 ? (output / target) * 100 : 0;
+
+                // 2 decimal point precision ensures Yield % + Loss % always perfectly totals 100.00%
+                const yieldPercent = yieldVal.toFixed(2);
+                const lossPercent = lossVal.toFixed(2);
+                const efficiencyPercent = efficiencyVal.toFixed(2);
 
                 return (
                   <>
@@ -702,10 +711,10 @@ export const ProductionModule: React.FC = () => {
                         <label className="block text-neutral-700 font-medium mb-1">Finished Goods Output (MT)</label>
                         <input
                           type="number"
-                          step="0.1"
+                          step="any"
                           min="0"
                           value={entryOutputMT}
-                          onChange={(e) => setEntryOutputMT(Number(e.target.value))}
+                          onChange={(e) => setEntryOutputMT(e.target.value === '' ? ('' as any) : Number(e.target.value))}
                           className="w-full border border-neutral-300 rounded p-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                         />
                       </div>
@@ -713,32 +722,38 @@ export const ProductionModule: React.FC = () => {
                         <label className="block text-neutral-700 font-medium mb-1">Process Loss / Dust (MT)</label>
                         <input
                           type="number"
-                          step="0.1"
+                          step="any"
                           min="0"
                           value={entryLossMT}
-                          onChange={(e) => setEntryLossMT(Number(e.target.value))}
+                          onChange={(e) => setEntryLossMT(e.target.value === '' ? ('' as any) : Number(e.target.value))}
                           className="w-full border border-neutral-300 rounded p-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                         />
                       </div>
                     </div>
 
                     <div className="p-3 bg-neutral-50 border border-neutral-200 rounded space-y-1.5 text-[11px]">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center text-neutral-600">
+                        <span>Total Material Processed:</span>
+                        <span className="font-mono font-semibold text-neutral-800">
+                          {totalFeed.toFixed(2)} MT <span className="text-[10px] text-neutral-400 font-normal">({output.toFixed(2)} FG + {loss.toFixed(2)} Loss)</span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
                         <span className="text-neutral-600">Calculated Yield %:</span>
                         <span className="font-mono font-bold text-emerald-700">
                           {yieldPercent}%
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-neutral-600">Process Loss / Dust %:</span>
                         <span className="font-mono font-bold text-amber-700">
                           {lossPercent}%
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-neutral-600">Production Efficiency:</span>
                         <span className="font-mono font-bold text-neutral-900">
-                          {efficiencyPercent}%
+                          {efficiencyPercent}% <span className="text-[10px] text-neutral-400 font-normal">(Target: {target} MT)</span>
                         </span>
                       </div>
                     </div>
