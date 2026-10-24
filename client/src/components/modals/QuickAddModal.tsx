@@ -156,6 +156,7 @@ export const QuickAddModal: React.FC = () => {
           deliveryDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
           productId: prod.id,
           productName: prod.productName,
+          hsnCode: prod.hsnCode,
           quantityMT: Number(soQuantity),
           ratePerMT: Number(soRate || prod.sellingPricePerMT),
           discountPercent: 0,
@@ -372,22 +373,34 @@ export const QuickAddModal: React.FC = () => {
                   )}
                 </div>
               )}
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Finished Product</label>
+                <select
+                  value={soProduct}
+                  onChange={(e) => {
+                    setSoProduct(e.target.value);
+                    const prod = products.find(p => p.id === e.target.value);
+                    if (prod) setSoRate(prod.sellingPricePerMT);
+                  }}
+                  className="w-full border border-neutral-300 rounded p-2 bg-white"
+                >
+                  {products.map(p => (
+                    <option key={p.id} value={p.id}>{p.productName}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Finished Product</label>
-                  <select
-                    value={soProduct}
-                    onChange={(e) => {
-                      setSoProduct(e.target.value);
-                      const prod = products.find(p => p.id === e.target.value);
-                      if (prod) setSoRate(prod.sellingPricePerMT);
-                    }}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.productName}</option>
-                    ))}
-                  </select>
+                  <label className="block text-neutral-700 font-medium mb-1">HSN Code</label>
+                  <input
+                    type="text"
+                    value={selectedSoProduct?.hsnCode || '31059000'}
+                    readOnly
+                    disabled
+                    placeholder="Auto-fetched HSN"
+                    className="w-full border border-neutral-200 rounded p-2 bg-neutral-100 text-neutral-600 font-mono cursor-not-allowed select-none"
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Quantity (MT)</label>

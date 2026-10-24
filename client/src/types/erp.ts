@@ -211,6 +211,7 @@ export interface SalesOrder {
   deliveryDate: string;
   productId: string;
   productName: string;
+  hsnCode?: string;
   quantityMT: number;
   ratePerMT: number;
   discountPercent: number;
