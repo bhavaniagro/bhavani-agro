@@ -11,10 +11,15 @@ import {
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const CostingProfitabilityModule: React.FC = () => {
   const { products, boms, customers, salesOrders } = useERP();
   const [activeTab, setActiveTab] = useState<'products' | 'costing_breakdown' | 'customers'>('products');
+
+  const sortedProducts = sortByLatest(products);
+  const sortedBoms = sortByLatest(boms);
+  const sortedCustomers = sortByLatest(customers);
 
   return (
     <div className="space-y-6">
@@ -82,7 +87,7 @@ export const CostingProfitabilityModule: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {products.map(p => {
+              {sortedProducts.map(p => {
                 const marginPerMT = p.sellingPricePerMT - p.standardCostPerMT;
                 const marginPct = ((marginPerMT / p.sellingPricePerMT) * 100).toFixed(1);
                 const costPerBag = (p.standardCostPerMT / 20).toFixed(1); // 20 bags in 1 MT
@@ -128,7 +133,7 @@ export const CostingProfitabilityModule: React.FC = () => {
       {/* TAB 2: DETAILED COSTING BREAKDOWN */}
       {activeTab === 'costing_breakdown' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {boms.map(bom => {
+          {sortedBoms.map(bom => {
             const prod = products.find(p => p.id === bom.productId) || products[0];
             const margin = prod.sellingPricePerMT - bom.totalStandardCostPerMT;
 
@@ -197,7 +202,7 @@ export const CostingProfitabilityModule: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {customers.map(c => {
+              {sortedCustomers.map(c => {
                 const grossProfit = c.totalSales * 0.285;
                 const netProfit = c.totalSales * 0.192;
 

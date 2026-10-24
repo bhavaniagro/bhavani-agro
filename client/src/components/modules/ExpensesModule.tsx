@@ -18,6 +18,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ExpenseRecord } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const ExpensesModule: React.FC = () => {
   const { expenses, addExpense, updateExpense, deleteExpense, setIsQuickAddOpen, setQuickAddType } = useERP();
@@ -40,13 +41,13 @@ export const ExpensesModule: React.FC = () => {
     'Office & Admin'
   ];
 
-  const filteredExpenses = expenses.filter(exp => {
+  const filteredExpenses = sortByLatest(expenses.filter(exp => {
     const matchesCat = categoryFilter === 'All' || exp.category === categoryFilter;
     const matchesSearch = exp.expenseNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       exp.vendorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       exp.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCat && matchesSearch;
-  });
+  }));
 
   const totalExpenseAmount = expenses.reduce((acc, curr) => acc + curr.amount, 0);
 

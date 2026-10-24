@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const ReportsAnalyticsModule: React.FC = () => {
   const { 
@@ -210,7 +211,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {invoices.map(i => (
+                {sortByLatest(invoices).map(i => (
                   <tr key={i.id} className="hover:bg-neutral-50/50">
                     <td className="p-3 font-mono font-bold text-neutral-900">{i.invoiceNumber}</td>
                     <td className="p-3 font-semibold text-neutral-900">{i.customerName}</td>
@@ -247,7 +248,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {productionBatches.map(b => (
+                {sortByLatest(productionBatches).map(b => (
                   <tr key={b.id} className="hover:bg-neutral-50/50">
                     <td className="p-3 font-mono font-bold text-emerald-800">{b.batchNumber}</td>
                     <td className="p-3 font-semibold text-neutral-900">{b.productName}</td>
@@ -276,7 +277,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {products.map(p => (
+                {sortByLatest(products).map(p => (
                   <tr key={p.id} className="hover:bg-neutral-50/50">
                     <td className="p-3 font-semibold text-neutral-900">{p.productName}</td>
                     <td className="p-3 font-mono text-neutral-600">{p.sku}</td>
@@ -307,7 +308,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {expenses.map(e => (
+                {sortByLatest(expenses).map(e => (
                   <tr key={e.id} className="hover:bg-neutral-50/50">
                     <td className="p-3 font-mono font-bold text-neutral-900">{e.expenseNumber}</td>
                     <td className="p-3 font-medium text-neutral-800">{e.category}</td>
@@ -337,7 +338,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {dispatches.map(d => (
+                {sortByLatest(dispatches).map(d => (
                   <tr key={d.id} className="hover:bg-neutral-50/50">
                     <td className="p-3 font-mono font-bold text-neutral-900">{d.dispatchNumber}</td>
                     <td className="p-3 font-semibold text-neutral-900">{d.customerName}</td>

@@ -18,6 +18,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { SalesInvoice, PaymentTransaction } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const FinanceAccountsModule: React.FC = () => {
   const { 
@@ -52,10 +53,10 @@ export const FinanceAccountsModule: React.FC = () => {
   const [editingPayment, setEditingPayment] = useState<PaymentTransaction | null>(null);
   const [deletePaymentId, setDeletePaymentId] = useState<string | null>(null);
 
-  const filteredInvoices = invoices.filter(inv => 
+  const filteredInvoices = sortByLatest(invoices.filter(inv => 
     inv.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     inv.customerName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const totalReceivables = invoices.reduce((acc, curr) => acc + curr.balanceAmount, 0);
   const totalPayables = suppliers.reduce((acc, curr) => acc + curr.outstandingBalance, 0);
@@ -349,7 +350,7 @@ export const FinanceAccountsModule: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {suppliers.map(s => (
+              {sortByLatest(suppliers).map(s => (
                 <tr key={s.id} className="hover:bg-neutral-50/50">
                   <td className="p-3 font-semibold text-neutral-900">{s.supplierName}</td>
                   <td className="p-3 text-neutral-600">{s.materialSupplied.join(', ')}</td>
@@ -391,7 +392,7 @@ export const FinanceAccountsModule: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {payments.map(p => (
+              {sortByLatest(payments).map(p => (
                 <tr key={p.id} className="hover:bg-neutral-50/50">
                   <td className="p-3 font-mono font-bold text-neutral-900">{p.transactionNumber}</td>
                   <td className="p-3 font-semibold text-neutral-900">{p.partyName}</td>

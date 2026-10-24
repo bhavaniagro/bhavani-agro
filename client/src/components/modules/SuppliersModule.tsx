@@ -17,6 +17,7 @@ import { useERP } from '../../context/ERPContext';
 import { Supplier } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const SuppliersModule: React.FC = () => {
   const { suppliers, rawMaterials, purchaseOrders, setActiveModule, setIsQuickAddOpen, setQuickAddType, addSupplier, updateSupplier, deleteSupplier } = useERP();
@@ -72,14 +73,14 @@ export const SuppliersModule: React.FC = () => {
     });
   };
 
-  const filteredSuppliers = suppliers.filter(s => 
+  const filteredSuppliers = sortByLatest(suppliers.filter(s => 
     s.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.materialSupplied.some(m => m.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  ));
 
   const activeSupplier = selectedSupplier || filteredSuppliers[0];
-  const suppPOs = activeSupplier ? purchaseOrders.filter(p => p.supplierId === activeSupplier.id) : [];
+  const suppPOs = activeSupplier ? sortByLatest(purchaseOrders.filter(p => p.supplierId === activeSupplier.id)) : [];
 
   const totalPayables = suppliers.reduce((acc, curr) => acc + curr.outstandingBalance, 0);
 

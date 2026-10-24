@@ -19,6 +19,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ProductionOrder, ProductionBatch, BOM } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const ProductionModule: React.FC = () => {
   const { 
@@ -80,11 +81,11 @@ export const ProductionModule: React.FC = () => {
   const [bomNotes, setBomNotes] = useState('');
   const [bomItems, setBomItems] = useState<any[]>([]);
 
-  const filteredOrders = productionOrders.filter(po => 
+  const filteredOrders = sortByLatest(productionOrders.filter(po => 
     po.productionOrderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.productionLine.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const handleOpenEntry = (po: any) => {
     setSelectedOrder(po);
@@ -499,7 +500,7 @@ export const ProductionModule: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {boms.length > 0 ? (
-              boms.map(bom => (
+              sortByLatest(boms).map(bom => (
                 <div key={bom.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-3">
                   <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
                     <div>
@@ -594,7 +595,7 @@ export const ProductionModule: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {productionBatches.map(b => (
+                {sortByLatest(productionBatches).map(b => (
                   <tr key={b.id} className="hover:bg-neutral-50/70 transition-colors">
                     <td className="p-3">
                       <span className="font-mono font-bold text-emerald-800">{b.batchNumber}</span>

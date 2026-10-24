@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const InventoryModule: React.FC = () => {
   const { 
@@ -23,8 +24,8 @@ export const InventoryModule: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'raw' | 'finished' | 'packaging' | 'damaged'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const packagingItems = rawMaterials.filter(r => r.category === 'Packaging');
-  const rawMineralItems = rawMaterials.filter(r => r.category !== 'Packaging');
+  const packagingItems = sortByLatest(rawMaterials.filter(r => r.category === 'Packaging'));
+  const rawMineralItems = sortByLatest(rawMaterials.filter(r => r.category !== 'Packaging'));
 
   const rawValuation = rawMaterials.reduce((acc, curr) => acc + (curr.currentStock * curr.averageCost), 0);
   const finishedValuation = products.reduce((acc, curr) => acc + (curr.currentStockMT * curr.standardCostPerMT), 0);
@@ -179,7 +180,7 @@ export const InventoryModule: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {products.map(p => (
+                {sortByLatest(products).map(p => (
                   <tr key={p.id} className="hover:bg-neutral-50/50">
                     <td className="p-3 font-semibold text-neutral-900">{p.productName}</td>
                     <td className="p-3 text-neutral-600">Finished Goods</td>

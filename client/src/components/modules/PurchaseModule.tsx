@@ -15,6 +15,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { PurchaseOrder, GRN } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const PurchaseModule: React.FC = () => {
   const { 
@@ -69,18 +70,18 @@ export const PurchaseModule: React.FC = () => {
   const [editGRNQCStatus, setEditGRNQCStatus] = useState<'Pending QC' | 'Approved' | 'Rejected'>('Approved');
   const [editGRNRemarks, setEditGRNRemarks] = useState('');
 
-  const filteredPOs = purchaseOrders.filter(po => 
+  const filteredPOs = sortByLatest(purchaseOrders.filter(po => 
     po.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.materialName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
-  const filteredGRNs = grns.filter(g =>
+  const filteredGRNs = sortByLatest(grns.filter(g =>
     g.grnNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     g.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     g.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     g.materialName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const handleCreateGRN = (po: any) => {
     setIsManualGRN(false);

@@ -16,6 +16,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { QCInspection } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const QualityControlModule: React.FC = () => {
   const { 
@@ -39,13 +40,13 @@ export const QualityControlModule: React.FC = () => {
   const [editOverallStatus, setEditOverallStatus] = useState<QCInspection['overallStatus']>('Pending');
   const [editRemarks, setEditRemarks] = useState('');
 
-  const filteredQC = qcInspections.filter(q => {
+  const filteredQC = sortByLatest(qcInspections.filter(q => {
     const matchesType = typeFilter === 'All' || q.type === typeFilter;
     const matchesSearch = q.qcNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       q.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       q.batchLotNumber.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesType && matchesSearch;
-  });
+  }));
 
   const activeInspection = selectedQC || filteredQC[0];
 

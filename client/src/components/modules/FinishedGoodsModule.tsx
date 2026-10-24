@@ -17,6 +17,7 @@ import { useERP } from '../../context/ERPContext';
 import { FinishedProduct } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const FinishedGoodsModule: React.FC = () => {
   const { 
@@ -104,11 +105,11 @@ export const FinishedGoodsModule: React.FC = () => {
     });
   };
 
-  const filteredProducts = products.filter(p => 
+  const filteredProducts = sortByLatest(products.filter(p => 
     p.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const totalFinishedValuation = products.reduce((acc, curr) => 
     acc + ((Number(curr.currentStockMT) || 0) * (Number(curr.standardCostPerMT) || 0)), 0

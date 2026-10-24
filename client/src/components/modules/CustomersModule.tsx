@@ -18,6 +18,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Customer } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const CustomersModule: React.FC = () => {
   const { 
@@ -52,12 +53,12 @@ export const CustomersModule: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [editingCustomer, deletingCustomerId]);
 
-  const filteredCustomers = customers.filter(c => 
+  const filteredCustomers = sortByLatest(customers.filter(c => 
     c.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.state.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const activeCustomer = selectedCustomer || filteredCustomers[0];
 
@@ -82,9 +83,9 @@ export const CustomersModule: React.FC = () => {
   };
 
   // 360 Degree Customer Profile data
-  const custOrders = activeCustomer ? salesOrders.filter(s => isCustomerMatch(s.customerId, s.customerName, activeCustomer)) : [];
-  const custInvoices = activeCustomer ? invoices.filter(i => isCustomerMatch(i.customerId, i.customerName, activeCustomer)) : [];
-  const custDispatches = activeCustomer ? dispatches.filter(d => isCustomerMatch(d.customerId, d.customerName, activeCustomer)) : [];
+  const custOrders = activeCustomer ? sortByLatest(salesOrders.filter(s => isCustomerMatch(s.customerId, s.customerName, activeCustomer))) : [];
+  const custInvoices = activeCustomer ? sortByLatest(invoices.filter(i => isCustomerMatch(i.customerId, i.customerName, activeCustomer))) : [];
+  const custDispatches = activeCustomer ? sortByLatest(dispatches.filter(d => isCustomerMatch(d.customerId, d.customerName, activeCustomer))) : [];
 
   const activeCustOrders = custOrders.filter(o => o.status !== 'Cancelled' && o.status !== 'Rejected');
   const usedCustCredit = activeCustOrders.reduce((acc, curr) => acc + curr.totalAmount, 0);

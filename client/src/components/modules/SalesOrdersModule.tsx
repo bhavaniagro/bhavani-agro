@@ -18,6 +18,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { SalesOrder } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const SalesOrdersModule: React.FC = () => {
   const { 
@@ -107,13 +108,13 @@ export const SalesOrdersModule: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [editingOrder, deletingOrder]);
 
-  const filteredOrders = salesOrders.filter(so => {
+  const filteredOrders = sortByLatest(salesOrders.filter(so => {
     const matchesStatus = statusFilter === 'All' || so.status === statusFilter;
     const matchesSearch = so.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       so.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       so.productName.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
-  });
+  }));
 
   const totalOrderValue = salesOrders.reduce((acc, curr) => acc + curr.totalAmount, 0);
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MODULE_PATHS, PATH_TO_MODULE } from '../config/routes';
+import { sortByLatest } from '../utils/sortUtils';
 import {
   CompanyProfile,
   Customer,
@@ -333,6 +334,7 @@ interface ERPContextType {
   toasts: ToastMessage[];
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
   dismissToast: (id: string) => void;
+  refreshAllData: () => Promise<void>;
 
   // Actions & Automations
   addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<Lead>;
@@ -463,215 +465,143 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [company, setCompany] = useState<CompanyProfile>(defaultCompanyProfile);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
-  const [products, setProducts] = useState<FinishedProduct[]>([]);
-  const [boms, setBOMs] = useState<BOM[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
-  const [grns, setGRNs] = useState<GRN[]>([]);
-  const [qcInspections, setQCInspections] = useState<QCInspection[]>([]);
-  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>([]);
-  const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>([]);
-  const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
-  const [dispatches, setDispatches] = useState<DispatchChallan[]>([]);
-  const [invoices, setInvoices] = useState<SalesInvoice[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>(() => sortByLatest(initialCustomers));
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => sortByLatest(initialSuppliers));
+  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>(() => sortByLatest(initialRawMaterials));
+  const [products, setProducts] = useState<FinishedProduct[]>(() => sortByLatest(initialFinishedProducts));
+  const [boms, setBOMs] = useState<BOM[]>(() => sortByLatest(initialBOMs));
+  const [leads, setLeads] = useState<Lead[]>(() => sortByLatest(initialLeads));
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(() => sortByLatest(initialSalesOrders));
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => sortByLatest(initialPurchaseOrders));
+  const [grns, setGRNs] = useState<GRN[]>(() => sortByLatest(initialGRNs));
+  const [qcInspections, setQCInspections] = useState<QCInspection[]>(() => sortByLatest(initialQCInspections));
+  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(() => sortByLatest(initialProductionOrders));
+  const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>(() => sortByLatest(initialProductionBatches));
+  const [vehicles, setVehicles] = useState<VehicleMaster[]>(() => sortByLatest(initialVehicles));
+  const [dispatches, setDispatches] = useState<DispatchChallan[]>(() => sortByLatest(initialDispatches));
+  const [invoices, setInvoices] = useState<SalesInvoice[]>(() => sortByLatest(initialInvoices));
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
-  const [machinery, setMachinery] = useState<Machinery[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [documents, setDocuments] = useState<ErpDocument[]>([]);
-  const [alerts, setAlerts] = useState<ErpAlert[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => sortByLatest(initialExpenses));
+  const [machinery, setMachinery] = useState<Machinery[]>(() => sortByLatest(initialMachinery));
+  const [employees, setEmployees] = useState<Employee[]>(() => sortByLatest(initialEmployees));
+  const [documents, setDocuments] = useState<ErpDocument[]>(() => sortByLatest(initialDocuments));
+  const [alerts, setAlerts] = useState<ErpAlert[]>(() => sortByLatest(initialAlerts));
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
 
-  // Load customers from API when the ERP starts
-  useEffect(() => {
-    const loadCustomersFromApi = async () => {
+  // Cross-tab real-time sync notification
+  const notifyChange = () => {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
-        const apiCustomers = await getCustomersFromApi();
-        setCustomers(apiCustomers || []);
-      } catch (error) {
-        console.error("Failed to load customers from API:", error);
+        const bc = new BroadcastChannel('bhavani_erp_realtime_sync');
+        bc.postMessage({ type: 'DATA_CHANGED', timestamp: Date.now() });
+        bc.close();
+      } catch (e) {
+        // BroadcastChannel optional fallback
       }
-    };
+    }
+  };
 
-    loadCustomersFromApi();
-  }, []);
+  // Real-time synchronization: fetches latest records from APIs & sorts newest-first
+  const syncRealtimeData = async () => {
+    try {
+      const [
+        custs, lds, supps, rms, prods, sos, pos, grnList, qcs, pOrders, pBatches, bomsList,
+        movs, disps, vehs, invs, pmts, exps, emps, machs, docs, comp
+      ] = await Promise.allSettled([
+        getCustomersFromApi(),
+        getLeadsFromApi(),
+        getSuppliersFromApi(),
+        getRawMaterialsFromApi(),
+        getProductsFromApi(),
+        getSalesOrdersFromApi(),
+        getPurchaseOrdersFromApi(),
+        getGRNsFromApi(),
+        fetchQCInspectionsFromApi(),
+        fetchProductionOrdersFromApi(),
+        fetchProductionBatchesFromApi(),
+        fetchBOMsFromApi(),
+        fetchStockMovementsFromApi(),
+        fetchDispatchesFromApi(),
+        fetchVehiclesFromApi(),
+        fetchSalesInvoicesFromApi(),
+        fetchPaymentsFromApi(),
+        fetchExpensesFromApi(),
+        fetchEmployeesFromApi(),
+        fetchMachineryFromApi(),
+        fetchDocumentsFromApi(),
+        fetchCompanyProfileFromApi(),
+      ]);
 
-  // Load leads from API when the ERP starts
-  useEffect(() => {
-    const loadLeadsFromApi = async () => {
-      try {
-        const apiLeads = await getLeadsFromApi();
-        setLeads(apiLeads || []);
-      } catch (error) {
-        console.error("Failed to load leads from API:", error);
-      }
-    };
-    loadLeadsFromApi();
-  }, []);
-
-  // Load suppliers from API
-  useEffect(() => {
-    getSuppliersFromApi()
-      .then((data) => { setSuppliers(data || []); })
-      .catch((err) => console.error("Failed to load suppliers from API:", err));
-  }, []);
-
-  // Load raw materials from API
-  useEffect(() => {
-    getRawMaterialsFromApi()
-      .then((data) => { setRawMaterials(data || []); })
-      .catch((err) => console.error("Failed to load raw materials from API:", err));
-  }, []);
-
-  // Load products from API
-  useEffect(() => {
-    getProductsFromApi()
-      .then((data) => {
-        const normalized = (data || []).map(p => ({
+      if (custs.status === 'fulfilled' && custs.value) setCustomers(sortByLatest(custs.value));
+      if (lds.status === 'fulfilled' && lds.value) setLeads(sortByLatest(lds.value));
+      if (supps.status === 'fulfilled' && supps.value) setSuppliers(sortByLatest(supps.value));
+      if (rms.status === 'fulfilled' && rms.value) setRawMaterials(sortByLatest(rms.value));
+      if (prods.status === 'fulfilled' && prods.value) {
+        const normalized = prods.value.map(p => ({
           ...p,
           currentStockMT: typeof p.currentStockMT === 'number' ? p.currentStockMT : (Number(p.currentStockMT) || 0),
           reservedStockMT: typeof p.reservedStockMT === 'number' ? p.reservedStockMT : (Number(p.reservedStockMT) || 0),
         }));
-        setProducts(normalized);
-      })
-      .catch((err) => {
-        console.error("Failed to load products from API:", err);
-        loadCollection<FinishedProduct>("products")
-          .then((data) => {
-            if (data && data.length > 0) {
-              const normalized = data.map(p => ({
-                ...p,
-                currentStockMT: typeof p.currentStockMT === 'number' ? p.currentStockMT : (Number(p.currentStockMT) || 0),
-                reservedStockMT: typeof p.reservedStockMT === 'number' ? p.reservedStockMT : (Number(p.reservedStockMT) || 0),
-              }));
-              setProducts(normalized);
-            }
-          })
-          .catch((fsErr) => console.error("Failed to load products from Firestore fallback:", fsErr));
-      });
-  }, []);
+        setProducts(sortByLatest(normalized));
+      }
+      if (sos.status === 'fulfilled' && sos.value) setSalesOrders(sortByLatest(sos.value));
+      if (pos.status === 'fulfilled' && pos.value) setPurchaseOrders(sortByLatest(pos.value));
+      if (grnList.status === 'fulfilled' && grnList.value) setGRNs(sortByLatest(grnList.value));
+      if (qcs.status === 'fulfilled' && qcs.value) setQCInspections(sortByLatest(qcs.value));
+      if (pOrders.status === 'fulfilled' && pOrders.value) setProductionOrders(sortByLatest(pOrders.value));
+      if (pBatches.status === 'fulfilled' && pBatches.value) setProductionBatches(sortByLatest(pBatches.value));
+      if (bomsList.status === 'fulfilled' && bomsList.value) setBOMs(sortByLatest(bomsList.value));
+      if (movs.status === 'fulfilled' && movs.value) setStockMovements(sortByLatest(movs.value));
+      if (disps.status === 'fulfilled' && disps.value) setDispatches(sortByLatest(disps.value));
+      if (vehs.status === 'fulfilled' && vehs.value) setVehicles(sortByLatest(vehs.value));
+      if (invs.status === 'fulfilled' && invs.value) setInvoices(sortByLatest(invs.value));
+      if (pmts.status === 'fulfilled' && pmts.value) setPayments(sortByLatest(pmts.value));
+      if (exps.status === 'fulfilled' && exps.value) setExpenses(sortByLatest(exps.value));
+      if (emps.status === 'fulfilled' && emps.value) setEmployees(sortByLatest(emps.value));
+      if (machs.status === 'fulfilled' && machs.value) setMachinery(sortByLatest(machs.value));
+      if (docs.status === 'fulfilled' && docs.value) setDocuments(sortByLatest(docs.value));
+      if (comp.status === 'fulfilled' && comp.value) setCompany(comp.value);
+    } catch (err) {
+      console.error("Realtime sync error:", err);
+    }
+  };
 
-  // Load sales orders from API
+  // Real-time synchronization listeners (initial, window focus, interval, broadcast)
   useEffect(() => {
-    getSalesOrdersFromApi()
-      .then((data) => { setSalesOrders(data || []); })
-      .catch((err) => console.error("Failed to load sales orders from API:", err));
-  }, []);
+    // Initial fetch from backend
+    syncRealtimeData();
 
-  // Load purchase orders from API
-  useEffect(() => {
-    getPurchaseOrdersFromApi()
-      .then((data) => { setPurchaseOrders(data || []); })
-      .catch((err) => console.error("Failed to load purchase orders from API:", err));
-  }, []);
+    // Cross-tab real-time sync channel
+    let channel: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        channel = new BroadcastChannel('bhavani_erp_realtime_sync');
+        channel.onmessage = (event) => {
+          if (event.data?.type === 'DATA_CHANGED') {
+            syncRealtimeData();
+          }
+        };
+      } catch (e) {
+        console.error("BroadcastChannel init failed:", e);
+      }
+    }
 
-  // Load GRNs from API
-  useEffect(() => {
-    getGRNsFromApi()
-      .then((data) => { setGRNs(data || []); })
-      .catch((err) => console.error("Failed to load GRNs from API:", err));
-  }, []);
+    // Refresh when user returns to tab
+    const handleFocus = () => {
+      syncRealtimeData();
+    };
+    window.addEventListener('focus', handleFocus);
 
-  // Load production orders from API
-  useEffect(() => {
-    fetchProductionOrdersFromApi()
-      .then((data) => { setProductionOrders(data || []); })
-      .catch((err) => console.error("Failed to load production orders from API:", err));
-  }, []);
+    // Background interval sync (every 8 seconds for continuous live data without refresh)
+    const interval = setInterval(() => {
+      syncRealtimeData();
+    }, 8000);
 
-  // Load production batches from API
-  useEffect(() => {
-    fetchProductionBatchesFromApi()
-      .then((data) => { setProductionBatches(data || []); })
-      .catch((err) => console.error("Failed to load production batches from API:", err));
-  }, []);
-
-  // Load QC inspections from API
-  useEffect(() => {
-    fetchQCInspectionsFromApi()
-      .then((data) => { setQCInspections(data || []); })
-      .catch((err) => console.error("Failed to load QC inspections from API:", err));
-  }, []);
-
-  // Load BOMs from API
-  useEffect(() => {
-    fetchBOMsFromApi()
-      .then((data) => { setBOMs(data || []); })
-      .catch((err) => console.error("Failed to load BOMs from API:", err));
-  }, []);
-
-  // Load Stock Movements from API
-  useEffect(() => {
-    fetchStockMovementsFromApi()
-      .then((data) => { setStockMovements(data || []); })
-      .catch((err) => console.error("Failed to load stock movements from API:", err));
-  }, []);
-
-  // Load Dispatches from API
-  useEffect(() => {
-    fetchDispatchesFromApi()
-      .then((data) => { setDispatches(data || []); })
-      .catch((err) => console.error("Failed to load dispatches from API:", err));
-  }, []);
-
-  // Load Vehicles from API
-  useEffect(() => {
-    fetchVehiclesFromApi()
-      .then((data) => { setVehicles(data || []); })
-      .catch((err) => console.error("Failed to load vehicles from API:", err));
-  }, []);
-
-  // Load Sales Invoices from API
-  useEffect(() => {
-    fetchSalesInvoicesFromApi()
-      .then((data) => { setInvoices(data || []); })
-      .catch((err) => console.error("Failed to load sales invoices from API:", err));
-  }, []);
-
-  // Load Payments from API
-  useEffect(() => {
-    fetchPaymentsFromApi()
-      .then((data) => { setPayments(data || []); })
-      .catch((err) => console.error("Failed to load payments from API:", err));
-  }, []);
-
-  // Load Expenses from API
-  useEffect(() => {
-    fetchExpensesFromApi()
-      .then((data) => { setExpenses(data || []); })
-      .catch((err) => console.error("Failed to load expenses from API:", err));
-  }, []);
-
-  // Load Employees from API
-  useEffect(() => {
-    fetchEmployeesFromApi()
-      .then((data) => { setEmployees(data || []); })
-      .catch((err) => console.error("Failed to load employees from API:", err));
-  }, []);
-
-  // Load Machinery from API
-  useEffect(() => {
-    fetchMachineryFromApi()
-      .then((data) => { setMachinery(data || []); })
-      .catch((err) => console.error("Failed to load machinery from API:", err));
-  }, []);
-
-  // Load Documents from API
-  useEffect(() => {
-    fetchDocumentsFromApi()
-      .then((data) => { setDocuments(data || []); })
-      .catch((err) => console.error("Failed to load documents from API:", err));
-  }, []);
-
-  // Load Company Profile from API
-  useEffect(() => {
-    fetchCompanyProfileFromApi()
-      .then((data) => { if (data) setCompany(data); })
-      .catch((err) => console.error("Failed to load company profile from API:", err));
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+      if (channel) channel.close();
+    };
   }, []);
 
   // Toast Notification state
@@ -704,8 +634,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt'>): Promise<Lead> => {
     try {
       const apiLead = await createLeadFromApi(leadData);
-      setLeads(prev => [apiLead, ...prev]);
+      setLeads(prev => sortByLatest([apiLead, ...prev]));
       showToast("Lead created successfully", "success");
+      notifyChange();
       return apiLead;
     } catch (error: any) {
       console.error("Failed to save lead through API:", error);
@@ -719,6 +650,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const updated = await updateLeadFromApi(id, data);
       setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, ...updated, ...data } : l)));
       showToast("Lead updated successfully", "success");
+      notifyChange();
     } catch (error: any) {
       console.error("Failed to update lead:", error);
       showToast(error?.message || "Unable to update lead", "error");
@@ -731,6 +663,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLeads((prev) => prev.filter((l) => l.id !== id));
       await deleteLeadFromApi(id);
       showToast("Lead deleted successfully", "success");
+      notifyChange();
     } catch (error) {
       console.error("Failed to delete lead:", error);
       showToast("Unable to delete lead", "error");
@@ -761,7 +694,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     showToast(`Lead converted to customer: ${lead.leadName}`, 'success');
 
-    setAlerts(prev => [{
+    setAlerts(prev => sortByLatest([{
       id: `alt-${Date.now()}`,
       type: 'info',
       title: `Lead Converted to Customer`,
@@ -769,7 +702,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: 'Just now',
       module: 'Customers',
       read: false
-    }, ...prev]);
+    }, ...prev]));
+    notifyChange();
   };
 
   const addCustomer = async (
@@ -790,8 +724,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const apiCustomer = await createCustomerFromApi(customerData);
       const newCustomer: Customer = apiCustomer;
-      setCustomers((prev) => [newCustomer, ...prev]);
+      setCustomers((prev) => sortByLatest([newCustomer, ...prev]));
       showToast("Customer created successfully", "success");
+      notifyChange();
       return newCustomer;
     } catch (error) {
       console.error('Failed to save customer to Firebase:', error);
@@ -805,6 +740,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCustomers((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)));
       await updateCustomerFromApi(id, data);
       showToast("Customer updated successfully", "success");
+      notifyChange();
     } catch (error) {
       console.error("Failed to update customer:", error);
       showToast("Unable to update customer", "error");
@@ -816,6 +752,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCustomers((prev) => prev.filter((c) => c.id !== id));
       await deleteCustomerFromApi(id);
       showToast("Customer deleted successfully", "success");
+      notifyChange();
     } catch (error) {
       console.error("Failed to delete customer:", error);
       showToast("Unable to delete customer", "error");
@@ -863,7 +800,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notes: `Generated automatically from Sales Order ${so.orderNumber}.`
     };
 
-    setProductionOrders(prev => [newPO, ...prev]);
+    setProductionOrders(prev => sortByLatest([newPO, ...prev]));
 
     persistProductionOrder(newPO).catch((error) => {
       console.error('Failed to save production order to Firebase:', error);
@@ -871,7 +808,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setSalesOrders(prev => prev.map(o => o.id === so.id ? { ...o, productionOrderId: newPO.id } : o));
 
-    setAlerts(prev => [{
+    setAlerts(prev => sortByLatest([{
       id: `alt-${Date.now()}`,
       type: 'info',
       title: `Production Order ${poNum} Created`,
@@ -879,7 +816,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: 'Just now',
       module: 'Production',
       read: false
-    }, ...prev]);
+    }, ...prev]));
+    notifyChange();
   };
 
   const createProductionOrderFromSO = (salesOrderId: string) => {
@@ -932,8 +870,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const apiOrder = await createSalesOrderFromApi(newOrder);
       const savedOrder = apiOrder || newOrder;
-      setSalesOrders(prev => [savedOrder, ...prev]);
+      setSalesOrders(prev => sortByLatest([savedOrder, ...prev]));
       showToast("Sales Order created successfully", "success");
+      notifyChange();
 
       // Update customer total sales
       setCustomers(prev => prev.map(c => c.id === soData.customerId ? { ...c, totalSales: c.totalSales + soData.totalAmount } : c));
@@ -963,6 +902,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSalesOrders(prev => prev.map(so => so.id === id ? { ...so, ...data } : so));
       await updateSalesOrderFromApi(id, data);
       showToast("Sales Order updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update sales order:", err);
       showToast("Unable to update sales order", "error");
@@ -974,6 +914,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSalesOrders(prev => prev.filter(so => so.id !== id));
       await deleteSalesOrderFromApi(id);
       showToast("Sales Order deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete sales order:", err);
       showToast("Unable to delete sales order", "error");
@@ -1003,6 +944,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProductionOrders(prev => prev.map(p => p.id === poId ? { ...p, status: 'In Production' } : p));
     updateProductionOrderInApi(poId, { status: 'In Production' }).catch(console.error);
     showToast(`Production Order ${po.productionOrderNumber} started`, 'info');
+    notifyChange();
   };
 
   // Automation 4: Complete Production -> Create Batch & Send to QC
@@ -1033,7 +975,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       actualCostPerMT: 4210
     };
 
-    setProductionBatches(prev => [newBatch, ...prev]);
+    setProductionBatches(prev => sortByLatest([newBatch, ...prev]));
     createProductionBatchInApi(newBatch).catch(console.error);
     persistProductionBatch(newBatch).catch((error) => {
       console.error('Failed to save production batch to Firebase:', error);
@@ -1062,7 +1004,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       remarks: 'Awaiting lab titration and sieve retention verification.'
     };
 
-    setQCInspections(prev => [newQC, ...prev]);
+    setQCInspections(prev => sortByLatest([newQC, ...prev]));
     createQCInspectionInApi(newQC).catch(console.error);
     persistQCInspection(newQC).catch((error) => {
       console.error('Failed to save QC inspection to Firebase:', error);
@@ -1076,6 +1018,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } : p));
     updateProductionOrderInApi(poId, { status: 'QC', actualBatchNumber: batchCode, outputProducedMT: outputMT }).catch(console.error);
     showToast(`Production Batch ${batchCode} completed & sent to QC`, 'success');
+    notifyChange();
   };
 
   // Automation 5: QC Approval -> Make Finished Goods Available for Sale
@@ -1150,7 +1093,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     showToast(`QC Inspection ${qc.qcNumber} passed & approved`, 'success');
 
-    setAlerts(prev => [{
+    setAlerts(prev => sortByLatest([{
       id: `alt-${Date.now()}`,
       type: 'info',
       title: `QC Passed: ${qc.itemName}`,
@@ -1158,7 +1101,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: 'Just now',
       module: 'Production',
       read: false
-    }, ...prev]);
+    }, ...prev]));
+    notifyChange();
   };
 
   const rejectQC = (qcId: string, reason: string) => {
@@ -1173,6 +1117,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProductionBatches(prev => prev.map(b => b.batchNumber === qc.batchLotNumber ? { ...b, qcStatus: 'Rejected' } : b));
     }
     showToast(`QC Inspection ${qc?.qcNumber || ''} marked as Rejected`, 'warning');
+    notifyChange();
   };
 
   // Direct batch quality approval & inventory release helper
@@ -1224,7 +1169,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    setAlerts(prev => [{
+    setAlerts(prev => sortByLatest([{
       id: `alt-${Date.now()}`,
       type: 'info',
       title: `Batch Quality Approved: ${batch.productName}`,
@@ -1232,7 +1177,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: 'Just now',
       module: 'Production',
       read: false
-    }, ...prev]);
+    }, ...prev]));
+    notifyChange();
   };
 
   // Automation 6: Dispatch -> Deduct Finished Goods Stock
@@ -1245,12 +1191,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Dispatched'
     };
 
-    setDispatches(prev => [newDispatch, ...prev]);
+    setDispatches(prev => sortByLatest([newDispatch, ...prev]));
     createDispatchInApi(newDispatch).catch(console.error);
     persistDispatch(newDispatch).catch((error) => {
       console.error('Failed to save dispatch to Firebase:', error);
     });
     showToast(`Dispatch Challan ${dispNum} created successfully`, 'success');
+    notifyChange();
 
     // Deduct finished goods stock accurately
     const so = salesOrders.find(s => s.id === dispatchData.salesOrderId);
@@ -1280,6 +1227,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDispatches(prev => prev.map(d => d.id === dispatchId ? { ...d, status } : d));
     updateDispatchInApi(dispatchId, { status }).catch(console.error);
     showToast(`Dispatch status updated to ${status}`, 'success');
+    notifyChange();
   };
 
   // Automation 7: Generate Invoice from Dispatch / Sales Order -> Create Receivable
@@ -1330,7 +1278,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       paymentTerms: cust ? cust.paymentTerms : 'Net 30 Days'
     };
 
-    setInvoices(prev => [newInvoice, ...prev]);
+    setInvoices(prev => sortByLatest([newInvoice, ...prev]));
     createSalesInvoiceInApi(newInvoice).catch(console.error);
     persistInvoice(newInvoice).catch((error) => {
       console.error('Failed to save invoice to Firebase:', error);
@@ -1348,8 +1296,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     showToast(`Sales Invoice ${invNum} generated successfully`, 'success');
+    notifyChange();
 
-    setAlerts(prev => [{
+    setAlerts(prev => sortByLatest([{
       id: `alt-${Date.now()}`,
       type: 'info',
       title: `Invoice ${invNum} Generated`,
@@ -1357,7 +1306,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: 'Just now',
       module: 'Finance & Accounts',
       read: false
-    }, ...prev]);
+    }, ...prev]));
   };
 
   // Automation 8: Record Payment -> Update Customer Outstanding
@@ -1399,15 +1348,16 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       bankReference: reference,
       notes: `Received towards invoice ${inv.invoiceNumber}`
     };
-    setPayments(prev => [newTx, ...prev]);
+    setPayments(prev => sortByLatest([newTx, ...prev]));
     createPaymentInApi(newTx).catch(console.error);
     persistPayment(newTx).catch((error) => {
       console.error('Failed to save payment to Firebase:', error);
     });
 
     showToast(`Payment of ₹${amount.toLocaleString('en-IN')} recorded successfully`, 'success');
+    notifyChange();
 
-    setAlerts(prev => [{
+    setAlerts(prev => sortByLatest([{
       id: `alt-${Date.now()}`,
       type: 'info',
       title: `Payment Received: ₹${amount.toLocaleString('en-IN')}`,
@@ -1415,7 +1365,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: 'Just now',
       module: 'Finance & Accounts',
       read: false
-    }, ...prev]);
+    }, ...prev]));
   };
 
   // Purchase Order & GRN
@@ -1430,8 +1380,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const apiPO = await createPurchaseOrderFromApi(newPO);
       const savedPO = apiPO || newPO;
-      setPurchaseOrders(prev => [savedPO, ...prev]);
+      setPurchaseOrders(prev => sortByLatest([savedPO, ...prev]));
       showToast("Purchase Order created successfully", "success");
+      notifyChange();
       return savedPO;
     } catch (err) {
       console.error("Failed to save purchase order to API:", err);
@@ -1445,6 +1396,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setPurchaseOrders(prev => prev.map(po => po.id === id ? { ...po, ...data } : po));
       await updatePurchaseOrderFromApi(id, data);
       showToast("Purchase Order updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update purchase order:", err);
       showToast("Unable to update purchase order", "error");
@@ -1456,13 +1408,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setPurchaseOrders(prev => prev.filter(po => po.id !== id));
       await deletePurchaseOrderFromApi(id);
       showToast("Purchase Order deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete purchase order:", err);
       showToast("Unable to delete purchase order", "error");
     }
   };
 
-  // Automation 9 & 10: GRN -> QC & Inventory
   // Automation 9 & 10: GRN -> QC & Inventory
   const addGRN = (grnData: Omit<GRN, 'id' | 'grnNumber' | 'qcStatus' | 'enteredInventory'>) => {
     const grnNum = `GRN-2609-0${grns.length + 35}`;
@@ -1473,16 +1425,18 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       qcStatus: 'Approved',
       enteredInventory: true
     };
-    setGRNs(prev => [newGRN, ...prev]);
+    setGRNs(prev => sortByLatest([newGRN, ...prev]));
     createGRNFromApi(newGRN)
       .then((apiGRN) => {
-        setGRNs(prev => prev.map(g => g.id === newGRN.id ? { ...newGRN, id: apiGRN.id } : g));
+        setGRNs(prev => sortByLatest(prev.map(g => g.id === newGRN.id ? { ...newGRN, id: apiGRN.id } : g)));
         showToast("GRN created successfully", "success");
+        notifyChange();
       })
       .catch((err) => {
         console.error("Failed to save GRN to API:", err);
         showToast("GRN created successfully", "success");
       });
+    notifyChange();
 
     // Add accepted quantity to Raw Material Inventory
     setRawMaterials(prev => prev.map(rm => rm.id === grnData.materialId ? {
@@ -1504,6 +1458,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setGRNs(prev => prev.map(g => g.id === id ? { ...g, ...data } : g));
       await updateGRNFromApi(id, data);
       showToast("GRN updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update GRN:", err);
       showToast("Unable to update GRN", "error");
@@ -1515,6 +1470,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setGRNs(prev => prev.filter(g => g.id !== id));
       await deleteGRNFromApi(id);
       showToast("GRN deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete GRN:", err);
       showToast("Unable to delete GRN", "error");
@@ -1526,6 +1482,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProductionOrders(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
       await updateProductionOrderInApi(id, data);
       showToast("Production Order updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Production Order:", err);
       showToast("Unable to update Production Order", "error");
@@ -1537,6 +1494,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProductionOrders(prev => prev.filter(p => p.id !== id));
       await deleteProductionOrderFromApi(id);
       showToast("Production Order deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Production Order:", err);
       showToast("Unable to delete Production Order", "error");
@@ -1548,6 +1506,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProductionBatches(prev => prev.map(b => b.id === id ? { ...b, ...data } : b));
       await updateProductionBatchInApi(id, data);
       showToast("Production Batch updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Production Batch:", err);
       showToast("Unable to update Production Batch", "error");
@@ -1559,6 +1518,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProductionBatches(prev => prev.filter(b => b.id !== id));
       await deleteProductionBatchFromApi(id);
       showToast("Production Batch deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Production Batch:", err);
       showToast("Unable to delete Production Batch", "error");
@@ -1570,6 +1530,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setQCInspections(prev => prev.map(q => q.id === id ? { ...q, ...data } : q));
       await updateQCInspectionInApi(id, data);
       showToast("QC Inspection updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update QC Inspection:", err);
       showToast("Unable to update QC Inspection", "error");
@@ -1581,6 +1542,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setQCInspections(prev => prev.filter(q => q.id !== id));
       await deleteQCInspectionFromApi(id);
       showToast("QC Inspection deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete QC Inspection:", err);
       showToast("Unable to delete QC Inspection", "error");
@@ -1593,8 +1555,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const newBOM: BOM = { ...bomData, id: tempId };
       const created = await createBOMInApi(bomData);
       const saved = created || newBOM;
-      setBOMs(prev => [saved, ...prev]);
+      setBOMs(prev => sortByLatest([saved, ...prev]));
       showToast("BOM added successfully", "success");
+      notifyChange();
       return saved;
     } catch (err) {
       console.error("Failed to add BOM:", err);
@@ -1608,6 +1571,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setBOMs(prev => prev.map(b => b.id === id ? { ...b, ...data } : b));
       await updateBOMInApi(id, data);
       showToast("BOM updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update BOM:", err);
       showToast("Unable to update BOM", "error");
@@ -1619,6 +1583,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setBOMs(prev => prev.filter(b => b.id !== id));
       await deleteBOMFromApi(id);
       showToast("BOM deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete BOM:", err);
       showToast("Unable to delete BOM", "error");
@@ -1630,6 +1595,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setStockMovements(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
       await updateStockMovementInApi(id, data);
       showToast("Stock Movement updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Stock Movement:", err);
       showToast("Unable to update Stock Movement", "error");
@@ -1641,6 +1607,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setStockMovements(prev => prev.filter(s => s.id !== id));
       await deleteStockMovementFromApi(id);
       showToast("Stock Movement deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Stock Movement:", err);
       showToast("Unable to delete Stock Movement", "error");
@@ -1652,6 +1619,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setDispatches(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
       await updateDispatchInApi(id, data);
       showToast("Dispatch updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Dispatch:", err);
       showToast("Unable to update Dispatch", "error");
@@ -1663,6 +1631,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setDispatches(prev => prev.filter(d => d.id !== id));
       await deleteDispatchFromApi(id);
       showToast("Dispatch deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Dispatch:", err);
       showToast("Unable to delete Dispatch", "error");
@@ -1673,12 +1642,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const tempId = `veh-${Date.now()}`;
       const newVeh: VehicleMaster = { ...vehicleData, id: tempId };
-      setVehicles(prev => [newVeh, ...prev]);
+      setVehicles(prev => sortByLatest([newVeh, ...prev]));
       const created = await createVehicleInApi(vehicleData);
       if (created) {
-        setVehicles(prev => prev.map(v => v.id === tempId ? created : v));
+        setVehicles(prev => sortByLatest(prev.map(v => v.id === tempId ? created : v)));
       }
       showToast("Vehicle registered successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to add vehicle:", err);
       showToast("Unable to add vehicle", "error");
@@ -1690,6 +1660,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setVehicles(prev => prev.map(v => v.id === id ? { ...v, ...data } : v));
       await updateVehicleInApi(id, data);
       showToast("Vehicle updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Vehicle:", err);
       showToast("Unable to update Vehicle", "error");
@@ -1701,6 +1672,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setVehicles(prev => prev.filter(v => v.id !== id));
       await deleteVehicleFromApi(id);
       showToast("Vehicle deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Vehicle:", err);
       showToast("Unable to delete Vehicle", "error");
@@ -1712,6 +1684,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setInvoices(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
       await updateSalesInvoiceInApi(id, data);
       showToast("Sales Invoice updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Sales Invoice:", err);
       showToast("Unable to update Sales Invoice", "error");
@@ -1723,6 +1696,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setInvoices(prev => prev.filter(i => i.id !== id));
       await deleteSalesInvoiceFromApi(id);
       showToast("Sales Invoice deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Sales Invoice:", err);
       showToast("Unable to delete Sales Invoice", "error");
@@ -1734,6 +1708,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
       await updatePaymentInApi(id, data);
       showToast("Payment transaction updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Payment:", err);
       showToast("Unable to update Payment", "error");
@@ -1745,6 +1720,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setPayments(prev => prev.filter(p => p.id !== id));
       await deletePaymentFromApi(id);
       showToast("Payment transaction deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Payment:", err);
       showToast("Unable to delete Payment", "error");
@@ -1763,8 +1739,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       const created = await createExpenseInApi(newExp);
       if (created) {
-        setExpenses(prev => [created, ...prev]);
+        setExpenses(prev => sortByLatest([created, ...prev]));
         showToast("Expense record added successfully", "success");
+        notifyChange();
         return created;
       } else {
         throw new Error("Failed to create expense in API");
@@ -1781,6 +1758,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
       await updateExpenseInApi(id, data);
       showToast("Expense updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Expense:", err);
       showToast("Unable to update Expense", "error");
@@ -1792,6 +1770,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setExpenses(prev => prev.filter(e => e.id !== id));
       await deleteExpenseFromApi(id);
       showToast("Expense deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Expense:", err);
       showToast("Unable to delete Expense", "error");
@@ -1802,12 +1781,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const tempId = `emp-${Date.now()}`;
       const newEmp: Employee = { ...empData, id: tempId };
-      setEmployees(prev => [newEmp, ...prev]);
+      setEmployees(prev => sortByLatest([newEmp, ...prev]));
       const created = await createEmployeeInApi(newEmp);
       if (created) {
-        setEmployees(prev => prev.map(e => e.id === tempId ? created : e));
+        setEmployees(prev => sortByLatest(prev.map(e => e.id === tempId ? created : e)));
       }
       showToast("Employee added successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to add Employee:", err);
       showToast("Unable to add Employee", "error");
@@ -1819,6 +1799,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
       await updateEmployeeInApi(id, data);
       showToast("Employee updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Employee:", err);
       showToast("Unable to update Employee", "error");
@@ -1830,6 +1811,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setEmployees(prev => prev.filter(e => e.id !== id));
       await deleteEmployeeFromApi(id);
       showToast("Employee deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Employee:", err);
       showToast("Unable to delete Employee", "error");
@@ -1840,12 +1822,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const tempId = `mach-${Date.now()}`;
       const newMach: Machinery = { ...machData, id: tempId };
-      setMachinery(prev => [newMach, ...prev]);
+      setMachinery(prev => sortByLatest([newMach, ...prev]));
       const created = await createMachineryInApi(newMach);
       if (created) {
-        setMachinery(prev => prev.map(m => m.id === tempId ? created : m));
+        setMachinery(prev => sortByLatest(prev.map(m => m.id === tempId ? created : m)));
       }
       showToast("Machinery record added successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to add Machinery:", err);
       showToast("Unable to add Machinery", "error");
@@ -1857,6 +1840,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setMachinery(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
       await updateMachineryInApi(id, data);
       showToast("Machinery record updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Machinery:", err);
       showToast("Unable to update Machinery", "error");
@@ -1868,6 +1852,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setMachinery(prev => prev.filter(m => m.id !== id));
       await deleteMachineryFromApi(id);
       showToast("Machinery record deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Machinery:", err);
       showToast("Unable to delete Machinery", "error");
@@ -1878,12 +1863,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const tempId = `doc-${Date.now()}`;
       const newDoc: ErpDocument = { ...docData, id: tempId };
-      setDocuments(prev => [newDoc, ...prev]);
+      setDocuments(prev => sortByLatest([newDoc, ...prev]));
       const created = await createDocumentInApi(newDoc);
       if (created) {
-        setDocuments(prev => prev.map(d => d.id === tempId ? created : d));
+        setDocuments(prev => sortByLatest(prev.map(d => d.id === tempId ? created : d)));
       }
       showToast("Document added successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to add Document:", err);
       showToast("Unable to add Document", "error");
@@ -1895,6 +1881,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setDocuments(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
       await updateDocumentInApi(id, data);
       showToast("Document updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Document:", err);
       showToast("Unable to update Document", "error");
@@ -1906,6 +1893,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setDocuments(prev => prev.filter(d => d.id !== id));
       await deleteDocumentFromApi(id);
       showToast("Document deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete Document:", err);
       showToast("Unable to delete Document", "error");
@@ -1917,6 +1905,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCompany(prev => ({ ...prev, ...data }));
       await updateCompanyProfileInApi(data);
       showToast("Company Profile updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update Company Profile:", err);
       showToast("Unable to update Company Profile", "error");
@@ -1936,8 +1925,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     try {
       const apiSupp = await createSupplierFromApi(newSupp);
-      setSuppliers(prev => [apiSupp, ...prev]);
+      setSuppliers(prev => sortByLatest([apiSupp, ...prev]));
       showToast("Supplier created successfully", "success");
+      notifyChange();
       return apiSupp;
     } catch (err) {
       console.error("Failed to add supplier:", err);
@@ -1951,6 +1941,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSuppliers(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
       await updateSupplierFromApi(id, data);
       showToast("Supplier updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update supplier:", err);
       showToast("Unable to update supplier", "error");
@@ -1962,6 +1953,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSuppliers(prev => prev.filter(s => s.id !== id));
       await deleteSupplierFromApi(id);
       showToast("Supplier deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete supplier:", err);
       showToast("Unable to delete supplier", "error");
@@ -1980,12 +1972,14 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     try {
       const apiRM = await createRawMaterialFromApi(newRM);
-      setRawMaterials(prev => [apiRM, ...prev]);
+      setRawMaterials(prev => sortByLatest([apiRM, ...prev]));
       showToast("Raw material created successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to create raw material:", err);
-      setRawMaterials(prev => [newRM, ...prev]);
+      setRawMaterials(prev => sortByLatest([newRM, ...prev]));
       showToast("Raw material created successfully", "success");
+      notifyChange();
     }
   };
 
@@ -1994,6 +1988,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setRawMaterials(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
       await updateRawMaterialFromApi(id, data);
       showToast("Raw material updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update raw material:", err);
       showToast("Unable to update raw material", "error");
@@ -2005,6 +2000,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setRawMaterials(prev => prev.filter(m => m.id !== id));
       await deleteRawMaterialFromApi(id);
       showToast("Raw material deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete raw material:", err);
       showToast("Unable to delete raw material", "error");
@@ -2029,8 +2025,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentStockMT: typeof apiProd.currentStockMT === 'number' ? apiProd.currentStockMT : (Number(apiProd.currentStockMT) || currentStock),
         reservedStockMT: typeof apiProd.reservedStockMT === 'number' ? apiProd.reservedStockMT : (Number(apiProd.reservedStockMT) || reservedStock),
       };
-      setProducts(prev => [normalizedProd, ...prev]);
+      setProducts(prev => sortByLatest([normalizedProd, ...prev]));
       showToast("Product created successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to create product via API, saving to direct Firestore:", err);
       try {
@@ -2038,8 +2035,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (persistErr) {
         console.error("Failed to persist product to Firestore fallback:", persistErr);
       }
-      setProducts(prev => [newProd, ...prev]);
+      setProducts(prev => sortByLatest([newProd, ...prev]));
       showToast("Product created successfully", "success");
+      notifyChange();
     }
   };
 
@@ -2048,6 +2046,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
       await updateProductFromApi(id, data);
       showToast("Product updated successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to update product via API, saving to direct Firestore:", err);
       try {
@@ -2059,6 +2058,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.error("Failed to persist product update to Firestore fallback:", persistErr);
       }
       showToast("Product updated successfully", "success");
+      notifyChange();
     }
   };
 
@@ -2067,6 +2067,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProducts(prev => prev.filter(p => p.id !== id));
       await deleteProductFromApi(id);
       showToast("Product deleted successfully", "success");
+      notifyChange();
     } catch (err) {
       console.error("Failed to delete product:", err);
       showToast("Unable to delete product", "error");
@@ -2345,6 +2346,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         markAlertRead,
         resetAllData,
         runDemoStepAction,
+        refreshAllData: syncRealtimeData,
         getCustomerCredit: (customer: Customer | null | undefined) => getCustomerCreditSummary(customer, salesOrders),
       }}
     >

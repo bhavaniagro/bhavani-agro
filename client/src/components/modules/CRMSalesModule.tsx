@@ -21,6 +21,7 @@ import { ConfirmModal } from '../modals/ConfirmModal';
 import { LostReasonModal } from '../modals/LostReasonModal';
 import { LeadFormModal } from '../crm/LeadFormModal';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const CRMSalesModule: React.FC = () => {
   const {
@@ -135,7 +136,7 @@ export const CRMSalesModule: React.FC = () => {
     'Lost'
   ];
 
-  const filteredLeads = leads.filter(l => {
+  const filteredLeads = sortByLatest(leads.filter(l => {
     const matchesStage = stageFilter === 'All' || l.status === stageFilter;
     const searchLower = searchTerm.trim().toLowerCase();
     const matchesSearch = !searchLower ||
@@ -152,7 +153,7 @@ export const CRMSalesModule: React.FC = () => {
     })();
 
     return matchesStage && matchesSearch && matchesProduct;
-  });
+  }));
 
   const isFilterActive = selectedProduct !== 'All' || stageFilter !== 'All';
   const selectedProductObj = products.find(p => p.id === selectedProduct || p.productName === selectedProduct);

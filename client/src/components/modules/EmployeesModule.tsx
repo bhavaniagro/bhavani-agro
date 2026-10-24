@@ -4,6 +4,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Employee } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const EmployeesModule: React.FC = () => {
   const { employees, addEmployee, updateEmployee, deleteEmployee } = useERP();
@@ -48,13 +49,13 @@ export const EmployeesModule: React.FC = () => {
 
   const departments = ['All', 'Production', 'Sales', 'Purchase', 'Accounts', 'Warehouse', 'Dispatch', 'Administration'];
 
-  const filteredEmployees = employees.filter(e => {
+  const filteredEmployees = sortByLatest(employees.filter(e => {
     const matchesDept = deptFilter === 'All' || e.department === deptFilter;
     const matchesSearch = e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.employeeCode.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesDept && matchesSearch;
-  });
+  }));
 
   const totalPayroll = employees.reduce((acc, curr) => acc + curr.monthlySalary, 0);
 

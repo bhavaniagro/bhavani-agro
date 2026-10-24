@@ -6,6 +6,7 @@ import { ErpDocument } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
 import { uploadDocumentFileInApi } from '../../services/api/documentApi.service';
 import { resolveDocumentUrl } from '../../config/apiConfig';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const DocumentsModule: React.FC = () => {
   const { documents, addDocument, updateDocument, deleteDocument } = useERP();
@@ -60,13 +61,13 @@ export const DocumentsModule: React.FC = () => {
     'Delivery Challan'
   ];
 
-  const filteredDocs = documents.filter(d => {
+  const filteredDocs = sortByLatest(documents.filter(d => {
     const matchesType = typeFilter === 'All' || d.documentType === typeFilter;
     const matchesSearch = d.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       d.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       d.relatedEntity.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesType && matchesSearch;
-  });
+  }));
 
   const handleCreateDocument = async (e: React.FormEvent) => {
     e.preventDefault();

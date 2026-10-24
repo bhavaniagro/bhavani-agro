@@ -18,6 +18,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { DispatchChallan, VehicleMaster, DispatchStatus } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const DispatchLogisticsModule: React.FC = () => {
   const { 
@@ -59,12 +60,12 @@ export const DispatchLogisticsModule: React.FC = () => {
   const [vehPhone, setVehPhone] = useState('');
   const [vehCapacity, setVehCapacity] = useState(30);
 
-  const filteredDispatches = dispatches.filter(d => 
+  const filteredDispatches = sortByLatest(dispatches.filter(d => 
     d.dispatchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     d.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     d.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     d.destination.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const statuses: DispatchStatus[] = ['Ready', 'Loaded', 'Dispatched', 'In Transit', 'Delivered'];
 
@@ -375,7 +376,7 @@ export const DispatchLogisticsModule: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {vehicles.map(v => (
+            {sortByLatest(vehicles).map(v => (
               <div key={v.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-2">
                 <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
                   <div>

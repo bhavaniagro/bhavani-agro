@@ -4,6 +4,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Machinery } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const MaintenanceModule: React.FC = () => {
   const { machinery, addMachinery, updateMachinery, deleteMachinery } = useERP();
@@ -115,7 +116,7 @@ export const MaintenanceModule: React.FC = () => {
 
       {/* Machinery Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {machinery.map(m => (
+        {sortByLatest(machinery).map(m => (
           <div key={m.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-3 shadow-2xs">
             <div className="flex items-start justify-between border-b border-neutral-100 pb-2">
               <div>

@@ -17,6 +17,7 @@ import { useERP } from '../../context/ERPContext';
 import { RawMaterial } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const RawMaterialModule: React.FC = () => {
   const { 
@@ -91,13 +92,13 @@ export const RawMaterialModule: React.FC = () => {
     'Consumable'
   ];
 
-  const filteredMaterials = rawMaterials.filter(rm => {
+  const filteredMaterials = sortByLatest(rawMaterials.filter(rm => {
     const matchesCat = categoryFilter === 'All' || rm.category === categoryFilter;
     const matchesSearch = rm.materialName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       rm.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
       rm.primarySupplier.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCat && matchesSearch;
-  });
+  }));
 
   const totalRawStockValue = rawMaterials.reduce((acc, curr) => {
     const qty = curr.unit === 'MT' ? curr.currentStock : curr.currentStock;
