@@ -1,8 +1,9 @@
 import type { RawMaterial } from "../../types/erp";
 import { API_BASE_URL } from "../../config/apiConfig";
 
-export async function getRawMaterialsFromApi(): Promise<RawMaterial[]> {
-    const response = await fetch(`${API_BASE_URL}/raw-materials`);
+export async function getRawMaterialsFromApi(since?: string): Promise<RawMaterial[]> {
+    const url = since ? `${API_BASE_URL}/raw-materials?since=${encodeURIComponent(since)}` : `${API_BASE_URL}/raw-materials`;
+    const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch raw materials");
     const result = await response.json();
     return result.data;

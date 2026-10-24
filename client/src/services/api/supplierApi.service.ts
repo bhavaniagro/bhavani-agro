@@ -1,8 +1,9 @@
 import type { Supplier } from "../../types/erp";
 import { API_BASE_URL } from "../../config/apiConfig";
 
-export async function getSuppliersFromApi(): Promise<Supplier[]> {
-    const response = await fetch(`${API_BASE_URL}/suppliers`);
+export async function getSuppliersFromApi(since?: string): Promise<Supplier[]> {
+    const url = since ? `${API_BASE_URL}/suppliers?since=${encodeURIComponent(since)}` : `${API_BASE_URL}/suppliers`;
+    const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch suppliers");
     const result = await response.json();
     return result.data;

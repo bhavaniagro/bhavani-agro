@@ -3,9 +3,10 @@ import { API_BASE_URL } from '../../config/apiConfig';
 
 const ENDPOINT_URL = `${API_BASE_URL}/qc-inspections`;
 
-export async function fetchQCInspectionsFromApi(): Promise<QCInspection[]> {
+export async function fetchQCInspectionsFromApi(since?: string): Promise<QCInspection[]> {
   try {
-    const res = await fetch(ENDPOINT_URL);
+    const url = since ? `${ENDPOINT_URL}?since=${encodeURIComponent(since)}` : ENDPOINT_URL;
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch QC inspections');
     return await res.json();
   } catch (err) {

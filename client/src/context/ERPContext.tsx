@@ -463,29 +463,88 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ifscCode: 'SBIN0001234'
   };
 
-  const [company, setCompany] = useState<CompanyProfile>(defaultCompanyProfile);
-  const [customers, setCustomers] = useState<Customer[]>(() => sortByLatest(initialCustomers));
-  const [suppliers, setSuppliers] = useState<Supplier[]>(() => sortByLatest(initialSuppliers));
-  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>(() => sortByLatest(initialRawMaterials));
-  const [products, setProducts] = useState<FinishedProduct[]>(() => sortByLatest(initialFinishedProducts));
-  const [boms, setBOMs] = useState<BOM[]>(() => sortByLatest(initialBOMs));
-  const [leads, setLeads] = useState<Lead[]>(() => sortByLatest(initialLeads));
-  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(() => sortByLatest(initialSalesOrders));
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => sortByLatest(initialPurchaseOrders));
-  const [grns, setGRNs] = useState<GRN[]>(() => sortByLatest(initialGRNs));
-  const [qcInspections, setQCInspections] = useState<QCInspection[]>(() => sortByLatest(initialQCInspections));
-  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(() => sortByLatest(initialProductionOrders));
-  const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>(() => sortByLatest(initialProductionBatches));
-  const [vehicles, setVehicles] = useState<VehicleMaster[]>(() => sortByLatest(initialVehicles));
-  const [dispatches, setDispatches] = useState<DispatchChallan[]>(() => sortByLatest(initialDispatches));
-  const [invoices, setInvoices] = useState<SalesInvoice[]>(() => sortByLatest(initialInvoices));
-  const [payments, setPayments] = useState<PaymentTransaction[]>([]);
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => sortByLatest(initialExpenses));
-  const [machinery, setMachinery] = useState<Machinery[]>(() => sortByLatest(initialMachinery));
-  const [employees, setEmployees] = useState<Employee[]>(() => sortByLatest(initialEmployees));
-  const [documents, setDocuments] = useState<ErpDocument[]>(() => sortByLatest(initialDocuments));
-  const [alerts, setAlerts] = useState<ErpAlert[]>(() => sortByLatest(initialAlerts));
-  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const CACHE_PREFIX = 'bhavani_erp_v2_';
+
+  function loadCached<T>(key: string, fallback: T): T {
+    if (typeof window === 'undefined') return fallback;
+    try {
+      const raw = localStorage.getItem(`${CACHE_PREFIX}${key}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed as T;
+        if (parsed && typeof parsed === 'object') return parsed as T;
+      }
+    } catch (e) {
+      console.warn(`[ERPContext] Cache read error for ${key}:`, e);
+    }
+    return fallback;
+  }
+
+  function saveCached(key: string, data: any): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(`${CACHE_PREFIX}${key}`, JSON.stringify(data));
+    } catch (e) {
+      // quota or storage disabled
+    }
+  }
+
+  function mergeDelta<T extends { id: string }>(existing: T[], delta?: T[] | null): T[] {
+    if (!delta || !Array.isArray(delta) || delta.length === 0) return existing;
+    const deltaMap = new Map(delta.map(d => [d.id, d]));
+    const updated = existing.map(item => deltaMap.has(item.id) ? { ...item, ...deltaMap.get(item.id)! } : item);
+    const existingIds = new Set(existing.map(e => e.id));
+    const newItems = delta.filter(d => !existingIds.has(d.id));
+    return sortByLatest([...newItems, ...updated]);
+  }
+
+  const [company, setCompany] = useState<CompanyProfile>(() => loadCached('company', defaultCompanyProfile));
+  const [customers, setCustomers] = useState<Customer[]>(() => loadCached('customers', sortByLatest(initialCustomers)));
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => loadCached('suppliers', sortByLatest(initialSuppliers)));
+  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>(() => loadCached('rawMaterials', sortByLatest(initialRawMaterials)));
+  const [products, setProducts] = useState<FinishedProduct[]>(() => loadCached('products', sortByLatest(initialFinishedProducts)));
+  const [boms, setBOMs] = useState<BOM[]>(() => loadCached('boms', sortByLatest(initialBOMs)));
+  const [leads, setLeads] = useState<Lead[]>(() => loadCached('leads', sortByLatest(initialLeads)));
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(() => loadCached('salesOrders', sortByLatest(initialSalesOrders)));
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => loadCached('purchaseOrders', sortByLatest(initialPurchaseOrders)));
+  const [grns, setGRNs] = useState<GRN[]>(() => loadCached('grns', sortByLatest(initialGRNs)));
+  const [qcInspections, setQCInspections] = useState<QCInspection[]>(() => loadCached('qcInspections', sortByLatest(initialQCInspections)));
+  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(() => loadCached('productionOrders', sortByLatest(initialProductionOrders)));
+  const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>(() => loadCached('productionBatches', sortByLatest(initialProductionBatches)));
+  const [vehicles, setVehicles] = useState<VehicleMaster[]>(() => loadCached('vehicles', sortByLatest(initialVehicles)));
+  const [dispatches, setDispatches] = useState<DispatchChallan[]>(() => loadCached('dispatches', sortByLatest(initialDispatches)));
+  const [invoices, setInvoices] = useState<SalesInvoice[]>(() => loadCached('invoices', sortByLatest(initialInvoices)));
+  const [payments, setPayments] = useState<PaymentTransaction[]>(() => loadCached('payments', []));
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => loadCached('expenses', sortByLatest(initialExpenses)));
+  const [machinery, setMachinery] = useState<Machinery[]>(() => loadCached('machinery', sortByLatest(initialMachinery)));
+  const [employees, setEmployees] = useState<Employee[]>(() => loadCached('employees', sortByLatest(initialEmployees)));
+  const [documents, setDocuments] = useState<ErpDocument[]>(() => loadCached('documents', sortByLatest(initialDocuments)));
+  const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadCached('alerts', sortByLatest(initialAlerts)));
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => loadCached('stockMovements', []));
+
+  // Sync state changes to localStorage
+  useEffect(() => { saveCached('customers', customers); }, [customers]);
+  useEffect(() => { saveCached('leads', leads); }, [leads]);
+  useEffect(() => { saveCached('suppliers', suppliers); }, [suppliers]);
+  useEffect(() => { saveCached('rawMaterials', rawMaterials); }, [rawMaterials]);
+  useEffect(() => { saveCached('products', products); }, [products]);
+  useEffect(() => { saveCached('salesOrders', salesOrders); }, [salesOrders]);
+  useEffect(() => { saveCached('purchaseOrders', purchaseOrders); }, [purchaseOrders]);
+  useEffect(() => { saveCached('grns', grns); }, [grns]);
+  useEffect(() => { saveCached('qcInspections', qcInspections); }, [qcInspections]);
+  useEffect(() => { saveCached('productionOrders', productionOrders); }, [productionOrders]);
+  useEffect(() => { saveCached('productionBatches', productionBatches); }, [productionBatches]);
+  useEffect(() => { saveCached('boms', boms); }, [boms]);
+  useEffect(() => { saveCached('stockMovements', stockMovements); }, [stockMovements]);
+  useEffect(() => { saveCached('dispatches', dispatches); }, [dispatches]);
+  useEffect(() => { saveCached('vehicles', vehicles); }, [vehicles]);
+  useEffect(() => { saveCached('invoices', invoices); }, [invoices]);
+  useEffect(() => { saveCached('payments', payments); }, [payments]);
+  useEffect(() => { saveCached('expenses', expenses); }, [expenses]);
+  useEffect(() => { saveCached('employees', employees); }, [employees]);
+  useEffect(() => { saveCached('machinery', machinery); }, [machinery]);
+  useEffect(() => { saveCached('documents', documents); }, [documents]);
+  useEffect(() => { saveCached('company', company); }, [company]);
 
   // Cross-tab real-time sync notification
   const notifyChange = () => {
@@ -500,84 +559,143 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Real-time synchronization: fetches latest records from APIs & sorts newest-first
-  const syncRealtimeData = async () => {
+  const lastSyncTimestampRef = useRef<string | null>(
+    typeof window !== 'undefined' ? localStorage.getItem(`${CACHE_PREFIX}last_sync_timestamp`) : null
+  );
+  const isSyncingRef = useRef(false);
+
+  // Real-time synchronization: supports both full initial fetch and lightweight delta updates
+  const syncRealtimeData = async (isDelta = false) => {
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
     try {
+      const since = isDelta && lastSyncTimestampRef.current ? lastSyncTimestampRef.current : undefined;
+      const syncStartTime = new Date().toISOString();
+
       const [
         custs, lds, supps, rms, prods, sos, pos, grnList, qcs, pOrders, pBatches, bomsList,
         movs, disps, vehs, invs, pmts, exps, emps, machs, docs, comp
       ] = await Promise.allSettled([
-        getCustomersFromApi(),
-        getLeadsFromApi(),
-        getSuppliersFromApi(),
-        getRawMaterialsFromApi(),
-        getProductsFromApi(),
-        getSalesOrdersFromApi(),
-        getPurchaseOrdersFromApi(),
-        getGRNsFromApi(),
-        fetchQCInspectionsFromApi(),
-        fetchProductionOrdersFromApi(),
-        fetchProductionBatchesFromApi(),
-        fetchBOMsFromApi(),
-        fetchStockMovementsFromApi(),
-        fetchDispatchesFromApi(),
-        fetchVehiclesFromApi(),
-        fetchSalesInvoicesFromApi(),
-        fetchPaymentsFromApi(),
-        fetchExpensesFromApi(),
-        fetchEmployeesFromApi(),
-        fetchMachineryFromApi(),
-        fetchDocumentsFromApi(),
+        getCustomersFromApi(since),
+        getLeadsFromApi(since),
+        getSuppliersFromApi(since),
+        getRawMaterialsFromApi(since),
+        getProductsFromApi(since),
+        getSalesOrdersFromApi(since),
+        getPurchaseOrdersFromApi(since),
+        getGRNsFromApi(since),
+        fetchQCInspectionsFromApi(since),
+        fetchProductionOrdersFromApi(since),
+        fetchProductionBatchesFromApi(since),
+        fetchBOMsFromApi(since),
+        fetchStockMovementsFromApi(since),
+        fetchDispatchesFromApi(since),
+        fetchVehiclesFromApi(since),
+        fetchSalesInvoicesFromApi(since),
+        fetchPaymentsFromApi(since),
+        fetchExpensesFromApi(since),
+        fetchEmployeesFromApi(since),
+        fetchMachineryFromApi(since),
+        fetchDocumentsFromApi(since),
         fetchCompanyProfileFromApi(),
       ]);
 
-      if (custs.status === 'fulfilled' && custs.value) setCustomers(sortByLatest(custs.value));
-      if (lds.status === 'fulfilled' && lds.value) setLeads(sortByLatest(lds.value));
-      if (supps.status === 'fulfilled' && supps.value) setSuppliers(sortByLatest(supps.value));
-      if (rms.status === 'fulfilled' && rms.value) setRawMaterials(sortByLatest(rms.value));
-      if (prods.status === 'fulfilled' && prods.value) {
-        const normalized = prods.value.map(p => ({
-          ...p,
-          currentStockMT: typeof p.currentStockMT === 'number' ? p.currentStockMT : (Number(p.currentStockMT) || 0),
-          reservedStockMT: typeof p.reservedStockMT === 'number' ? p.reservedStockMT : (Number(p.reservedStockMT) || 0),
-        }));
-        setProducts(sortByLatest(normalized));
+      if (isDelta) {
+        // Delta mode: only merge non-empty delta items
+        if (custs.status === 'fulfilled' && custs.value && custs.value.length > 0) setCustomers(prev => mergeDelta(prev, custs.value));
+        if (lds.status === 'fulfilled' && lds.value && lds.value.length > 0) setLeads(prev => mergeDelta(prev, lds.value));
+        if (supps.status === 'fulfilled' && supps.value && supps.value.length > 0) setSuppliers(prev => mergeDelta(prev, supps.value));
+        if (rms.status === 'fulfilled' && rms.value && rms.value.length > 0) setRawMaterials(prev => mergeDelta(prev, rms.value));
+        if (prods.status === 'fulfilled' && prods.value && prods.value.length > 0) {
+          const normalized = prods.value.map(p => ({
+            ...p,
+            currentStockMT: typeof p.currentStockMT === 'number' ? p.currentStockMT : (Number(p.currentStockMT) || 0),
+            reservedStockMT: typeof p.reservedStockMT === 'number' ? p.reservedStockMT : (Number(p.reservedStockMT) || 0),
+          }));
+          setProducts(prev => mergeDelta(prev, normalized));
+        }
+        if (sos.status === 'fulfilled' && sos.value && sos.value.length > 0) setSalesOrders(prev => mergeDelta(prev, sos.value));
+        if (pos.status === 'fulfilled' && pos.value && pos.value.length > 0) setPurchaseOrders(prev => mergeDelta(prev, pos.value));
+        if (grnList.status === 'fulfilled' && grnList.value && grnList.value.length > 0) setGRNs(prev => mergeDelta(prev, grnList.value));
+        if (qcs.status === 'fulfilled' && qcs.value && qcs.value.length > 0) setQCInspections(prev => mergeDelta(prev, qcs.value));
+        if (pOrders.status === 'fulfilled' && pOrders.value && pOrders.value.length > 0) setProductionOrders(prev => mergeDelta(prev, pOrders.value));
+        if (pBatches.status === 'fulfilled' && pBatches.value && pBatches.value.length > 0) setProductionBatches(prev => mergeDelta(prev, pBatches.value));
+        if (bomsList.status === 'fulfilled' && bomsList.value && bomsList.value.length > 0) setBOMs(prev => mergeDelta(prev, bomsList.value));
+        if (movs.status === 'fulfilled' && movs.value && movs.value.length > 0) setStockMovements(prev => mergeDelta(prev, movs.value));
+        if (disps.status === 'fulfilled' && disps.value && disps.value.length > 0) setDispatches(prev => mergeDelta(prev, disps.value));
+        if (vehs.status === 'fulfilled' && vehs.value && vehs.value.length > 0) setVehicles(prev => mergeDelta(prev, vehs.value));
+        if (invs.status === 'fulfilled' && invs.value && invs.value.length > 0) setInvoices(prev => mergeDelta(prev, invs.value));
+        if (pmts.status === 'fulfilled' && pmts.value && pmts.value.length > 0) setPayments(prev => mergeDelta(prev, pmts.value));
+        if (exps.status === 'fulfilled' && exps.value && exps.value.length > 0) setExpenses(prev => mergeDelta(prev, exps.value));
+        if (emps.status === 'fulfilled' && emps.value && emps.value.length > 0) setEmployees(prev => mergeDelta(prev, emps.value));
+        if (machs.status === 'fulfilled' && machs.value && machs.value.length > 0) setMachinery(prev => mergeDelta(prev, machs.value));
+        if (docs.status === 'fulfilled' && docs.value && docs.value.length > 0) setDocuments(prev => mergeDelta(prev, docs.value));
+        if (comp.status === 'fulfilled' && comp.value) setCompany(comp.value);
+      } else {
+        // Full initial sync
+        if (custs.status === 'fulfilled' && custs.value) setCustomers(sortByLatest(custs.value));
+        if (lds.status === 'fulfilled' && lds.value) setLeads(sortByLatest(lds.value));
+        if (supps.status === 'fulfilled' && supps.value) setSuppliers(sortByLatest(supps.value));
+        if (rms.status === 'fulfilled' && rms.value) setRawMaterials(sortByLatest(rms.value));
+        if (prods.status === 'fulfilled' && prods.value) {
+          const normalized = prods.value.map(p => ({
+            ...p,
+            currentStockMT: typeof p.currentStockMT === 'number' ? p.currentStockMT : (Number(p.currentStockMT) || 0),
+            reservedStockMT: typeof p.reservedStockMT === 'number' ? p.reservedStockMT : (Number(p.reservedStockMT) || 0),
+          }));
+          setProducts(sortByLatest(normalized));
+        }
+        if (sos.status === 'fulfilled' && sos.value) setSalesOrders(sortByLatest(sos.value));
+        if (pos.status === 'fulfilled' && pos.value) setPurchaseOrders(sortByLatest(pos.value));
+        if (grnList.status === 'fulfilled' && grnList.value) setGRNs(sortByLatest(grnList.value));
+        if (qcs.status === 'fulfilled' && qcs.value) setQCInspections(sortByLatest(qcs.value));
+        if (pOrders.status === 'fulfilled' && pOrders.value) setProductionOrders(sortByLatest(pOrders.value));
+        if (pBatches.status === 'fulfilled' && pBatches.value) setProductionBatches(sortByLatest(pBatches.value));
+        if (bomsList.status === 'fulfilled' && bomsList.value) setBOMs(sortByLatest(bomsList.value));
+        if (movs.status === 'fulfilled' && movs.value) setStockMovements(sortByLatest(movs.value));
+        if (disps.status === 'fulfilled' && disps.value) setDispatches(sortByLatest(disps.value));
+        if (vehs.status === 'fulfilled' && vehs.value) setVehicles(sortByLatest(vehs.value));
+        if (invs.status === 'fulfilled' && invs.value) setInvoices(sortByLatest(invs.value));
+        if (pmts.status === 'fulfilled' && pmts.value) setPayments(sortByLatest(pmts.value));
+        if (exps.status === 'fulfilled' && exps.value) setExpenses(sortByLatest(exps.value));
+        if (emps.status === 'fulfilled' && emps.value) setEmployees(sortByLatest(emps.value));
+        if (machs.status === 'fulfilled' && machs.value) setMachinery(sortByLatest(machs.value));
+        if (docs.status === 'fulfilled' && docs.value) setDocuments(sortByLatest(docs.value));
+        if (comp.status === 'fulfilled' && comp.value) setCompany(comp.value);
       }
-      if (sos.status === 'fulfilled' && sos.value) setSalesOrders(sortByLatest(sos.value));
-      if (pos.status === 'fulfilled' && pos.value) setPurchaseOrders(sortByLatest(pos.value));
-      if (grnList.status === 'fulfilled' && grnList.value) setGRNs(sortByLatest(grnList.value));
-      if (qcs.status === 'fulfilled' && qcs.value) setQCInspections(sortByLatest(qcs.value));
-      if (pOrders.status === 'fulfilled' && pOrders.value) setProductionOrders(sortByLatest(pOrders.value));
-      if (pBatches.status === 'fulfilled' && pBatches.value) setProductionBatches(sortByLatest(pBatches.value));
-      if (bomsList.status === 'fulfilled' && bomsList.value) setBOMs(sortByLatest(bomsList.value));
-      if (movs.status === 'fulfilled' && movs.value) setStockMovements(sortByLatest(movs.value));
-      if (disps.status === 'fulfilled' && disps.value) setDispatches(sortByLatest(disps.value));
-      if (vehs.status === 'fulfilled' && vehs.value) setVehicles(sortByLatest(vehs.value));
-      if (invs.status === 'fulfilled' && invs.value) setInvoices(sortByLatest(invs.value));
-      if (pmts.status === 'fulfilled' && pmts.value) setPayments(sortByLatest(pmts.value));
-      if (exps.status === 'fulfilled' && exps.value) setExpenses(sortByLatest(exps.value));
-      if (emps.status === 'fulfilled' && emps.value) setEmployees(sortByLatest(emps.value));
-      if (machs.status === 'fulfilled' && machs.value) setMachinery(sortByLatest(machs.value));
-      if (docs.status === 'fulfilled' && docs.value) setDocuments(sortByLatest(docs.value));
-      if (comp.status === 'fulfilled' && comp.value) setCompany(comp.value);
+
+      lastSyncTimestampRef.current = syncStartTime;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`${CACHE_PREFIX}last_sync_timestamp`, syncStartTime);
+        localStorage.setItem(`${CACHE_PREFIX}has_synced`, 'true');
+      }
     } catch (err) {
       console.error("Realtime sync error:", err);
+    } finally {
+      isSyncingRef.current = false;
     }
   };
 
-  // Real-time synchronization listeners (initial, window focus, interval, broadcast)
+  // Real-time synchronization listeners (smart initial, window focus, interval, broadcast)
   useEffect(() => {
-    // Initial fetch from backend
-    syncRealtimeData();
+    const hasSynced = typeof window !== 'undefined' && localStorage.getItem(`${CACHE_PREFIX}has_synced`) === 'true';
 
-    // Cross-tab real-time sync channel
+    if (!hasSynced) {
+      // First time visitor: full sync once
+      syncRealtimeData(false);
+    } else {
+      // Returning visitor or page refresh: delta sync only!
+      syncRealtimeData(true);
+    }
+
+    // Cross-tab real-time sync channel: instant delta sync when another tab updates data
     let channel: BroadcastChannel | null = null;
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
         channel = new BroadcastChannel('bhavani_erp_realtime_sync');
         channel.onmessage = (event) => {
           if (event.data?.type === 'DATA_CHANGED') {
-            syncRealtimeData();
+            syncRealtimeData(true);
           }
         };
       } catch (e) {
@@ -585,16 +703,20 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // Refresh when user returns to tab
+    // Gentle tab focus sync (only if > 45s since last sync, and only delta!)
+    let lastFocusSync = Date.now();
     const handleFocus = () => {
-      syncRealtimeData();
+      if (Date.now() - lastFocusSync > 45000) {
+        lastFocusSync = Date.now();
+        syncRealtimeData(true);
+      }
     };
     window.addEventListener('focus', handleFocus);
 
-    // Background interval sync (every 8 seconds for continuous live data without refresh)
+    // Smart background interval sync (every 60 seconds instead of 8s, and only delta!)
     const interval = setInterval(() => {
-      syncRealtimeData();
-    }, 8000);
+      syncRealtimeData(true);
+    }, 60000);
 
     return () => {
       window.removeEventListener('focus', handleFocus);

@@ -1,8 +1,9 @@
 import type { GRN } from "../../types/erp";
 import { API_BASE_URL } from "../../config/apiConfig";
 
-export async function getGRNsFromApi(): Promise<GRN[]> {
-    const response = await fetch(`${API_BASE_URL}/grns`);
+export async function getGRNsFromApi(since?: string): Promise<GRN[]> {
+    const url = since ? `${API_BASE_URL}/grns?since=${encodeURIComponent(since)}` : `${API_BASE_URL}/grns`;
+    const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch GRNs");
     const result = await response.json();
     return result.data;

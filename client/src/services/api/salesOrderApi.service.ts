@@ -1,8 +1,9 @@
 import type { SalesOrder } from "../../types/erp";
 import { API_BASE_URL } from "../../config/apiConfig";
 
-export async function getSalesOrdersFromApi(): Promise<SalesOrder[]> {
-    const response = await fetch(`${API_BASE_URL}/sales-orders`);
+export async function getSalesOrdersFromApi(since?: string): Promise<SalesOrder[]> {
+    const url = since ? `${API_BASE_URL}/sales-orders?since=${encodeURIComponent(since)}` : `${API_BASE_URL}/sales-orders`;
+    const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch sales orders");
     const result = await response.json();
     return result.data;

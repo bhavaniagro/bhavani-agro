@@ -1,8 +1,9 @@
 import type { Lead } from "../../types/erp";
 import { API_BASE_URL } from "../../config/apiConfig";
 
-export async function getLeadsFromApi(): Promise<Lead[]> {
-    const response = await fetch(`${API_BASE_URL}/leads`);
+export async function getLeadsFromApi(since?: string): Promise<Lead[]> {
+    const url = since ? `${API_BASE_URL}/leads?since=${encodeURIComponent(since)}` : `${API_BASE_URL}/leads`;
+    const response = await fetch(url);
 
     if (!response.ok) {
         throw new Error("Failed to fetch leads");

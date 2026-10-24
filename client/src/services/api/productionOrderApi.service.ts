@@ -3,9 +3,10 @@ import { API_BASE_URL } from '../../config/apiConfig';
 
 const ENDPOINT_URL = `${API_BASE_URL}/production-orders`;
 
-export async function fetchProductionOrdersFromApi(): Promise<ProductionOrder[]> {
+export async function fetchProductionOrdersFromApi(since?: string): Promise<ProductionOrder[]> {
   try {
-    const res = await fetch(ENDPOINT_URL);
+    const url = since ? `${ENDPOINT_URL}?since=${encodeURIComponent(since)}` : ENDPOINT_URL;
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch production orders');
     return await res.json();
   } catch (err) {

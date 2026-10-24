@@ -3,9 +3,10 @@ import { API_BASE_URL } from '../../config/apiConfig';
 
 const ENDPOINT_URL = `${API_BASE_URL}/stock-movements`;
 
-export async function fetchStockMovementsFromApi(): Promise<StockMovement[]> {
+export async function fetchStockMovementsFromApi(since?: string): Promise<StockMovement[]> {
   try {
-    const res = await fetch(ENDPOINT_URL);
+    const url = since ? `${ENDPOINT_URL}?since=${encodeURIComponent(since)}` : ENDPOINT_URL;
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch stock movements');
     return await res.json();
   } catch (err) {

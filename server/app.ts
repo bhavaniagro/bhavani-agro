@@ -29,6 +29,8 @@ import path from "node:path";
 
 import { getUploadsDir } from "./config/upload";
 
+import { apiCacheMiddleware, clearMemoryCache } from "./middlewares/cache.middleware";
+
 const app = express();
 
 const uploadsDir = getUploadsDir();
@@ -43,6 +45,17 @@ app.get("/api/health", (_req, res) => {
         message: "Bhavani Agro API is running",
     });
 });
+
+app.post("/api/cache/clear", (_req, res) => {
+    clearMemoryCache();
+    res.status(200).json({
+        success: true,
+        message: "Memory cache cleared successfully",
+    });
+});
+
+// Protect all /api routes with smart in-memory cache and delta filtering
+app.use("/api", apiCacheMiddleware);
 
 app.use("/api/leads", leadRoutes);
 app.use("/api/customers", customerRoutes);

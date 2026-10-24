@@ -3,9 +3,10 @@ import { API_BASE_URL } from '../../config/apiConfig';
 
 const ENDPOINT_URL = `${API_BASE_URL}/employees`;
 
-export async function fetchEmployeesFromApi(): Promise<Employee[]> {
+export async function fetchEmployeesFromApi(since?: string): Promise<Employee[]> {
   try {
-    const res = await fetch(ENDPOINT_URL);
+    const url = since ? `${ENDPOINT_URL}?since=${encodeURIComponent(since)}` : ENDPOINT_URL;
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch employees');
     const json = await res.json();
     return Array.isArray(json) ? json : (json.data || []);

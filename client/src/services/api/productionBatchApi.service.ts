@@ -3,9 +3,10 @@ import { API_BASE_URL } from '../../config/apiConfig';
 
 const ENDPOINT_URL = `${API_BASE_URL}/production-batches`;
 
-export async function fetchProductionBatchesFromApi(): Promise<ProductionBatch[]> {
+export async function fetchProductionBatchesFromApi(since?: string): Promise<ProductionBatch[]> {
   try {
-    const res = await fetch(ENDPOINT_URL);
+    const url = since ? `${ENDPOINT_URL}?since=${encodeURIComponent(since)}` : ENDPOINT_URL;
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch production batches');
     return await res.json();
   } catch (err) {
