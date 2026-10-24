@@ -705,23 +705,19 @@ export const ProductionModule: React.FC = () => {
                           step="0.1"
                           min="0"
                           value={entryOutputMT}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setEntryOutputMT(val);
-                            setEntryLossMT(Number((val * 0.02).toFixed(2)));
-                          }}
+                          onChange={(e) => setEntryOutputMT(Number(e.target.value))}
                           className="w-full border border-neutral-300 rounded p-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                         />
                       </div>
                       <div>
                         <label className="block text-neutral-700 font-medium mb-1">Process Loss / Dust (MT)</label>
                         <input
-                          type="text"
-                          disabled
-                          readOnly
+                          type="number"
+                          step="0.1"
+                          min="0"
                           value={entryLossMT}
-                          className="w-full border border-neutral-200 rounded p-2 bg-neutral-100 text-neutral-600 cursor-not-allowed select-none"
-                          title="Auto-calculated from Output (non-editable)"
+                          onChange={(e) => setEntryLossMT(Number(e.target.value))}
+                          className="w-full border border-neutral-300 rounded p-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                         />
                       </div>
                     </div>
