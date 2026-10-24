@@ -71,14 +71,16 @@ export const MaintenanceModule: React.FC = () => {
   const handleUpdateMachinery = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingMachine) return;
-    await updateMachinery(editingMachine.id, editingMachine);
+    const targetMach = editingMachine;
     setEditingMachine(null);
+    await updateMachinery(targetMach.id, targetMach);
   };
 
   const handleDeleteMachineryConfirm = async () => {
     if (!deletingMachineId) return;
-    await deleteMachinery(deletingMachineId);
+    const id = deletingMachineId;
     setDeletingMachineId(null);
+    await deleteMachinery(id);
   };
 
   return (

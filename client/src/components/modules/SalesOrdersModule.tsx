@@ -73,7 +73,9 @@ export const SalesOrdersModule: React.FC = () => {
     const taxAmount = (subtotal * editTaxPercent) / 100;
     const totalAmount = subtotal + taxAmount;
 
-    await updateSalesOrder(editingOrder.id, {
+    const targetOrder = editingOrder;
+    setEditingOrder(null);
+    await updateSalesOrder(targetOrder.id, {
       customerName: editCustomerName,
       productName: editProductName,
       quantityMT: Number(editQuantityMT),
@@ -85,13 +87,13 @@ export const SalesOrdersModule: React.FC = () => {
       shippingAddress: editShippingAddress,
       notes: editRemarks,
     });
-    setEditingOrder(null);
   };
 
   const handleDeleteConfirm = async () => {
     if (!deletingOrder) return;
-    await deleteSalesOrder(deletingOrder.id);
+    const id = deletingOrder.id;
     setDeletingOrder(null);
+    await deleteSalesOrder(id);
   };
 
   useEffect(() => {

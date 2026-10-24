@@ -501,13 +501,9 @@ export const RawMaterialModule: React.FC = () => {
         onClose={() => setDeletingRMId(null)}
         onConfirm={async () => {
           if (!deletingRMId) return;
-          setIsSubmitting(true);
-          try {
-            await deleteRawMaterial(deletingRMId);
-            setDeletingRMId(null);
-          } finally {
-            setIsSubmitting(false);
-          }
+          const id = deletingRMId;
+          setDeletingRMId(null);
+          await deleteRawMaterial(id);
         }}
       />
     </div>

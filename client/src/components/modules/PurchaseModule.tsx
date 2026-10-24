@@ -184,8 +184,10 @@ export const PurchaseModule: React.FC = () => {
   const handleSavePOEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPO) return;
+    const poToEdit = editingPO;
+    setEditingPO(null);
     const totalAmount = editPOQuantity * editPORate;
-    await updatePurchaseOrder(editingPO.id, {
+    await updatePurchaseOrder(poToEdit.id, {
       supplierName: editPOSupplierName,
       materialName: editPOMaterialName,
       quantity: Number(editPOQuantity),
@@ -196,13 +198,13 @@ export const PurchaseModule: React.FC = () => {
       paymentTerms: editPOPaymentTerms,
       status: editPOStatus
     });
-    setEditingPO(null);
   };
 
   const handleDeletePOConfirm = async () => {
     if (!deletingPO) return;
-    await deletePurchaseOrder(deletingPO.id);
+    const id = deletingPO.id;
     setDeletingPO(null);
+    await deletePurchaseOrder(id);
   };
 
   // GRN Edit handlers
@@ -220,7 +222,9 @@ export const PurchaseModule: React.FC = () => {
   const handleSaveGRNEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingGRN) return;
-    await updateGRN(editingGRN.id, {
+    const grnToEdit = editingGRN;
+    setEditingGRN(null);
+    await updateGRN(grnToEdit.id, {
       receivedQuantity: Number(editGRNReceivedQty),
       acceptedQuantity: Number(editGRNAcceptedQty),
       rejectedQuantity: Number(editGRNRejectedQty),
@@ -230,13 +234,13 @@ export const PurchaseModule: React.FC = () => {
       qcStatus: editGRNQCStatus,
       remarks: editGRNRemarks
     });
-    setEditingGRN(null);
   };
 
   const handleDeleteGRNConfirm = async () => {
     if (!deletingGRN) return;
-    await deleteGRN(deletingGRN.id);
+    const id = deletingGRN.id;
     setDeletingGRN(null);
+    await deleteGRN(id);
   };
 
   useEffect(() => {

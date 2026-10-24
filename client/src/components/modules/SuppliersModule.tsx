@@ -617,14 +617,10 @@ export const SuppliersModule: React.FC = () => {
         onClose={() => setDeletingSupplierId(null)}
         onConfirm={async () => {
           if (!deletingSupplierId) return;
-          setIsSubmitting(true);
-          try {
-            await deleteSupplier(deletingSupplierId);
-            if (selectedSupplier?.id === deletingSupplierId) setSelectedSupplier(null);
-            setDeletingSupplierId(null);
-          } finally {
-            setIsSubmitting(false);
-          }
+          const id = deletingSupplierId;
+          setDeletingSupplierId(null);
+          if (selectedSupplier?.id === id) setSelectedSupplier(null);
+          await deleteSupplier(id);
         }}
       />
     </div>

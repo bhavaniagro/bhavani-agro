@@ -124,8 +124,9 @@ export const ProductionModule: React.FC = () => {
 
   const handleDeleteOrderConfirm = async () => {
     if (!deletingOrder) return;
-    await deleteProductionOrder(deletingOrder.id);
+    const id = deletingOrder.id;
     setDeletingOrder(null);
+    await deleteProductionOrder(id);
   };
 
   // Production Batch handlers
@@ -156,8 +157,9 @@ export const ProductionModule: React.FC = () => {
 
   const handleDeleteBatchConfirm = async () => {
     if (!deletingBatch) return;
-    await deleteProductionBatch(deletingBatch.id);
+    const id = deletingBatch.id;
     setDeletingBatch(null);
+    await deleteProductionBatch(id);
   };
 
   // BOM Handlers
@@ -212,8 +214,9 @@ export const ProductionModule: React.FC = () => {
 
   const handleDeleteBOMConfirm = async () => {
     if (!deletingBOM) return;
-    await deleteBOM(deletingBOM.id);
+    const id = deletingBOM.id;
     setDeletingBOM(null);
+    await deleteBOM(id);
   };
 
   const handleCreateBOM = async (e: React.FormEvent) => {

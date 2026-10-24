@@ -71,7 +71,10 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           </button>
           <button
             type="button"
-            onClick={onConfirm}
+            onClick={() => {
+              onClose();
+              onConfirm();
+            }}
             disabled={isLoading}
             className={`px-3 py-1.5 text-white rounded-md font-semibold cursor-pointer flex items-center gap-1.5 ${
               isDangerous

@@ -97,21 +97,24 @@ export const FinanceAccountsModule: React.FC = () => {
 
   const handleDeleteInvoice = async () => {
     if (!deleteInvoiceId) return;
-    await deleteSalesInvoice(deleteInvoiceId);
+    const id = deleteInvoiceId;
     setDeleteInvoiceId(null);
+    await deleteSalesInvoice(id);
   };
 
   const handleUpdatePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPayment) return;
-    await updatePayment(editingPayment.id, editingPayment);
+    const targetPay = editingPayment;
     setEditingPayment(null);
+    await updatePayment(targetPay.id, targetPay);
   };
 
   const handleDeletePayment = async () => {
     if (!deletePaymentId) return;
-    await deletePayment(deletePaymentId);
+    const id = deletePaymentId;
     setDeletePaymentId(null);
+    await deletePayment(id);
   };
 
   useEffect(() => {

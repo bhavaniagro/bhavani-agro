@@ -69,9 +69,10 @@ export const QualityControlModule: React.FC = () => {
 
   const handleDeleteQCConfirm = async () => {
     if (!deletingQC) return;
-    await deleteQCInspection(deletingQC.id);
+    const id = deletingQC.id;
     setDeletingQC(null);
     setSelectedQC(null);
+    await deleteQCInspection(id);
   };
 
   useEffect(() => {

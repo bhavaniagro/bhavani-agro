@@ -759,6 +759,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     await updateLead(leadId, { status: 'Won' });
 
+    showToast(`Lead converted to customer: ${lead.leadName}`, 'success');
+
     setAlerts(prev => [{
       id: `alt-${Date.now()}`,
       type: 'info',
@@ -1000,6 +1002,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setProductionOrders(prev => prev.map(p => p.id === poId ? { ...p, status: 'In Production' } : p));
     updateProductionOrderInApi(poId, { status: 'In Production' }).catch(console.error);
+    showToast(`Production Order ${po.orderNumber} started`, 'info');
   };
 
   // Automation 4: Complete Production -> Create Batch & Send to QC
@@ -1072,6 +1075,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       outputProducedMT: outputMT
     } : p));
     updateProductionOrderInApi(poId, { status: 'QC', actualBatchNumber: batchCode, outputProducedMT: outputMT }).catch(console.error);
+    showToast(`Production Batch ${batchCode} completed & sent to QC`, 'success');
   };
 
   // Automation 5: QC Approval -> Make Finished Goods Available for Sale
@@ -1144,6 +1148,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
+    showToast(`QC Inspection ${qc.qcNumber} passed & approved`, 'success');
+
     setAlerts(prev => [{
       id: `alt-${Date.now()}`,
       type: 'info',
@@ -1166,6 +1172,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (qc && qc.type === 'Finished Goods') {
       setProductionBatches(prev => prev.map(b => b.batchNumber === qc.batchLotNumber ? { ...b, qcStatus: 'Rejected' } : b));
     }
+    showToast(`QC Inspection ${qc?.qcNumber || ''} marked as Rejected`, 'warning');
   };
 
   // Direct batch quality approval & inventory release helper
@@ -1243,6 +1250,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     persistDispatch(newDispatch).catch((error) => {
       console.error('Failed to save dispatch to Firebase:', error);
     });
+    showToast(`Dispatch Challan ${dispNum} created successfully`, 'success');
 
     // Deduct finished goods stock accurately
     const so = salesOrders.find(s => s.id === dispatchData.salesOrderId);
@@ -1271,6 +1279,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateDispatchStatus = (dispatchId: string, status: DispatchChallan['status']) => {
     setDispatches(prev => prev.map(d => d.id === dispatchId ? { ...d, status } : d));
     updateDispatchInApi(dispatchId, { status }).catch(console.error);
+    showToast(`Dispatch status updated to ${status}`, 'success');
   };
 
   // Automation 7: Generate Invoice from Dispatch / Sales Order -> Create Receivable
@@ -1338,6 +1347,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateCustomerFromApi(cust.id, { outstandingBalance: newBal, totalSales: newSales }).catch(console.error);
     }
 
+    showToast(`Sales Invoice ${invNum} generated successfully`, 'success');
+
     setAlerts(prev => [{
       id: `alt-${Date.now()}`,
       type: 'info',
@@ -1394,6 +1405,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('Failed to save payment to Firebase:', error);
     });
 
+    showToast(`Payment of ₹${amount.toLocaleString('en-IN')} recorded successfully`, 'success');
 
     setAlerts(prev => [{
       id: `alt-${Date.now()}`,

@@ -97,8 +97,9 @@ export const DispatchLogisticsModule: React.FC = () => {
 
   const handleDeleteDispatchConfirm = async () => {
     if (!deletingDispatch) return;
-    await deleteDispatch(deletingDispatch.id);
+    const id = deletingDispatch.id;
     setDeletingDispatch(null);
+    await deleteDispatch(id);
   };
 
   // Vehicle Handlers
@@ -115,7 +116,9 @@ export const DispatchLogisticsModule: React.FC = () => {
   const handleSaveVehicleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingVehicle) return;
-    await updateVehicle(editingVehicle.id, {
+    const targetVeh = editingVehicle;
+    setEditingVehicle(null);
+    await updateVehicle(targetVeh.id, {
       vehicleNumber: vehNumber,
       vehicleType: vehType as any,
       transporterName: vehTransporter,
@@ -123,13 +126,13 @@ export const DispatchLogisticsModule: React.FC = () => {
       driverPhone: vehPhone,
       capacityMT: Number(vehCapacity)
     });
-    setEditingVehicle(null);
   };
 
   const handleDeleteVehicleConfirm = async () => {
     if (!deletingVehicle) return;
-    await deleteVehicle(deletingVehicle.id);
+    const id = deletingVehicle.id;
     setDeletingVehicle(null);
+    await deleteVehicle(id);
   };
 
   const handleCreateVehicle = async (e: React.FormEvent) => {

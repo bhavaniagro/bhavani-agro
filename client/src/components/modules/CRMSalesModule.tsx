@@ -875,13 +875,9 @@ export const CRMSalesModule: React.FC = () => {
         onClose={() => setDeletingLeadId(null)}
         onConfirm={async () => {
           if (!deletingLeadId) return;
-          setIsSubmitting(true);
-          try {
-            await deleteLead(deletingLeadId);
-            setDeletingLeadId(null);
-          } finally {
-            setIsSubmitting(false);
-          }
+          const id = deletingLeadId;
+          setDeletingLeadId(null);
+          await deleteLead(id);
         }}
       />
     </div>

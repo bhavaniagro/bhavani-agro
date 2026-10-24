@@ -77,14 +77,16 @@ export const EmployeesModule: React.FC = () => {
   const handleUpdateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingEmployee) return;
-    await updateEmployee(editingEmployee.id, editingEmployee);
+    const targetEmp = editingEmployee;
     setEditingEmployee(null);
+    await updateEmployee(targetEmp.id, targetEmp);
   };
 
   const handleDeleteEmployeeConfirm = async () => {
     if (!deletingEmployeeId) return;
-    await deleteEmployee(deletingEmployeeId);
+    const id = deletingEmployeeId;
     setDeletingEmployeeId(null);
+    await deleteEmployee(id);
   };
 
   return (

@@ -579,13 +579,9 @@ export const FinishedGoodsModule: React.FC = () => {
         onClose={() => setDeletingProductId(null)}
         onConfirm={async () => {
           if (!deletingProductId) return;
-          setIsSubmitting(true);
-          try {
-            await deleteProduct(deletingProductId);
-            setDeletingProductId(null);
-          } finally {
-            setIsSubmitting(false);
-          }
+          const id = deletingProductId;
+          setDeletingProductId(null);
+          await deleteProduct(id);
         }}
       />
     </div>

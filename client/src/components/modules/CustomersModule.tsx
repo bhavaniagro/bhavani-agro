@@ -594,16 +594,12 @@ export const CustomersModule: React.FC = () => {
         onClose={() => setDeletingCustomerId(null)}
         onConfirm={async () => {
           if (!deletingCustomerId) return;
-          setIsSubmitting(true);
-          try {
-            await deleteCustomer(deletingCustomerId);
-            if (selectedCustomer?.id === deletingCustomerId) {
-              setSelectedCustomer(null);
-            }
-            setDeletingCustomerId(null);
-          } finally {
-            setIsSubmitting(false);
+          const id = deletingCustomerId;
+          setDeletingCustomerId(null);
+          if (selectedCustomer?.id === id) {
+            setSelectedCustomer(null);
           }
+          await deleteCustomer(id);
         }}
       />
     </div>

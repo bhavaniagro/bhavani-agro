@@ -109,14 +109,16 @@ export const DocumentsModule: React.FC = () => {
   const handleUpdateDocument = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDoc) return;
-    await updateDocument(editingDoc.id, editingDoc);
+    const targetDoc = editingDoc;
     setEditingDoc(null);
+    await updateDocument(targetDoc.id, targetDoc);
   };
 
   const handleDeleteDocumentConfirm = async () => {
     if (!deletingDocId) return;
-    await deleteDocument(deletingDocId);
+    const id = deletingDocId;
     setDeletingDocId(null);
+    await deleteDocument(id);
   };
 
   return (

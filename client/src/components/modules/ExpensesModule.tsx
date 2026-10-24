@@ -53,14 +53,16 @@ export const ExpensesModule: React.FC = () => {
   const handleUpdateExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingExpense) return;
-    await updateExpense(editingExpense.id, editingExpense);
+    const targetExp = editingExpense;
     setEditingExpense(null);
+    await updateExpense(targetExp.id, targetExp);
   };
 
   const handleDeleteExpenseConfirm = async () => {
     if (!deletingExpenseId) return;
-    await deleteExpense(deletingExpenseId);
+    const id = deletingExpenseId;
     setDeletingExpenseId(null);
+    await deleteExpense(id);
   };
 
   useEffect(() => {
