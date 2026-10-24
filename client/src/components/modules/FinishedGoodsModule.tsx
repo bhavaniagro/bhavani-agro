@@ -133,7 +133,7 @@ export const FinishedGoodsModule: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            Only <strong>QC Approved</strong> batches become Available for Sale. Manage warehouse bays, packaging bags, and dispatch reservations.
+            Completed batches immediately become Available for Sale. Manage warehouse bays, packaging bags, and dispatch reservations.
           </p>
         </div>
 
@@ -184,7 +184,7 @@ export const FinishedGoodsModule: React.FC = () => {
         <div className="bg-white p-3 rounded-lg border border-neutral-200">
           <div className="text-neutral-500 text-[11px]">Certified Batches in Stock</div>
           <div className="font-bold text-base font-mono text-neutral-900 mt-1">
-            {productionBatches.filter(b => b.qcStatus === 'Approved').length} Batches
+            {productionBatches.filter(b => (b.status || 'In Stock') === 'In Stock').length} Batches
           </div>
           <div className="text-[10px] text-neutral-400">Complete lot traceability</div>
         </div>

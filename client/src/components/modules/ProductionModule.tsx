@@ -35,11 +35,9 @@ export const ProductionModule: React.FC = () => {
     addBOM,
     updateBOM,
     deleteBOM,
-    startProductionOrder, 
+    startProductionOrder,
     completeProductionOrder,
-    approveQC,
     approveProductionBatch,
-    qcInspections,
     setPrintableDoc,
     setActiveModule,
     setIsDemoRunnerOpen
@@ -147,14 +145,6 @@ export const ProductionModule: React.FC = () => {
     setEditingBatch(null);
   };
 
-  const handleApproveBatch = (batch: ProductionBatch) => {
-    const qc = qcInspections.find(q => q.batchLotNumber === batch.batchNumber || q.referenceId === batch.batchNumber);
-    if (qc) {
-      approveQC(qc.id);
-    } else {
-      approveProductionBatch(batch.id);
-    }
-  };
 
   const handleDeleteBatchConfirm = async () => {
     if (!deletingBatch) return;
@@ -427,25 +417,6 @@ export const ProductionModule: React.FC = () => {
                             <CheckCircle2 className="w-3 h-3" />
                             <span>Log Entry</span>
                           </button>
-                        ) : po.status === 'QC' ? (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <span className="text-[11px] text-amber-700 font-mono font-medium">
-                              Batch {po.actualBatchNumber || 'Produced'}
-                            </span>
-                            <button
-                              onClick={() => {
-                                const batch = productionBatches.find(b => b.productionOrderId === po.id || b.batchNumber === po.actualBatchNumber);
-                                if (batch) {
-                                  handleApproveBatch(batch);
-                                }
-                              }}
-                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold flex items-center gap-1 cursor-pointer shadow-2xs transition-colors"
-                              title="Verify quality and release batch to Finished Goods"
-                            >
-                              <CheckCircle2 className="w-3 h-3" />
-                              <span>Approve &amp; Release</span>
-                            </button>
-                          </div>
                         ) : (
                           <span className="text-[11px] text-emerald-700 font-mono font-medium">
                             Batch {po.actualBatchNumber || 'Produced'}
@@ -589,8 +560,8 @@ export const ProductionModule: React.FC = () => {
                   <th className="p-3 text-right">Produced Qty</th>
                   <th className="p-3 text-right">Std vs Actual Cost</th>
                   <th className="p-3">Storage Bay</th>
-                  <th className="p-3">Quality Status</th>
-                  <th className="p-3 text-right">Inventory Release</th>
+                  <th className="p-3">Batch Status</th>
+                  <th className="p-3 text-right">Inventory Status</th>
                   <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -612,38 +583,22 @@ export const ProductionModule: React.FC = () => {
                     </td>
                     <td className="p-3 text-neutral-700">{b.storageLocation}</td>
                     <td className="p-3">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
-                        b.qcStatus === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
-                        b.qcStatus === 'Pending' ? 'bg-amber-100 text-amber-800' :
-                        'bg-rose-100 text-rose-800'
-                      }`}>
-                        {b.qcStatus}
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded uppercase bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span>In Stock</span>
                       </span>
                     </td>
                     <td className="p-3 text-right">
-                      {b.qcStatus === 'Pending' ? (
+                      <div className="flex items-center justify-end gap-1.5">
+                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Released to FG</span>
                         <button
-                          onClick={() => handleApproveBatch(b)}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer shadow-2xs transition-colors"
-                          title="Verify quality and release batch to Finished Goods inventory"
+                          onClick={() => setPrintableDoc({ type: 'batch_cert', data: b })}
+                          className="p-1 hover:bg-neutral-100 rounded text-neutral-500 hover:text-neutral-800 cursor-pointer"
+                          title="Print Batch Report"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Approve &amp; Release</span>
+                          <Printer className="w-3.5 h-3.5" />
                         </button>
-                      ) : b.qcStatus === 'Approved' ? (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">✓ In Stock</span>
-                          <button
-                            onClick={() => setPrintableDoc({ type: 'qc_cert', data: b })}
-                            className="p-1 hover:bg-neutral-100 rounded text-neutral-500 hover:text-neutral-800 cursor-pointer"
-                            title="Print Batch Quality Certificate"
-                          >
-                            <Printer className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-[11px] font-medium text-rose-600">Rejected</span>
-                      )}
+                      </div>
                     </td>
                     <td className="p-3 text-center">
                       <div className="flex items-center justify-center gap-1.5">

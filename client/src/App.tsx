@@ -60,7 +60,6 @@ const MainContent: React.FC = () => {
               <Route path="/purchase" element={<PurchaseModule />} />
               <Route path="/raw-material" element={<RawMaterialModule />} />
               <Route path="/production" element={<ProductionModule />} />
-              <Route path="/quality-control" element={<Navigate to="/production" replace />} />
               <Route path="/finished-goods" element={<FinishedGoodsModule />} />
               <Route path="/inventory" element={<InventoryModule />} />
               <Route path="/dispatch" element={<DispatchLogisticsModule />} />

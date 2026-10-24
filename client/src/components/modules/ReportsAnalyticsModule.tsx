@@ -72,7 +72,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
         Product: b.productName,
         Date: b.productionDate,
         QuantityProducedMT: b.quantityProducedMT,
-        QCStatus: b.qcStatus,
+        BatchStatus: 'In Stock',
         StandardCostPerMT: b.standardCostPerMT,
         ActualCostPerMT: b.actualCostPerMT,
         StorageLocation: b.storageLocation
@@ -243,7 +243,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
                   <th className="p-3 text-right">Qty (MT)</th>
                   <th className="p-3 text-right">Std Cost</th>
                   <th className="p-3 text-right">Actual Cost</th>
-                  <th className="p-3">QC Status</th>
+                  <th className="p-3">Batch Status</th>
                   <th className="p-3">Warehouse Bay</th>
                 </tr>
               </thead>
@@ -256,7 +256,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
                     <td className="p-3 text-right font-mono tabular-nums font-bold">{b.quantityProducedMT} MT</td>
                     <td className="p-3 text-right font-mono tabular-nums">₹{b.standardCostPerMT}</td>
                     <td className="p-3 text-right font-mono tabular-nums text-emerald-700 font-bold">₹{b.actualCostPerMT}</td>
-                    <td className="p-3 font-medium text-emerald-700">{b.qcStatus}</td>
+                    <td className="p-3 font-medium text-emerald-700">In Stock</td>
                     <td className="p-3 text-neutral-600">{b.storageLocation}</td>
                   </tr>
                 ))}

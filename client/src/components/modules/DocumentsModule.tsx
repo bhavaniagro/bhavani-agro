@@ -55,7 +55,7 @@ export const DocumentsModule: React.FC = () => {
   const docTypes = [
     'All',
     'GST & Statutory',
-    'Quality Lab Report',
+    'Technical & Lab Report',
     'E-Way Bill',
     'Supplier Invoice',
     'Delivery Challan'
@@ -161,7 +161,7 @@ export const DocumentsModule: React.FC = () => {
               Electronic Document Management (EDM)
             </h1>
             <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">
-              Statutory &amp; Quality Repositories
+              Statutory &amp; Compliance Repositories
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">

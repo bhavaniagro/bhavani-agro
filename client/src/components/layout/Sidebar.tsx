@@ -51,7 +51,6 @@ export const Sidebar: React.FC = () => {
     { id: 'Purchase', label: 'Purchase', icon: ShoppingCart },
     { id: 'Raw Material', label: 'Raw Material', icon: Boxes, badge: lowStockRM > 0 ? lowStockRM : undefined },
     { id: 'Production', label: 'Production', icon: Factory },
-    // Quality Control removed from navigation per company request (Task 1)
     { id: 'Finished Goods', label: 'Finished Goods', icon: PackageCheck },
     { id: 'Inventory', label: 'Inventory', icon: Warehouse },
     { id: 'Dispatch & Logistics', label: 'Dispatch & Logistics', icon: Truck, badge: pendingDispatches > 0 ? pendingDispatches : undefined },
@@ -67,9 +66,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   // Role visibility filter (Owner/Admin sees all; specific roles see pertinent items)
-  // Note: Quality Control is excluded from all role filters as it has been removed from navigation.
   const isItemVisible = (id: ERPModule): boolean => {
-    if (id === 'Quality Control') return false; // Always hide QC from navigation
     if (activeRole === 'Owner / Admin') return true;
     switch (activeRole) {
       case 'Sales':

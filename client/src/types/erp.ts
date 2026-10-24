@@ -308,7 +308,6 @@ export type ProductionOrderStatus =
   | 'Planned'
   | 'Material Ready'
   | 'In Production'
-  | 'QC'
   | 'Completed'
   | 'Cancelled';
 
@@ -377,6 +376,7 @@ export interface ProductionBatch {
   }[];
   quantityProducedMT: number;
   quantityRemainingMT: number;
+  status?: 'In Stock' | 'Allocated' | 'Dispatched';
   qcStatus: 'Pending' | 'Approved' | 'Rejected';
   storageLocation: string;
   manufacturingDate: string;
@@ -556,7 +556,7 @@ export interface Machinery {
 export interface ErpDocument {
   id: string;
   title: string;
-  documentType: 'GST & Statutory' | 'Quality Lab Report' | 'E-Way Bill' | 'Supplier Invoice' | 'Delivery Challan' | 'Pollution Clearance & License';
+  documentType: 'GST & Statutory' | 'Technical & Lab Report' | 'E-Way Bill' | 'Supplier Invoice' | 'Delivery Challan' | 'Pollution Clearance & License';
   relatedEntity: string; // e.g. "Order #SO-2409-082", "Batch #BNT-2609-088"
   fileName: string;
   fileSize: string;

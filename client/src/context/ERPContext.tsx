@@ -217,7 +217,6 @@ export type ERPModule =
   | 'Purchase'
   | 'Raw Material'
   | 'Production'
-  | 'Quality Control'
   | 'Finished Goods'
   | 'Inventory'
   | 'Dispatch & Logistics'
@@ -232,7 +231,7 @@ export type ERPModule =
   | 'Settings';
 
 interface PrintableDoc {
-  type: 'invoice' | 'challan' | 'qc_cert';
+  type: 'invoice' | 'challan' | 'qc_cert' | 'batch_cert';
   data: any;
 }
 
@@ -947,7 +946,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     notifyChange();
   };
 
-  // Automation 4: Complete Production -> Create Batch & Send to QC
+  // Automation 4: Complete Production -> Create Batch & Release to Inventory
   const completeProductionOrder = (poId: string, outputMT: number, remarks = '') => {
     const po = productionOrders.find(p => p.id === poId);
     if (!po) return;
@@ -967,7 +966,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ],
       quantityProducedMT: outputMT,
       quantityRemainingMT: outputMT,
-      qcStatus: 'Pending',
+      qcStatus: 'Approved',
       storageLocation: 'Finished Warehouse Bay 1',
       manufacturingDate: new Date().toISOString().split('T')[0],
       bestBeforeDate: new Date(Date.now() + 730 * 86400000).toISOString().split('T')[0],
@@ -981,43 +980,44 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('Failed to save production batch to Firebase:', error);
     });
 
-    // Create QC inspection record
-    const newQC: QCInspection = {
-      id: `qc-${Date.now()}`,
-      qcNumber: `QC-2609-0${qcInspections.length + 60}`,
-      type: 'Finished Goods',
-      referenceId: batchCode,
-      itemCode: po.productId,
-      itemName: po.productName,
-      batchLotNumber: batchCode,
-      quantity: outputMT,
-      unit: 'MT',
-      inspectionDate: new Date().toISOString().split('T')[0],
-      inspector: 'Manish Trivedi (QC Chemist)',
-      parameters: [
-        { parameter: 'Moisture Content %', specification: 'Max 8.0%', observedValue: '6.5%', status: 'Pass' },
-        { parameter: 'Grain Size 16-30 Mesh', specification: 'Min 90% retained', observedValue: '94.2%', status: 'Pass' },
-        { parameter: 'Swelling Volume ml/2g', specification: 'Min 24 ml', observedValue: '28.0 ml', status: 'Pass' },
-        { parameter: 'Bag Weight & Stitching', specification: '50.0 kg ± 0.2 kg', observedValue: '50.1 kg', status: 'Pass' }
-      ],
-      overallStatus: 'Pending',
-      remarks: 'Awaiting lab titration and sieve retention verification.'
-    };
+    // Directly credit Finished Goods Stock
+    const targetProd = products.find(p => p.id === po.productId || (p.productName && po.productName && p.productName.toLowerCase().trim() === po.productName.toLowerCase().trim()));
+    if (targetProd) {
+      const newQty = Number((targetProd.currentStockMT + outputMT).toFixed(2));
+      setProducts(prev => prev.map(p => p.id === targetProd.id ? {
+        ...p,
+        currentStockMT: newQty
+      } : p));
+      updateProductFromApi(targetProd.id, { currentStockMT: newQty }).catch(console.error);
+      persistFinishedProduct({ ...targetProd, currentStockMT: newQty }).catch(console.error);
 
-    setQCInspections(prev => sortByLatest([newQC, ...prev]));
-    createQCInspectionInApi(newQC).catch(console.error);
-    persistQCInspection(newQC).catch((error) => {
-      console.error('Failed to save QC inspection to Firebase:', error);
-    });
+      // Check sales orders waiting for this product
+      setSalesOrders(prev => prev.map(so => {
+        if (so.productId === targetProd.id && so.status === 'Production Required') {
+          return { ...so, status: 'Ready', stockAvailable: true };
+        }
+        return so;
+      }));
+    }
 
     setProductionOrders(prev => prev.map(p => p.id === poId ? {
       ...p,
-      status: 'QC',
+      status: 'Completed',
       actualBatchNumber: batchCode,
       outputProducedMT: outputMT
     } : p));
-    updateProductionOrderInApi(poId, { status: 'QC', actualBatchNumber: batchCode, outputProducedMT: outputMT }).catch(console.error);
-    showToast(`Production Batch ${batchCode} completed & sent to QC`, 'success');
+    updateProductionOrderInApi(poId, { status: 'Completed', actualBatchNumber: batchCode, outputProducedMT: outputMT }).catch(console.error);
+    showToast(`Production Batch ${batchCode} completed & released to inventory`, 'success');
+
+    setAlerts(prev => sortByLatest([{
+      id: `alt-${Date.now()}`,
+      type: 'info',
+      title: `Batch Produced: ${po.productName}`,
+      description: `Batch ${batchCode} completed (${outputMT} MT). Added to Finished Goods stock.`,
+      timestamp: 'Just now',
+      module: 'Production',
+      read: false
+    }, ...prev]));
     notifyChange();
   };
 
@@ -1120,19 +1120,11 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     notifyChange();
   };
 
-  // Direct batch quality approval & inventory release helper
+  // Direct batch approval & inventory release helper
   const approveProductionBatch = (batchId: string) => {
     const batch = productionBatches.find(b => b.id === batchId);
     if (!batch) return;
 
-    // If there is an associated QC Inspection, route through approveQC to maintain full audit traceability
-    const qc = qcInspections.find(q => q.batchLotNumber === batch.batchNumber || q.referenceId === batch.batchNumber);
-    if (qc) {
-      approveQC(qc.id);
-      return;
-    }
-
-    // Direct fallback if no QC inspection object exists
     setProductionBatches(prev => prev.map(b => b.id === batch.id ? { ...b, qcStatus: 'Approved' } : b));
     updateProductionBatchInApi(batch.id, { qcStatus: 'Approved' }).catch(console.error);
 
@@ -1172,8 +1164,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAlerts(prev => sortByLatest([{
       id: `alt-${Date.now()}`,
       type: 'info',
-      title: `Batch Quality Approved: ${batch.productName}`,
-      description: `Batch ${batch.batchNumber} approved. Inventory updated & released for sale.`,
+      title: `Batch Released: ${batch.productName}`,
+      description: `Batch ${batch.batchNumber} completed. Inventory updated & released for sale.`,
       timestamp: 'Just now',
       module: 'Production',
       read: false
@@ -2165,10 +2157,10 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       case 9:
       case 10: {
-        // Step 9-10: QC approval & Add to Finished Goods Available
-        const latestQC = qcInspections[0];
-        if (latestQC) {
-          approveQC(latestQC.id);
+        // Step 9-10: Batch verification & Add to Finished Goods Available
+        const latestBatch = productionBatches[0];
+        if (latestBatch) {
+          approveProductionBatch(latestBatch.id);
         }
         setDemoStep(11);
         break;

@@ -73,7 +73,7 @@ export const PrintableDocumentModal: React.FC = () => {
               </div>
               <div className="text-right">
                 <div className="inline-block border-2 border-neutral-900 px-3 py-1 font-bold text-sm tracking-wider uppercase bg-neutral-50">
-                  {type === 'invoice' ? 'TAX INVOICE' : type === 'challan' ? 'DELIVERY CHALLAN' : 'QUALITY TEST CERTIFICATE'}
+                  {type === 'invoice' ? 'TAX INVOICE' : type === 'challan' ? 'DELIVERY CHALLAN' : 'BATCH PRODUCTION & SPECIFICATION REPORT'}
                 </div>
                 <div className="text-[11px] text-neutral-600 mt-2">Original for Recipient</div>
               </div>
@@ -247,29 +247,29 @@ export const PrintableDocumentModal: React.FC = () => {
             </div>
           )}
 
-          {/* QC CERTIFICATE VIEW */}
-          {type === 'qc_cert' && (
+          {/* BATCH REPORT VIEW */}
+          {(type === 'qc_cert' || type === 'batch_cert') && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 border border-neutral-300 p-3 rounded">
                 <div>
-                  <div className="font-bold text-neutral-900">Product / Sample Details:</div>
+                  <div className="font-bold text-neutral-900">Product / Batch Details:</div>
                   <div className="font-semibold text-neutral-800 mt-0.5">{data.productName}</div>
                   <div className="text-neutral-600 font-mono">Batch Lot No: {data.batchNumber}</div>
                   <div className="text-neutral-600">Mfg Date: {data.productionDate || data.manufacturingDate}</div>
-                  <div className="text-neutral-600">Quantity Tested: {data.quantityProducedMT || data.quantity} MT</div>
+                  <div className="text-neutral-600">Quantity Produced: {data.quantityProducedMT || data.quantity} MT</div>
                 </div>
                 <div className="border-l border-neutral-200 pl-4 space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-neutral-600">Testing Lab:</span>
-                    <span className="font-medium">Bhavani Central Quality Control Lab</span>
+                    <span className="text-neutral-600">Production Unit:</span>
+                    <span className="font-medium">Bhavani Central Manufacturing Plant</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-600">Certification Standard:</span>
+                    <span className="text-neutral-600">Standard:</span>
                     <span>IS 12624 / FCO 1985</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-600">QC Status:</span>
-                    <span className="font-bold text-emerald-700 uppercase">{data.qcStatus || 'Approved'}</span>
+                    <span className="text-neutral-600">Status:</span>
+                    <span className="font-bold text-emerald-700 uppercase">Released to Stock</span>
                   </div>
                 </div>
               </div>
@@ -277,9 +277,9 @@ export const PrintableDocumentModal: React.FC = () => {
               <table className="w-full border-collapse border border-neutral-300 text-left">
                 <thead>
                   <tr className="bg-neutral-100 font-bold border-b border-neutral-300">
-                    <th className="p-2 border-r border-neutral-300">Quality Parameter</th>
+                    <th className="p-2 border-r border-neutral-300">Parameter</th>
                     <th className="p-2 border-r border-neutral-300">Standard Specification</th>
-                    <th className="p-2 border-r border-neutral-300">Observed Test Value</th>
+                    <th className="p-2 border-r border-neutral-300">Observed Value</th>
                     <th className="p-2 text-center">Result</th>
                   </tr>
                 </thead>

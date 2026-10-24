@@ -310,7 +310,7 @@ export const PurchaseModule: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            Create Purchase Orders, record weighbridge delivery via GRN, and automatically credit Raw Material Inventory after QC.
+            Create Purchase Orders, record weighbridge delivery via GRN, and automatically credit Raw Material Inventory upon verification.
           </p>
         </div>
 
@@ -453,7 +453,7 @@ export const PurchaseModule: React.FC = () => {
                   <th className="p-3">Supplier &amp; Vehicle</th>
                   <th className="p-3">Material &amp; Batch</th>
                   <th className="p-3 text-right">Received vs Accepted</th>
-                  <th className="p-3">QC Status</th>
+                  <th className="p-3">Receipt Status</th>
                   <th className="p-3 text-right">Inventory Entry</th>
                   <th className="p-3 text-center">Actions</th>
                 </tr>
@@ -489,7 +489,7 @@ export const PurchaseModule: React.FC = () => {
                     </td>
                     <td className="p-3">
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase">
-                        {g.qcStatus}
+                        Verified
                       </span>
                     </td>
                     <td className="p-3 text-right">
@@ -563,7 +563,7 @@ export const PurchaseModule: React.FC = () => {
                     {isManualGRN ? 'Add Goods Receipt Note (GRN)' : `Create Goods Receipt Note (GRN) for ${selectedPO?.poNumber}`}
                   </h3>
                   <p className="text-[11px] text-neutral-500">
-                    {isManualGRN ? 'Manual GRN Entry · Direct Delivery Receipt' : 'Weighbridge verification & incoming QC acceptance'}
+                    {isManualGRN ? 'Manual GRN Entry · Direct Delivery Receipt' : 'Weighbridge verification & incoming goods receipt'}
                   </p>
                 </div>
               </div>
@@ -941,14 +941,14 @@ export const PurchaseModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">QC Status</label>
+                <label className="block text-neutral-700 font-medium mb-1">Receipt Status</label>
                 <select
                   value={editGRNQCStatus}
                   onChange={(e) => setEditGRNQCStatus(e.target.value as any)}
                   className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
                 >
-                  <option value="Approved">Approved</option>
-                  <option value="Pending QC">Pending QC</option>
+                  <option value="Approved">Verified</option>
+                  <option value="Pending QC">Pending Verification</option>
                   <option value="Rejected">Rejected</option>
                 </select>
               </div>

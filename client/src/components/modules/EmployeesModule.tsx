@@ -133,7 +133,7 @@ export const EmployeesModule: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            Plant management across 7 departments: Production, Sales, Purchase, Quality Lab, Accounts, and Dispatch.
+            Plant management across departments: Production, Sales, Purchase, Warehouse, Accounts, and Dispatch.
           </p>
         </div>
 
