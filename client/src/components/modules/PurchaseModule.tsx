@@ -37,7 +37,10 @@ export const PurchaseModule: React.FC = () => {
 
   // GRN Creation State
   const [showGRNModal, setShowGRNModal] = useState(false);
+  const [isManualGRN, setIsManualGRN] = useState(false);
   const [selectedPO, setSelectedPO] = useState<any | null>(null);
+  const [manualSupplierId, setManualSupplierId] = useState('');
+  const [manualMaterialId, setManualMaterialId] = useState('');
   const [receivedQty, setReceivedQty] = useState(50);
   const [acceptedQty, setAcceptedQty] = useState(49.5);
   const [vehicleNo, setVehicleNo] = useState('GJ-12-BW-9901');
@@ -80,6 +83,7 @@ export const PurchaseModule: React.FC = () => {
   );
 
   const handleCreateGRN = (po: any) => {
+    setIsManualGRN(false);
     setSelectedPO(po);
     setReceivedQty(po.quantity);
     setAcceptedQty(po.quantity);
@@ -89,28 +93,12 @@ export const PurchaseModule: React.FC = () => {
   };
 
   const handleOpenAddGRN = () => {
-    const openPO = purchaseOrders.find(po => po.status === 'Issued' || po.status === 'Approved' || po.status === 'Partial GRN') 
-      || purchaseOrders.find(po => po.status !== 'GRN Completed') 
-      || purchaseOrders[0];
-
-    if (openPO) {
-      setSelectedPO(openPO);
-      setReceivedQty(openPO.quantity);
-      setAcceptedQty(openPO.quantity);
-    } else {
-      setSelectedPO({
-        id: 'direct',
-        poNumber: 'PO-DIRECT',
-        supplierId: suppliers[0]?.id || '',
-        supplierName: suppliers[0]?.supplierName || 'Primary Supplier',
-        materialId: rawMaterials[0]?.id || '',
-        materialName: rawMaterials[0]?.materialName || 'Raw Material',
-        quantity: 50,
-        unit: 'MT'
-      });
-      setReceivedQty(50);
-      setAcceptedQty(50);
-    }
+    setIsManualGRN(true);
+    setSelectedPO(null);
+    setManualSupplierId(suppliers[0]?.id || '');
+    setManualMaterialId(rawMaterials[0]?.id || '');
+    setReceivedQty(50);
+    setAcceptedQty(50);
     setVehicleNo('GJ-12-BW-9901');
     setSupplierBatch(`MINE-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(10 + Math.random() * 90)}`);
     setShowGRNModal(true);
@@ -118,34 +106,60 @@ export const PurchaseModule: React.FC = () => {
 
   const submitGRN = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPO) return;
 
-    addGRN({
-      poNumber: selectedPO.poNumber,
-      poId: selectedPO.id,
-      supplierId: selectedPO.supplierId,
-      supplierName: selectedPO.supplierName,
-      materialId: selectedPO.materialId,
-      materialName: selectedPO.materialName,
-      orderedQuantity: selectedPO.quantity,
-      receivedQuantity: Number(receivedQty),
-      acceptedQuantity: Number(acceptedQty),
-      rejectedQuantity: Math.max(0, Number(receivedQty) - Number(acceptedQty)),
-      unit: selectedPO.unit || 'MT',
-      supplierBatchNumber: supplierBatch || 'MINE-BATCH-01',
-      internalLotNumber: `LOT-${(selectedPO.materialName || 'RAW').substring(0, 3).toUpperCase()}-2609-${Math.floor(10 + Math.random() * 90)}`,
-      manufacturingDate: new Date().toISOString().split('T')[0],
-      vehicleNumber: vehicleNo || 'GJ-12-BW-1234',
-      weightReceiptMT: Number(receivedQty),
-      date: new Date().toISOString().split('T')[0],
-      remarks: 'Goods received at factory weighbridge and accepted into raw stores.'
-    });
+    if (isManualGRN) {
+      const sup = suppliers.find(s => s.id === manualSupplierId) || suppliers[0];
+      const mat = rawMaterials.find(rm => rm.id === manualMaterialId) || rawMaterials[0];
 
-    if (selectedPO.id && selectedPO.id !== 'direct') {
-      updatePurchaseOrder(selectedPO.id, { status: 'GRN Completed' });
+      addGRN({
+        poNumber: '-',
+        poId: '',
+        supplierId: sup?.id || 'manual-sup',
+        supplierName: sup?.supplierName || 'Direct Supplier',
+        materialId: mat?.id || 'manual-mat',
+        materialName: mat?.materialName || 'Raw Material',
+        orderedQuantity: Number(receivedQty),
+        receivedQuantity: Number(receivedQty),
+        acceptedQuantity: Number(acceptedQty),
+        rejectedQuantity: Math.max(0, Number(receivedQty) - Number(acceptedQty)),
+        unit: mat?.unit || 'MT',
+        supplierBatchNumber: supplierBatch || 'MINE-BATCH-01',
+        internalLotNumber: `LOT-${(mat?.materialName || 'RAW').substring(0, 3).toUpperCase()}-2609-${Math.floor(10 + Math.random() * 90)}`,
+        manufacturingDate: new Date().toISOString().split('T')[0],
+        vehicleNumber: vehicleNo || 'GJ-12-BW-1234',
+        weightReceiptMT: Number(receivedQty),
+        date: new Date().toISOString().split('T')[0],
+        remarks: 'Manual Goods Receipt Note entered directly without PO.'
+      });
+    } else if (selectedPO) {
+      addGRN({
+        poNumber: selectedPO.poNumber,
+        poId: selectedPO.id,
+        supplierId: selectedPO.supplierId,
+        supplierName: selectedPO.supplierName,
+        materialId: selectedPO.materialId,
+        materialName: selectedPO.materialName,
+        orderedQuantity: selectedPO.quantity,
+        receivedQuantity: Number(receivedQty),
+        acceptedQuantity: Number(acceptedQty),
+        rejectedQuantity: Math.max(0, Number(receivedQty) - Number(acceptedQty)),
+        unit: selectedPO.unit || 'MT',
+        supplierBatchNumber: supplierBatch || 'MINE-BATCH-01',
+        internalLotNumber: `LOT-${(selectedPO.materialName || 'RAW').substring(0, 3).toUpperCase()}-2609-${Math.floor(10 + Math.random() * 90)}`,
+        manufacturingDate: new Date().toISOString().split('T')[0],
+        vehicleNumber: vehicleNo || 'GJ-12-BW-1234',
+        weightReceiptMT: Number(receivedQty),
+        date: new Date().toISOString().split('T')[0],
+        remarks: 'Goods received at factory weighbridge and accepted into raw stores.'
+      });
+
+      if (selectedPO.id && selectedPO.id !== 'direct') {
+        updatePurchaseOrder(selectedPO.id, { status: 'GRN Completed' });
+      }
     }
 
     setSelectedPO(null);
+    setIsManualGRN(false);
     setReceivedQty(0);
     setAcceptedQty(0);
     setVehicleNo('');
@@ -231,6 +245,7 @@ export const PurchaseModule: React.FC = () => {
         if (showGRNModal) {
           setShowGRNModal(false);
           setSelectedPO(null);
+          setIsManualGRN(false);
         }
         if (editingPO) setEditingPO(null);
         if (editingGRN) setEditingGRN(null);
@@ -445,7 +460,13 @@ export const PurchaseModule: React.FC = () => {
                       <div className="font-mono font-bold text-neutral-900">{g.grnNumber}</div>
                       <div className="text-[11px] text-neutral-400">{g.date}</div>
                     </td>
-                    <td className="p-3 font-mono text-neutral-700">{g.poNumber}</td>
+                    <td className="p-3 font-mono text-neutral-700">
+                      {!g.poNumber || g.poNumber === '-' || g.poNumber === 'NA' || g.poNumber === 'PO-DIRECT' ? (
+                        <span className="text-neutral-400 font-semibold">-</span>
+                      ) : (
+                        g.poNumber
+                      )}
+                    </td>
                     <td className="p-3">
                       <div className="font-semibold text-neutral-900">{g.supplierName}</div>
                       <div className="text-[11px] text-neutral-500 font-mono">Truck: {g.vehicleNumber}</div>
@@ -517,10 +538,10 @@ export const PurchaseModule: React.FC = () => {
         </div>
       )}
 
-      {/* CREATE GRN MODAL */}
-      {showGRNModal && selectedPO && (
+      {/* CREATE / ADD GRN MODAL */}
+      {showGRNModal && (isManualGRN || selectedPO) && (
         <div
-          onClick={(e) => { if (e.target === e.currentTarget) { setShowGRNModal(false); setSelectedPO(null); } }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowGRNModal(false); setSelectedPO(null); setIsManualGRN(false); } }}
           className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
         >
           <div
@@ -534,16 +555,16 @@ export const PurchaseModule: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-neutral-900">
-                    Record Goods Receipt Note (GRN)
+                    {isManualGRN ? 'Add Goods Receipt Note (GRN)' : `Create Goods Receipt Note (GRN) for ${selectedPO?.poNumber}`}
                   </h3>
                   <p className="text-[11px] text-neutral-500">
-                    Weighbridge verification &amp; incoming QC acceptance
+                    {isManualGRN ? 'Manual GRN Entry · Direct Delivery Receipt' : 'Weighbridge verification & incoming QC acceptance'}
                   </p>
                 </div>
               </div>
               <button 
                 type="button"
-                onClick={() => { setShowGRNModal(false); setSelectedPO(null); }}
+                onClick={() => { setShowGRNModal(false); setSelectedPO(null); setIsManualGRN(false); }}
                 className="text-neutral-400 hover:text-neutral-600 cursor-pointer p-1 rounded-md hover:bg-neutral-100 transition-colors"
                 title="Close (Esc)"
               >
@@ -552,65 +573,67 @@ export const PurchaseModule: React.FC = () => {
             </div>
 
             <form onSubmit={submitGRN} className="space-y-3.5">
-              {/* PO Selection */}
-              <div>
-                <label className="block text-neutral-700 font-semibold mb-1">
-                  Purchase Order (PO) Reference
-                </label>
-                {purchaseOrders.length > 0 ? (
-                  <select
-                    value={selectedPO.id}
-                    onChange={(e) => {
-                      const po = purchaseOrders.find(p => p.id === e.target.value);
-                      if (po) {
-                        setSelectedPO(po);
-                        setReceivedQty(po.quantity);
-                        setAcceptedQty(po.quantity);
-                      }
-                    }}
-                    className="w-full border border-neutral-300 rounded-lg p-2 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  >
-                    {purchaseOrders.map(po => (
-                      <option key={po.id} value={po.id}>
-                        {po.poNumber} — {po.supplierName} ({po.materialName}, {po.quantity} {po.unit}) {po.status === 'GRN Completed' ? '✓ (Completed)' : `[${po.status}]`}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={selectedPO.poNumber}
-                    disabled
-                    className="w-full border border-neutral-200 rounded-lg p-2 text-xs bg-neutral-50 text-neutral-500"
-                  />
-                )}
-              </div>
-
-              {/* PO Summary Card */}
-              <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-2.5 text-[11px] grid grid-cols-3 gap-2">
-                <div>
-                  <span className="text-neutral-500 block text-[10px] uppercase font-semibold">Supplier</span>
-                  <span className="font-semibold text-neutral-900 truncate block" title={selectedPO.supplierName}>
-                    {selectedPO.supplierName}
-                  </span>
+              {isManualGRN ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-neutral-700 font-semibold mb-1">
+                      Supplier
+                    </label>
+                    <select
+                      value={manualSupplierId}
+                      onChange={(e) => setManualSupplierId(e.target.value)}
+                      required
+                      className="w-full border border-neutral-300 rounded-lg p-2 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    >
+                      {suppliers.map(s => (
+                        <option key={s.id} value={s.id}>{s.supplierName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-neutral-700 font-semibold mb-1">
+                      Raw Material
+                    </label>
+                    <select
+                      value={manualMaterialId}
+                      onChange={(e) => setManualMaterialId(e.target.value)}
+                      required
+                      className="w-full border border-neutral-300 rounded-lg p-2 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    >
+                      {rawMaterials.map(rm => (
+                        <option key={rm.id} value={rm.id}>{rm.materialName} ({rm.unit})</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-neutral-500 block text-[10px] uppercase font-semibold">Material</span>
-                  <span className="font-semibold text-neutral-900 truncate block" title={selectedPO.materialName}>
-                    {selectedPO.materialName}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-neutral-500 block text-[10px] uppercase font-semibold">Ordered Qty</span>
-                  <span className="font-semibold text-neutral-900 font-mono">
-                    {selectedPO.quantity} {selectedPO.unit}
-                  </span>
-                </div>
-              </div>
+              ) : (
+                selectedPO && (
+                  <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-2.5 text-[11px] grid grid-cols-3 gap-2">
+                    <div>
+                      <span className="text-neutral-500 block text-[10px] uppercase font-semibold">PO Reference</span>
+                      <span className="font-mono font-bold text-neutral-900">{selectedPO.poNumber}</span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[10px] uppercase font-semibold">Supplier</span>
+                      <span className="font-semibold text-neutral-900 truncate block" title={selectedPO.supplierName}>
+                        {selectedPO.supplierName}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[10px] uppercase font-semibold">Material</span>
+                      <span className="font-semibold text-neutral-900 truncate block" title={selectedPO.materialName}>
+                        {selectedPO.materialName}
+                      </span>
+                    </div>
+                  </div>
+                )
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Weighbridge Received Qty ({selectedPO.unit})</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Weighbridge Received Qty ({isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')})
+                  </label>
                   <input
                     type="number"
                     step="0.1"
@@ -626,7 +649,9 @@ export const PurchaseModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">QC Accepted Qty ({selectedPO.unit})</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    QC Accepted Qty ({isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')})
+                  </label>
                   <input
                     type="number"
                     step="0.1"
@@ -668,7 +693,9 @@ export const PurchaseModule: React.FC = () => {
               {Number(receivedQty) > Number(acceptedQty) && (
                 <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-800 flex items-center justify-between">
                   <span>Rejected Quantity:</span>
-                  <strong className="font-mono">{Number(receivedQty) - Number(acceptedQty)} {selectedPO.unit}</strong>
+                  <strong className="font-mono">
+                    {Number(receivedQty) - Number(acceptedQty)} {isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')}
+                  </strong>
                 </div>
               )}
 
@@ -679,7 +706,7 @@ export const PurchaseModule: React.FC = () => {
               <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200">
                 <button
                   type="button"
-                  onClick={() => { setShowGRNModal(false); setSelectedPO(null); }}
+                  onClick={() => { setShowGRNModal(false); setSelectedPO(null); setIsManualGRN(false); }}
                   className="px-3.5 py-1.5 border border-neutral-300 rounded-lg text-neutral-700 hover:bg-neutral-50 cursor-pointer font-medium"
                 >
                   Cancel
