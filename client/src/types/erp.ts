@@ -89,7 +89,7 @@ export interface Supplier {
   supplierName: string;
   contactPerson: string;
   mobile: string;
-  email: string;
+  email?: string;
   address: string;
   gstin: string;
   materialSupplied: string[];

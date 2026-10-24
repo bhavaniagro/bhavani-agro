@@ -46,7 +46,6 @@ export const SuppliersModule: React.FC = () => {
     supplierName: '',
     contactPerson: '',
     mobile: '',
-    email: '',
     address: '',
     gstin: '',
     materialSupplied: '',
@@ -62,7 +61,6 @@ export const SuppliersModule: React.FC = () => {
       supplierName: '',
       contactPerson: '',
       mobile: '',
-      email: '',
       address: '',
       gstin: '',
       materialSupplied: '',
@@ -191,7 +189,7 @@ export const SuppliersModule: React.FC = () => {
                     {activeSupplier.supplierName}
                   </h2>
                   <div className="text-[11px] text-neutral-500">
-                    {activeSupplier.contactPerson} · {activeSupplier.mobile} · {activeSupplier.email}
+                    {activeSupplier.contactPerson} · {activeSupplier.mobile}{activeSupplier.email ? ` · ${activeSupplier.email}` : ''}
                   </div>
                 </div>
 
@@ -330,7 +328,6 @@ export const SuppliersModule: React.FC = () => {
                     supplierName: newSupp.supplierName,
                     contactPerson: newSupp.contactPerson,
                     mobile: newSupp.mobile,
-                    email: newSupp.email,
                     address: newSupp.address,
                     gstin: newSupp.gstin,
                     materialSupplied: [newSupp.materialSupplied],
@@ -342,20 +339,7 @@ export const SuppliersModule: React.FC = () => {
                     rating: 5
                   });
                   setIsAddOpen(false);
-                  setNewSupp({
-                    supplierName: '',
-                    contactPerson: '',
-                    mobile: '',
-                    email: '',
-                    address: '',
-                    gstin: '',
-                    materialSupplied: '',
-                    paymentTerms: 'Net 30 Days',
-                    creditPeriodDays: 30,
-                    bankName: '',
-                    accountNo: '',
-                    ifscCode: ''
-                  });
+                  resetSuppForm();
                 } finally {
                   setIsSubmitting(false);
                 }
@@ -397,18 +381,6 @@ export const SuppliersModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={newSupp.email}
-                    onChange={(e) => setNewSupp({ ...newSupp, email: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">GSTIN</label>
                   <input
                     type="text"
@@ -417,31 +389,32 @@ export const SuppliersModule: React.FC = () => {
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono uppercase"
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Material Supplied</label>
-                  {rawMaterials.length > 0 ? (
-                    <select
-                      value={newSupp.materialSupplied}
-                      onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
-                      className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                    >
-                      <option value="">Select Raw Material</option>
-                      {rawMaterials.map((rm) => (
-                        <option key={rm.id} value={rm.materialName}>
-                          {rm.materialName} ({rm.category})
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      placeholder="e.g. Bentonite Ore"
-                      value={newSupp.materialSupplied}
-                      onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
-                      className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                    />
-                  )}
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Material Supplied</label>
+                {rawMaterials.length > 0 ? (
+                  <select
+                    value={newSupp.materialSupplied}
+                    onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  >
+                    <option value="">Select Raw Material</option>
+                    {rawMaterials.map((rm) => (
+                      <option key={rm.id} value={rm.materialName}>
+                        {rm.materialName} ({rm.category})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="e.g. Bentonite Ore"
+                    value={newSupp.materialSupplied}
+                    onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -562,18 +535,6 @@ export const SuppliersModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={editingSupplier.email}
-                    onChange={(e) => setEditingSupplier({ ...editingSupplier, email: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">GSTIN</label>
                   <input
                     type="text"
@@ -582,15 +543,16 @@ export const SuppliersModule: React.FC = () => {
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono uppercase"
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Credit Days</label>
-                  <input
-                    type="number"
-                    value={editingSupplier.creditPeriodDays}
-                    onChange={(e) => setEditingSupplier({ ...editingSupplier, creditPeriodDays: Number(e.target.value) })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Credit Days</label>
+                <input
+                  type="number"
+                  value={editingSupplier.creditPeriodDays}
+                  onChange={(e) => setEditingSupplier({ ...editingSupplier, creditPeriodDays: Number(e.target.value) })}
+                  className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                />
               </div>
 
               <div className="grid grid-cols-3 gap-3">
