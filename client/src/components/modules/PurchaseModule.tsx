@@ -655,7 +655,7 @@ export const PurchaseModule: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">
-                    QC Accepted Qty ({isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')})
+                    Ordered Quantity ({isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')})
                   </label>
                   <input
                     type="number"

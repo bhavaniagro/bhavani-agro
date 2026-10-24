@@ -689,43 +689,66 @@ export const ProductionModule: React.FC = () => {
             </p>
 
             <form onSubmit={submitProductionEntry} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Finished Goods Output (MT)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={entryOutputMT}
-                    onChange={(e) => setEntryOutputMT(Number(e.target.value))}
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Process Loss / Dust (MT)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={entryLossMT}
-                    onChange={(e) => setEntryLossMT(Number(e.target.value))}
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
-              </div>
+              {(() => {
+                const totalFeed = Number(entryOutputMT || 0) + Number(entryLossMT || 0);
+                const yieldPercent = totalFeed > 0 ? ((Number(entryOutputMT || 0) / totalFeed) * 100).toFixed(1) : '0.0';
+                const lossPercent = totalFeed > 0 ? ((Number(entryLossMT || 0) / totalFeed) * 100).toFixed(1) : '0.0';
+                const efficiencyPercent = selectedOrder?.targetQuantityMT > 0 ? ((Number(entryOutputMT || 0) / selectedOrder.targetQuantityMT) * 100).toFixed(1) : '0.0';
 
-              <div className="p-3 bg-neutral-50 border border-neutral-200 rounded space-y-1 text-[11px]">
-                <div className="flex justify-between">
-                  <span className="text-neutral-600">Calculated Yield %:</span>
-                  <span className="font-mono font-bold text-emerald-700">
-                    {((entryOutputMT / (entryOutputMT + entryLossMT)) * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-600">Production Efficiency:</span>
-                  <span className="font-mono font-bold text-neutral-900">
-                    {((entryOutputMT / selectedOrder.targetQuantityMT) * 100).toFixed(1)}%
-                  </span>
-                </div>
-              </div>
+                return (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-neutral-700 font-medium mb-1">Finished Goods Output (MT)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          value={entryOutputMT}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setEntryOutputMT(val);
+                            setEntryLossMT(Number((val * 0.02).toFixed(2)));
+                          }}
+                          className="w-full border border-neutral-300 rounded p-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-neutral-700 font-medium mb-1">Process Loss / Dust (MT)</label>
+                        <input
+                          type="text"
+                          disabled
+                          readOnly
+                          value={entryLossMT}
+                          className="w-full border border-neutral-200 rounded p-2 bg-neutral-100 text-neutral-600 cursor-not-allowed select-none"
+                          title="Auto-calculated from Output (non-editable)"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-neutral-50 border border-neutral-200 rounded space-y-1.5 text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-neutral-600">Calculated Yield %:</span>
+                        <span className="font-mono font-bold text-emerald-700">
+                          {yieldPercent}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-600">Process Loss / Dust %:</span>
+                        <span className="font-mono font-bold text-amber-700">
+                          {lossPercent}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-600">Production Efficiency:</span>
+                        <span className="font-mono font-bold text-neutral-900">
+                          {efficiencyPercent}%
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-800">
                 <strong>Automation Note:</strong> Submitting will generate a new Production Batch and update finished goods inventory automatically.

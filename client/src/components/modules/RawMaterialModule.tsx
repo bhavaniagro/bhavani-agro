@@ -155,7 +155,7 @@ export const RawMaterialModule: React.FC = () => {
             )}
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            <strong>Stock Formula:</strong> Opening Stock + Purchases + Production Returns − Consumption − Issues = Current Stock
+            Stock ledger tracking opening stock, purchases, production consumption, and current available balance.
           </p>
         </div>
 
@@ -189,9 +189,9 @@ export const RawMaterialModule: React.FC = () => {
                 <th className="p-3">Material &amp; SKU</th>
                 <th className="p-3">Category &amp; Location</th>
                 <th className="p-3 text-right">Opening Stock</th>
-                <th className="p-3 text-right">+ Purchases</th>
-                <th className="p-3 text-right">− Consumed</th>
-                <th className="p-3 text-right font-bold text-neutral-900">= Current Stock</th>
+                <th className="p-3 text-right">Purchases</th>
+                <th className="p-3 text-right">Consumed</th>
+                <th className="p-3 text-right font-bold text-neutral-900">Current Stock</th>
                 <th className="p-3 text-right">Reserved</th>
                 <th className="p-3 text-right">Avail. to Use</th>
                 <th className="p-3">Reorder Alert</th>
@@ -217,10 +217,10 @@ export const RawMaterialModule: React.FC = () => {
                       {rm.openingStock} {rm.unit}
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums text-emerald-700">
-                      +{rm.totalPurchases} {rm.unit}
+                      {rm.totalPurchases} {rm.unit}
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums text-neutral-600">
-                      −{rm.totalConsumption} {rm.unit}
+                      {rm.totalConsumption} {rm.unit}
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums font-bold text-sm text-neutral-900">
                       {rm.currentStock} {rm.unit}

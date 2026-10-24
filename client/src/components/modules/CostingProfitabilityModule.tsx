@@ -66,7 +66,7 @@ export const CostingProfitabilityModule: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            <strong>Manufacturing Formula:</strong> Raw Material Cost + Labour + Electricity + Packaging + Overheads = Cost / MT &amp; Cost / 50kg Bag.
+            Unit economics tracking raw material, labour, electricity, packaging, and overhead costs per MT and 50kg bag.
           </p>
         </div>
       </ModuleHeader>

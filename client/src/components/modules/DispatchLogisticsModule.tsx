@@ -237,9 +237,10 @@ export const DispatchLogisticsModule: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveModule('CRM & Sales')}
-            className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
+            className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
           >
-            + Dispatch from Sales Order
+            <Plus className="w-3.5 h-3.5" />
+            <span>Dispatch from Sales Order</span>
           </button>
         </div>
       </ModuleHeader>
@@ -320,7 +321,7 @@ export const DispatchLogisticsModule: React.FC = () => {
                           onClick={() => generateInvoiceFromDispatch(d.id)}
                           className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold cursor-pointer shadow-2xs"
                         >
-                          + Generate GST Invoice
+                          Generate GST Invoice
                         </button>
                       ) : (
                         <span className="text-[11px] font-mono text-emerald-800 font-semibold">
