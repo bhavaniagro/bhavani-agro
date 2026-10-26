@@ -21,6 +21,7 @@ import {
   PaymentTransaction,
   ExpenseRecord,
   Machinery,
+  MachineStatusHistory,
   Employee,
   ErpDocument,
   ErpAlert,
@@ -177,6 +178,10 @@ import {
   deleteMachineryFromApi,
 } from "../services/api/machineryApi.service";
 import {
+  fetchMachineHistoryFromApi,
+  createMachineHistoryInApi,
+} from "../services/api/machineHistoryApi.service";
+import {
   fetchDocumentsFromApi,
   createDocumentInApi,
   updateDocumentInApi,
@@ -308,6 +313,7 @@ interface ERPContextType {
   payments: PaymentTransaction[];
   expenses: ExpenseRecord[];
   machinery: Machinery[];
+  machineHistory: MachineStatusHistory[];
   employees: Employee[];
   documents: ErpDocument[];
   alerts: ErpAlert[];
@@ -399,6 +405,7 @@ interface ERPContextType {
   addMachinery: (machinery: Omit<Machinery, 'id'>) => Promise<void>;
   updateMachinery: (id: string, data: Partial<Machinery>) => Promise<void>;
   deleteMachinery: (id: string) => Promise<void>;
+  addMachineHistory: (history: Omit<MachineStatusHistory, 'id'>) => Promise<void>;
   addDocument: (document: Omit<ErpDocument, 'id'>) => Promise<void>;
   updateDocument: (id: string, data: Partial<ErpDocument>) => Promise<void>;
   deleteDocument: (id: string) => Promise<void>;
@@ -517,6 +524,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [payments, setPayments] = useState<PaymentTransaction[]>(() => loadCached('payments', []));
   const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => loadCached('expenses', sortByLatest(initialExpenses)));
   const [machinery, setMachinery] = useState<Machinery[]>(() => loadCached('machinery', sortByLatest(initialMachinery)));
+  const [machineHistory, setMachineHistory] = useState<MachineStatusHistory[]>(() => loadCached('machineHistory', []));
   const [employees, setEmployees] = useState<Employee[]>(() => loadCached('employees', sortByLatest(initialEmployees)));
   const [documents, setDocuments] = useState<ErpDocument[]>(() => loadCached('documents', sortByLatest(initialDocuments)));
   const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadCached('alerts', sortByLatest(initialAlerts)));
@@ -543,6 +551,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => { saveCached('expenses', expenses); }, [expenses]);
   useEffect(() => { saveCached('employees', employees); }, [employees]);
   useEffect(() => { saveCached('machinery', machinery); }, [machinery]);
+  useEffect(() => { saveCached('machineHistory', machineHistory); }, [machineHistory]);
   useEffect(() => { saveCached('documents', documents); }, [documents]);
   useEffect(() => { saveCached('company', company); }, [company]);
 
@@ -574,7 +583,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const [
         custs, lds, supps, rms, prods, sos, pos, grnList, qcs, pOrders, pBatches, bomsList,
-        movs, disps, vehs, invs, pmts, exps, emps, machs, docs, comp
+        movs, disps, vehs, invs, pmts, exps, emps, machs, machHist, docs, comp
       ] = await Promise.allSettled([
         getCustomersFromApi(since),
         getLeadsFromApi(since),
@@ -596,6 +605,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         fetchExpensesFromApi(since),
         fetchEmployeesFromApi(since),
         fetchMachineryFromApi(since),
+        fetchMachineHistoryFromApi(),
         fetchDocumentsFromApi(since),
         fetchCompanyProfileFromApi(),
       ]);
@@ -629,6 +639,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (exps.status === 'fulfilled' && exps.value && exps.value.length > 0) setExpenses(prev => mergeDelta(prev, exps.value));
         if (emps.status === 'fulfilled' && emps.value && emps.value.length > 0) setEmployees(prev => mergeDelta(prev, emps.value));
         if (machs.status === 'fulfilled' && machs.value && machs.value.length > 0) setMachinery(prev => mergeDelta(prev, machs.value));
+        if (machHist.status === 'fulfilled' && machHist.value && machHist.value.length > 0) setMachineHistory(machHist.value);
         if (docs.status === 'fulfilled' && docs.value && docs.value.length > 0) setDocuments(prev => mergeDelta(prev, docs.value));
         if (comp.status === 'fulfilled' && comp.value) setCompany(comp.value);
       } else {
@@ -660,6 +671,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (exps.status === 'fulfilled' && exps.value) setExpenses(sortByLatest(exps.value));
         if (emps.status === 'fulfilled' && emps.value) setEmployees(sortByLatest(emps.value));
         if (machs.status === 'fulfilled' && machs.value) setMachinery(sortByLatest(machs.value));
+        if (machHist.status === 'fulfilled' && machHist.value) setMachineHistory(machHist.value);
         if (docs.status === 'fulfilled' && docs.value) setDocuments(sortByLatest(docs.value));
         if (comp.status === 'fulfilled' && comp.value) setCompany(comp.value);
       }
@@ -1949,8 +1961,36 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const addMachineHistory = async (histData: Omit<MachineStatusHistory, 'id'>) => {
+    try {
+      const tempId = `mhist-${Date.now()}`;
+      const newHist: MachineStatusHistory = { ...histData, id: tempId };
+      setMachineHistory(prev => [newHist, ...prev]);
+      const created = await createMachineHistoryInApi(histData);
+      if (created) {
+        setMachineHistory(prev => prev.map(h => h.id === tempId ? created : h));
+      }
+    } catch (err) {
+      console.error("Failed to save machine history:", err);
+    }
+  };
+
   const updateMachinery = async (id: string, data: Partial<Machinery>) => {
     try {
+      // Record history if status changed
+      if (data.currentStatus) {
+        const existing = machinery.find(m => m.id === id);
+        if (existing && existing.currentStatus !== data.currentStatus) {
+          await addMachineHistory({
+            machineId: id,
+            machineCode: existing.machineCode,
+            machineName: existing.machineName,
+            previousStatus: existing.currentStatus,
+            newStatus: data.currentStatus,
+            changedAt: new Date().toISOString(),
+          });
+        }
+      }
       setMachinery(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
       await updateMachineryInApi(id, data);
       showToast("Machinery record updated successfully", "success");
@@ -2452,6 +2492,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addMachinery,
         updateMachinery,
         deleteMachinery,
+        addMachineHistory,
+        machineHistory,
         addDocument,
         updateDocument,
         deleteDocument,

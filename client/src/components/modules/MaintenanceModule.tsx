@@ -1,14 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, AlertTriangle, CheckCircle2, Clock, Calendar, Plus, Edit, Trash2 } from 'lucide-react';
+import { Wrench, AlertTriangle, CheckCircle2, Clock, Calendar, Plus, Edit, Trash2, History, Cpu } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Machinery } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
 import { sortByLatest } from '../../utils/sortUtils';
 
+type ActiveTab = 'machines' | 'history';
+
+const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string; icon: React.ReactNode }> = {
+  'Operational': {
+    bg: 'bg-emerald-100', text: 'text-emerald-800', dot: 'bg-emerald-500',
+    icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+  },
+  'Under Maintenance': {
+    bg: 'bg-amber-100', text: 'text-amber-800', dot: 'bg-amber-500',
+    icon: <Wrench className="w-3.5 h-3.5" />,
+  },
+  'Breakdown': {
+    bg: 'bg-rose-100', text: 'text-rose-800', dot: 'bg-rose-500',
+    icon: <AlertTriangle className="w-3.5 h-3.5" />,
+  },
+  'Standby': {
+    bg: 'bg-slate-100', text: 'text-slate-700', dot: 'bg-slate-400',
+    icon: <Clock className="w-3.5 h-3.5" />,
+  },
+};
+
+function getStatusConfig(status: string) {
+  return STATUS_CONFIG[status] ?? { bg: 'bg-neutral-100', text: 'text-neutral-700', dot: 'bg-neutral-400', icon: null };
+}
+
+function formatDateTime(iso: string) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
+    });
+  } catch {
+    return iso;
+  }
+}
+
 export const MaintenanceModule: React.FC = () => {
-  const { machinery, addMachinery, updateMachinery, deleteMachinery } = useERP();
-  
+  const { machinery, machineHistory, addMachinery, updateMachinery, deleteMachinery } = useERP();
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>('machines');
+
   // Modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingMachine, setEditingMachine] = useState<Machinery | null>(null);
@@ -84,6 +123,11 @@ export const MaintenanceModule: React.FC = () => {
     await deleteMachinery(id);
   };
 
+  // Sort history newest first
+  const sortedHistory = [...machineHistory].sort((a, b) =>
+    new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -102,83 +146,188 @@ export const MaintenanceModule: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            resetMachineForm();
-            setShowAddModal(true);
-          }}
-          className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap self-start md:self-auto"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Add Machine</span>
-        </button>
+        {activeTab === 'machines' && (
+          <button
+            onClick={() => {
+              resetMachineForm();
+              setShowAddModal(true);
+            }}
+            className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap self-start md:self-auto"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Machine</span>
+          </button>
+        )}
       </ModuleHeader>
 
-      {/* Machinery Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {sortByLatest(machinery).map(m => (
-          <div key={m.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-3 shadow-2xs">
-            <div className="flex items-start justify-between border-b border-neutral-100 pb-2">
-              <div>
-                <span className="font-mono text-emerald-800 font-bold">{m.machineCode}</span>
-                <h3 className="font-bold text-neutral-900 text-sm mt-0.5">{m.machineName}</h3>
-                <div className="text-[11px] text-neutral-500">{m.department} Section · Rating: {m.capacityRating}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
-                  m.currentStatus === 'Operational' ? 'bg-emerald-100 text-emerald-800' :
-                  m.currentStatus === 'Under Maintenance' ? 'bg-amber-100 text-amber-800' :
-                  'bg-rose-100 text-rose-800'
-                }`}>
-                  {m.currentStatus}
-                </span>
-                <button
-                  onClick={() => setEditingMachine(m)}
-                  className="p-1 hover:bg-neutral-100 rounded text-neutral-600 cursor-pointer"
-                  title="Edit Machine"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setDeletingMachineId(m.id)}
-                  className="p-1 hover:bg-rose-50 rounded text-rose-600 cursor-pointer"
-                  title="Delete Machine"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <div>
-                <span className="text-neutral-500">Installation Date:</span>
-                <div className="font-medium text-neutral-900">{m.installationDate}</div>
-              </div>
-              <div>
-                <span className="text-neutral-500">Service Frequency:</span>
-                <div className="font-medium text-neutral-900">Every {m.maintenanceFrequencyDays} Days</div>
-              </div>
-              <div>
-                <span className="text-neutral-500">Last Serviced:</span>
-                <div className="font-mono font-medium text-neutral-800">{m.lastMaintenanceDate}</div>
-              </div>
-              <div>
-                <span className="text-neutral-500">Next Due Date:</span>
-                <div className="font-mono font-bold text-amber-800">{m.nextMaintenanceDate}</div>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-[11px]">
-              <div className="text-neutral-500">
-                Breakdowns this year: <span className="font-mono font-bold text-neutral-900">{m.breakdownCountThisYear}</span>
-              </div>
-              <div className="text-neutral-700 font-mono">
-                Maintenance Cost: <span className="font-bold text-neutral-900">₹{m.totalMaintenanceCostThisYear.toLocaleString('en-IN')}</span>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Tab Toggle */}
+      <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg w-fit border border-neutral-200 shadow-xs">
+        <button
+          onClick={() => setActiveTab('machines')}
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 cursor-pointer ${
+            activeTab === 'machines'
+              ? 'bg-white text-neutral-900 shadow-sm border border-neutral-200'
+              : 'text-neutral-500 hover:text-neutral-700'
+          }`}
+        >
+          <Cpu className="w-3.5 h-3.5" />
+          Machine
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 cursor-pointer ${
+            activeTab === 'history'
+              ? 'bg-white text-neutral-900 shadow-sm border border-neutral-200'
+              : 'text-neutral-500 hover:text-neutral-700'
+          }`}
+        >
+          <History className="w-3.5 h-3.5" />
+          History
+          {sortedHistory.length > 0 && (
+            <span className="ml-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-bold px-1">
+              {sortedHistory.length}
+            </span>
+          )}
+        </button>
       </div>
+
+      {/* MACHINES TAB */}
+      {activeTab === 'machines' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {sortByLatest(machinery).map(m => {
+            const cfg = getStatusConfig(m.currentStatus);
+            return (
+              <div key={m.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-3 shadow-2xs hover:shadow-sm transition-shadow">
+                <div className="flex items-start justify-between border-b border-neutral-100 pb-2">
+                  <div>
+                    <span className="font-mono text-emerald-800 font-bold">{m.machineCode}</span>
+                    <h3 className="font-bold text-neutral-900 text-sm mt-0.5">{m.machineName}</h3>
+                    <div className="text-[11px] text-neutral-500">{m.department} Section · Rating: {m.capacityRating}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${cfg.bg} ${cfg.text}`}>
+                      {cfg.icon}
+                      {m.currentStatus}
+                    </span>
+                    <button
+                      onClick={() => setEditingMachine(m)}
+                      className="p-1 hover:bg-neutral-100 rounded text-neutral-600 cursor-pointer"
+                      title="Edit Machine"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingMachineId(m.id)}
+                      className="p-1 hover:bg-rose-50 rounded text-rose-600 cursor-pointer"
+                      title="Delete Machine"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div>
+                    <span className="text-neutral-500">Installation Date:</span>
+                    <div className="font-medium text-neutral-900">{m.installationDate}</div>
+                  </div>
+                  <div>
+                    <span className="text-neutral-500">Service Frequency:</span>
+                    <div className="font-medium text-neutral-900">Every {m.maintenanceFrequencyDays} Days</div>
+                  </div>
+                  <div>
+                    <span className="text-neutral-500">Last Serviced:</span>
+                    <div className="font-mono font-medium text-neutral-800">{m.lastMaintenanceDate}</div>
+                  </div>
+                  <div>
+                    <span className="text-neutral-500">Next Due Date:</span>
+                    <div className="font-mono font-bold text-amber-800">{m.nextMaintenanceDate}</div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-[11px]">
+                  <div className="text-neutral-500">
+                    Breakdowns this year: <span className="font-mono font-bold text-neutral-900">{m.breakdownCountThisYear}</span>
+                  </div>
+                  <div className="text-neutral-700 font-mono">
+                    Maintenance Cost: <span className="font-bold text-neutral-900">₹{m.totalMaintenanceCostThisYear.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* HISTORY TAB */}
+      {activeTab === 'history' && (
+        <div className="space-y-3">
+          {sortedHistory.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
+                <History className="w-5 h-5 text-neutral-400" />
+              </div>
+              <p className="text-sm font-semibold text-neutral-600">No status history yet</p>
+              <p className="text-xs text-neutral-400 mt-1">
+                When a machine's status is changed, it will be recorded here.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
+              {/* Table Header */}
+              <div className="grid grid-cols-[1fr_1.2fr_1fr_1fr_1.4fr] gap-3 px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">
+                <div>Machine</div>
+                <div>Machine Name</div>
+                <div>From Status</div>
+                <div>To Status</div>
+                <div>Changed At</div>
+              </div>
+
+              {/* Timeline rows */}
+              <div className="divide-y divide-neutral-100">
+                {sortedHistory.map((h, idx) => {
+                  const fromCfg = getStatusConfig(h.previousStatus);
+                  const toCfg = getStatusConfig(h.newStatus);
+                  return (
+                    <div
+                      key={h.id}
+                      className="grid grid-cols-[1fr_1.2fr_1fr_1fr_1.4fr] gap-3 px-4 py-3 text-xs items-center hover:bg-neutral-50 transition-colors"
+                    >
+                      {/* Machine Code */}
+                      <div className="font-mono font-bold text-emerald-800">{h.machineCode}</div>
+
+                      {/* Machine Name */}
+                      <div className="font-medium text-neutral-800 truncate">{h.machineName}</div>
+
+                      {/* From Status */}
+                      <div>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${fromCfg.bg} ${fromCfg.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${fromCfg.dot}`} />
+                          {h.previousStatus}
+                        </span>
+                      </div>
+
+                      {/* To Status */}
+                      <div>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${toCfg.bg} ${toCfg.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${toCfg.dot}`} />
+                          {h.newStatus}
+                        </span>
+                      </div>
+
+                      {/* Changed At */}
+                      <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+                        <Calendar className="w-3 h-3 shrink-0" />
+                        {formatDateTime(h.changedAt)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ADD MACHINE MODAL */}
       {showAddModal && (
@@ -315,6 +464,7 @@ export const MaintenanceModule: React.FC = () => {
                     <option value="Operational">Operational</option>
                     <option value="Under Maintenance">Under Maintenance</option>
                     <option value="Breakdown">Breakdown</option>
+                    <option value="Standby">Standby</option>
                   </select>
                 </div>
                 <div>

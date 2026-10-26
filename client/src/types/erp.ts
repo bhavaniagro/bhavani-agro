@@ -554,6 +554,18 @@ export interface Machinery {
   totalMaintenanceCostThisYear: number;
 }
 
+export interface MachineStatusHistory {
+  id: string;
+  machineId: string;
+  machineCode: string;
+  machineName: string;
+  previousStatus: string;
+  newStatus: string;
+  changedAt: string; // ISO date-time string
+  changedBy?: string;
+  notes?: string;
+}
+
 export interface ErpDocument {
   id: string;
   title: string;

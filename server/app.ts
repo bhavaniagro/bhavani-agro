@@ -21,6 +21,7 @@ import paymentRoutes from "./routes/payment.routes";
 import expenseRoutes from "./routes/expense.routes";
 import employeeRoutes from "./routes/employee.routes";
 import machineryRoutes from "./routes/machinery.routes";
+import machineHistoryRoutes from "./routes/machineHistory.routes";
 import documentRoutes from "./routes/document.routes";
 import companyRoutes from "./routes/company.routes";
 
@@ -77,6 +78,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/machinery", machineryRoutes);
+app.use("/api/machine-history", machineHistoryRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/company", companyRoutes);
 
