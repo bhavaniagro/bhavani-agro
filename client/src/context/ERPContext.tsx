@@ -412,6 +412,8 @@ interface ERPContextType {
   updateCompanyProfile: (data: Partial<CompanyProfile>) => Promise<void>;
   addRawMaterial: (rm: Omit<RawMaterial, 'id' | 'currentStock' | 'totalPurchases' | 'totalConsumption' | 'reservedStock'>) => void;
   markAlertRead: (alertId: string) => void;
+  deleteAlert: (alertId: string) => void;
+  markAllAlertsRead: () => void;
   resetAllData: () => void;
   runDemoStepAction: (step: number) => void;
   getCustomerCredit: (customer: Customer | null | undefined) => CustomerCreditSummary;
@@ -476,9 +478,12 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (typeof window === 'undefined') return fallback;
     try {
       const raw = localStorage.getItem(`${CACHE_PREFIX}${key}`);
-      if (raw) {
+      if (raw !== null) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed as T;
+        if (Array.isArray(parsed)) {
+          if (key === 'alerts') return parsed as T;
+          if (parsed.length > 0) return parsed as T;
+        }
         if (parsed && typeof parsed === 'object') return parsed as T;
       }
     } catch (e) {
@@ -554,6 +559,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => { saveCached('machineHistory', machineHistory); }, [machineHistory]);
   useEffect(() => { saveCached('documents', documents); }, [documents]);
   useEffect(() => { saveCached('company', company); }, [company]);
+  useEffect(() => { saveCached('alerts', alerts); }, [alerts]);
 
   // Cross-tab real-time sync notification
   const notifyChange = () => {
@@ -725,6 +731,16 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     window.addEventListener('focus', handleFocus);
 
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === `${CACHE_PREFIX}alerts` && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setAlerts(parsed);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
     // Smart background interval sync (every 60 seconds instead of 8s, and only delta!)
     const interval = setInterval(() => {
       syncRealtimeData(true);
@@ -732,6 +748,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     return () => {
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorage);
       clearInterval(interval);
       if (channel) channel.close();
     };
@@ -2230,6 +2247,17 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const markAlertRead = (alertId: string) => {
     setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, read: true } : a));
+    notifyChange();
+  };
+
+  const deleteAlert = (alertId: string) => {
+    setAlerts(prev => prev.filter(a => a.id !== alertId));
+    notifyChange();
+  };
+
+  const markAllAlertsRead = () => {
+    setAlerts(prev => prev.map(a => ({ ...a, read: true })));
+    notifyChange();
   };
 
   const resetAllData = () => {
@@ -2500,6 +2528,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateCompanyProfile,
         addRawMaterial,
         markAlertRead,
+        deleteAlert,
+        markAllAlertsRead,
         resetAllData,
         runDemoStepAction,
         refreshAllData: syncRealtimeData,
