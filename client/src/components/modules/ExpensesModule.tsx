@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Receipt, 
   Plus, 
@@ -17,6 +17,8 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ExpenseRecord } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const ExpensesModule: React.FC = () => {
   const { expenses, addExpense, updateExpense, deleteExpense, setIsQuickAddOpen, setQuickAddType } = useERP();
@@ -39,33 +41,75 @@ export const ExpensesModule: React.FC = () => {
     'Office & Admin'
   ];
 
-  const filteredExpenses = expenses.filter(exp => {
+  const filteredExpenses = sortByLatest(expenses.filter(exp => {
     const matchesCat = categoryFilter === 'All' || exp.category === categoryFilter;
     const matchesSearch = exp.expenseNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       exp.vendorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       exp.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCat && matchesSearch;
-  });
+  }));
 
   const totalExpenseAmount = expenses.reduce((acc, curr) => acc + curr.amount, 0);
 
   const handleUpdateExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingExpense) return;
-    await updateExpense(editingExpense.id, editingExpense);
+    const targetExp = editingExpense;
     setEditingExpense(null);
+    await updateExpense(targetExp.id, targetExp);
   };
 
   const handleDeleteExpenseConfirm = async () => {
     if (!deletingExpenseId) return;
-    await deleteExpense(deletingExpenseId);
+    const id = deletingExpenseId;
     setDeletingExpenseId(null);
+    await deleteExpense(id);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (editingExpense) setEditingExpense(null);
+        if (deletingExpenseId) setDeletingExpenseId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingExpense, deletingExpenseId]);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
+            <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(cat)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                    categoryFilter === cat ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full sm:w-64">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search vendor, voucher, bill..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -92,35 +136,7 @@ export const ExpensesModule: React.FC = () => {
             <span>Record Expense</span>
           </button>
         </div>
-      </div>
-
-      {/* Category Pills & Search */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
-        <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                categoryFilter === cat ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search vendor, voucher, bill..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
-          />
-        </div>
-      </div>
+      </ModuleHeader>
 
       {/* Expenses Table */}
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
@@ -186,8 +202,14 @@ export const ExpensesModule: React.FC = () => {
 
       {/* EDIT EXPENSE MODAL */}
       {editingExpense && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingExpense(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">
               Edit Expense Voucher {editingExpense.expenseNumber}
             </h3>

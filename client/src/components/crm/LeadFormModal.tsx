@@ -6,6 +6,7 @@ import {
   LeadFormState,
   validateLeadForm
 } from './LeadFormFields';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 interface LeadFormModalProps {
   isOpen: boolean;
@@ -48,6 +49,11 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    isOpen && !isSubmitting,
+    onClose
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -119,8 +125,15 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-2xs p-4 animate-in fade-in duration-150">
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden text-xs flex flex-col max-h-[90vh]">
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-2xs p-4 animate-in fade-in duration-150"
+    >
+      <div
+        ref={contentRef}
+        className="bg-white border border-neutral-200 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden text-xs flex flex-col max-h-[90vh]"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50/70 shrink-0">
           <div className="flex items-center gap-2">

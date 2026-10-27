@@ -1,9 +1,14 @@
 import React from 'react';
 import { X, Printer, Download, Share2 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 export const PrintableDocumentModal: React.FC = () => {
   const { printableDoc, setPrintableDoc, company } = useERP();
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    !!printableDoc,
+    () => setPrintableDoc(null)
+  );
 
   if (!printableDoc) return null;
 
@@ -14,34 +19,43 @@ export const PrintableDocumentModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/70 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl border border-neutral-300 w-full max-w-3xl my-8 overflow-hidden flex flex-col">
-        {/* Top Control Bar */}
-        <div className="p-3 bg-neutral-900 text-white flex items-center justify-between no-print">
-          <div className="font-semibold text-xs flex items-center gap-2">
-            <span className="uppercase tracking-wider text-emerald-400">Document Preview:</span>
-            <span>
-              {type === 'invoice' ? `GST Tax Invoice #${data.invoiceNumber}` :
-               type === 'challan' ? `Delivery Challan #${data.dispatchNumber}` :
-               `QC Test Analysis Report #${data.batchNumber || data.referenceId}`}
-            </span>
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/80 backdrop-blur-xs py-8 sm:py-12 px-4 sm:px-6 md:px-8 animate-in fade-in duration-150"
+    >
+      <div className="min-h-full flex items-start justify-center">
+        <div
+          ref={contentRef}
+          className="bg-white rounded-xl shadow-2xl border border-neutral-300 w-full max-w-3xl my-auto overflow-hidden flex flex-col ring-1 ring-black/10"
+        >
+          {/* Top Control Bar */}
+          <div className="p-3.5 bg-neutral-900 text-white flex items-center justify-between no-print sticky top-0 z-10 border-b border-neutral-800 shadow-xs">
+            <div className="font-semibold text-xs flex items-center gap-2">
+              <span className="uppercase tracking-wider text-emerald-400 font-bold">Document Preview:</span>
+              <span className="text-neutral-200">
+                {type === 'invoice' ? `GST Tax Invoice #${data.invoiceNumber}` :
+                 type === 'challan' ? `Delivery Challan #${data.dispatchNumber}` :
+                 `QC Test Analysis Report #${data.batchNumber || data.referenceId}`}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrint}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print / Save PDF</span>
+              </button>
+              <button
+                onClick={() => setPrintableDoc(null)}
+                className="p-1 hover:bg-neutral-800 rounded text-neutral-300 hover:text-white transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrint}
-              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-medium flex items-center gap-1.5 cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print / Save PDF</span>
-            </button>
-            <button
-              onClick={() => setPrintableDoc(null)}
-              className="p-1 hover:bg-neutral-800 rounded text-neutral-300"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
 
         {/* Printable Sheet */}
         <div id="printable-document" className="p-8 bg-white text-neutral-900 text-xs font-sans leading-relaxed">
@@ -59,7 +73,7 @@ export const PrintableDocumentModal: React.FC = () => {
               </div>
               <div className="text-right">
                 <div className="inline-block border-2 border-neutral-900 px-3 py-1 font-bold text-sm tracking-wider uppercase bg-neutral-50">
-                  {type === 'invoice' ? 'TAX INVOICE' : type === 'challan' ? 'DELIVERY CHALLAN' : 'QUALITY TEST CERTIFICATE'}
+                  {type === 'invoice' ? 'TAX INVOICE' : type === 'challan' ? 'DELIVERY CHALLAN' : 'BATCH PRODUCTION & SPECIFICATION REPORT'}
                 </div>
                 <div className="text-[11px] text-neutral-600 mt-2">Original for Recipient</div>
               </div>
@@ -233,29 +247,29 @@ export const PrintableDocumentModal: React.FC = () => {
             </div>
           )}
 
-          {/* QC CERTIFICATE VIEW */}
-          {type === 'qc_cert' && (
+          {/* BATCH REPORT VIEW */}
+          {(type === 'qc_cert' || type === 'batch_cert') && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 border border-neutral-300 p-3 rounded">
                 <div>
-                  <div className="font-bold text-neutral-900">Product / Sample Details:</div>
+                  <div className="font-bold text-neutral-900">Product / Batch Details:</div>
                   <div className="font-semibold text-neutral-800 mt-0.5">{data.productName}</div>
                   <div className="text-neutral-600 font-mono">Batch Lot No: {data.batchNumber}</div>
                   <div className="text-neutral-600">Mfg Date: {data.productionDate || data.manufacturingDate}</div>
-                  <div className="text-neutral-600">Quantity Tested: {data.quantityProducedMT || data.quantity} MT</div>
+                  <div className="text-neutral-600">Quantity Produced: {data.quantityProducedMT || data.quantity} MT</div>
                 </div>
                 <div className="border-l border-neutral-200 pl-4 space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-neutral-600">Testing Lab:</span>
-                    <span className="font-medium">Bhavani Central Quality Control Lab</span>
+                    <span className="text-neutral-600">Production Unit:</span>
+                    <span className="font-medium">Bhavani Central Manufacturing Plant</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-600">Certification Standard:</span>
+                    <span className="text-neutral-600">Standard:</span>
                     <span>IS 12624 / FCO 1985</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-600">QC Status:</span>
-                    <span className="font-bold text-emerald-700 uppercase">{data.qcStatus || 'Approved'}</span>
+                    <span className="text-neutral-600">Status:</span>
+                    <span className="font-bold text-emerald-700 uppercase">Released to Stock</span>
                   </div>
                 </div>
               </div>
@@ -263,9 +277,9 @@ export const PrintableDocumentModal: React.FC = () => {
               <table className="w-full border-collapse border border-neutral-300 text-left">
                 <thead>
                   <tr className="bg-neutral-100 font-bold border-b border-neutral-300">
-                    <th className="p-2 border-r border-neutral-300">Quality Parameter</th>
+                    <th className="p-2 border-r border-neutral-300">Parameter</th>
                     <th className="p-2 border-r border-neutral-300">Standard Specification</th>
-                    <th className="p-2 border-r border-neutral-300">Observed Test Value</th>
+                    <th className="p-2 border-r border-neutral-300">Observed Value</th>
                     <th className="p-2 text-center">Result</th>
                   </tr>
                 </thead>
@@ -300,7 +314,7 @@ export const PrintableDocumentModal: React.FC = () => {
           )}
 
           {/* Signatures */}
-          <div className="pt-12 grid grid-cols-2 gap-8 text-[11px]">
+          <div className="pt-12 pb-4 grid grid-cols-2 gap-8 text-[11px]">
             <div>
               <div className="h-8 border-b border-dashed border-neutral-400 w-48 mb-1"></div>
               <div className="font-semibold text-neutral-800">Receiver / Driver Signature</div>
@@ -315,5 +329,6 @@ export const PrintableDocumentModal: React.FC = () => {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };

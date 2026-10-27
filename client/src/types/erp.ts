@@ -76,7 +76,7 @@ export interface Customer {
   state: string;
   creditLimit: number;
   paymentTerms: string; // e.g. "Net 30 Days", "Immediate", "50% Advance"
-  customerType: 'Distributor' | 'Dealer' | 'Fertilizer Blender' | 'Cooperative' | 'Institutional Buyer';
+  customerType: 'Dealer' | 'Supplier' | 'Vendor' | 'End User' | 'Fertilizer' | 'Distributor' | 'Fertilizer Blender' | 'Cooperative' | 'Institutional Buyer';
   assignedSalesperson: string;
   totalSales: number;
   outstandingBalance: number;
@@ -89,7 +89,7 @@ export interface Supplier {
   supplierName: string;
   contactPerson: string;
   mobile: string;
-  email: string;
+  email?: string;
   address: string;
   gstin: string;
   materialSupplied: string[];
@@ -198,7 +198,8 @@ export type SalesOrderStatus =
   | 'Ready'
   | 'Dispatched'
   | 'Completed'
-  | 'Cancelled';
+  | 'Cancelled'
+  | 'Rejected';
 
 export interface SalesOrder {
   id: string;
@@ -210,6 +211,7 @@ export interface SalesOrder {
   deliveryDate: string;
   productId: string;
   productName: string;
+  hsnCode?: string;
   quantityMT: number;
   ratePerMT: number;
   discountPercent: number;
@@ -307,7 +309,6 @@ export type ProductionOrderStatus =
   | 'Planned'
   | 'Material Ready'
   | 'In Production'
-  | 'QC'
   | 'Completed'
   | 'Cancelled';
 
@@ -376,6 +377,7 @@ export interface ProductionBatch {
   }[];
   quantityProducedMT: number;
   quantityRemainingMT: number;
+  status?: 'In Stock' | 'Allocated' | 'Dispatched';
   qcStatus: 'Pending' | 'Approved' | 'Rejected';
   storageLocation: string;
   manufacturingDate: string;
@@ -552,10 +554,22 @@ export interface Machinery {
   totalMaintenanceCostThisYear: number;
 }
 
+export interface MachineStatusHistory {
+  id: string;
+  machineId: string;
+  machineCode: string;
+  machineName: string;
+  previousStatus: string;
+  newStatus: string;
+  changedAt: string; // ISO date-time string
+  changedBy?: string;
+  notes?: string;
+}
+
 export interface ErpDocument {
   id: string;
   title: string;
-  documentType: 'GST & Statutory' | 'Quality Lab Report' | 'E-Way Bill' | 'Supplier Invoice' | 'Delivery Challan' | 'Pollution Clearance & License';
+  documentType: 'GST & Statutory' | 'Technical & Lab Report' | 'E-Way Bill' | 'Supplier Invoice' | 'Delivery Challan' | 'Pollution Clearance & License';
   relatedEntity: string; // e.g. "Order #SO-2409-082", "Batch #BNT-2609-088"
   fileName: string;
   fileSize: string;

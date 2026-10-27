@@ -1475,7 +1475,7 @@ export const initialEmployees: Employee[] = [
   { id: 'emp-2', employeeCode: 'EMP-02', name: 'Bipinchandra Solanki', mobile: '+91 98251 22002', role: 'Plant Production Manager', department: 'Production', joiningDate: '2012-06-15', monthlySalary: 65000, status: 'Active' },
   { id: 'emp-3', employeeCode: 'EMP-03', name: 'Rajesh Shah', mobile: '+91 98252 33003', role: 'Senior Sales Head', department: 'Sales', joiningDate: '2015-02-10', monthlySalary: 55000, status: 'Active' },
   { id: 'emp-4', employeeCode: 'EMP-04', name: 'Devji Makwana', mobile: '+91 98253 44004', role: 'Purchase & Stores Head', department: 'Purchase', joiningDate: '2014-08-01', monthlySalary: 48000, status: 'Active' },
-  { id: 'emp-5', employeeCode: 'EMP-05', name: 'Manish Trivedi', mobile: '+91 98254 55005', role: 'Chief QC Chemist & Lab Head', department: 'Production', joiningDate: '2017-03-20', monthlySalary: 45000, status: 'Active' },
+  { id: 'emp-5', employeeCode: 'EMP-05', name: 'Manish Trivedi', mobile: '+91 98254 55005', role: 'Chief Chemist & Lab Head', department: 'Production', joiningDate: '2017-03-20', monthlySalary: 45000, status: 'Active' },
   { id: 'emp-6', employeeCode: 'EMP-06', name: 'Hasmukh Joshi', mobile: '+91 98255 66006', role: 'Accounts & GST Lead', department: 'Accounts', joiningDate: '2016-11-01', monthlySalary: 42000, status: 'Active' },
   { id: 'emp-7', employeeCode: 'EMP-07', name: 'Jayesh Vaghela', mobile: '+91 98256 77007', role: 'Dispatch & Logistics Officer', department: 'Dispatch', joiningDate: '2019-05-18', monthlySalary: 32000, status: 'Active' }
 ];
@@ -1483,7 +1483,7 @@ export const initialEmployees: Employee[] = [
 export const initialDocuments: ErpDocument[] = [
   { id: 'doc-1', title: 'GST Registration Certificate Form REG-06', documentType: 'GST & Statutory', relatedEntity: 'Bhavani Agro & Minerals', fileName: 'GST_24AABCB4821F1ZX.pdf', fileSize: '480 KB', uploadDate: '2023-01-10', uploadedBy: 'Hasmukh Joshi' },
   { id: 'doc-2', title: 'ISO 9001:2015 Quality Management Certificate', documentType: 'GST & Statutory', relatedEntity: 'Bhavani Agro & Minerals', fileName: 'ISO9001_Bhavani_2026.pdf', fileSize: '1.2 MB', uploadDate: '2024-03-15', uploadedBy: 'Ramesh Patel' },
-  { id: 'doc-3', title: 'Lab Test Certificate - BNT Granules Batch 088', documentType: 'Quality Lab Report', relatedEntity: 'Batch #BNT-2609-088', fileName: 'QC_Cert_BNT_088.pdf', fileSize: '650 KB', uploadDate: '2026-09-24', uploadedBy: 'Manish Trivedi' },
+  { id: 'doc-3', title: 'Lab Test Certificate - BNT Granules Batch 088', documentType: 'Technical & Lab Report', relatedEntity: 'Batch #BNT-2609-088', fileName: 'Cert_BNT_088.pdf', fileSize: '650 KB', uploadDate: '2026-09-24', uploadedBy: 'Manish Trivedi' },
   { id: 'doc-4', title: 'E-Way Bill 241088910482 - Kisan Bio-Tech', documentType: 'E-Way Bill', relatedEntity: 'Dispatch #DC-2609-061', fileName: 'EWAY_241088910482.pdf', fileSize: '320 KB', uploadDate: '2026-09-24', uploadedBy: 'Jayesh Vaghela' },
   { id: 'doc-5', title: 'NPOP Organic Scope Certificate APEDA', documentType: 'GST & Statutory', relatedEntity: 'Organic Fertilizer', fileName: 'APEDA_NPOP_Cert_2026.pdf', fileSize: '980 KB', uploadDate: '2024-01-20', uploadedBy: 'Ramesh Patel' }
 ];
@@ -1492,6 +1492,6 @@ export const initialAlerts: ErpAlert[] = [
   { id: 'alt-1', type: 'critical', title: 'Bentonite Powder Stock Below Reorder Level', description: 'Current stock is 18.0 MT against minimum stock requirement of 30.0 MT.', timestamp: '10 mins ago', module: 'Inventory', read: false },
   { id: 'alt-2', type: 'warning', title: 'Customer Payment Overdue (Marwar Agro)', description: 'Invoice INV-2609-072 of ₹1,51,600 is 19 days overdue.', timestamp: '1 hour ago', module: 'Finance & Accounts', read: false },
   { id: 'alt-3', type: 'info', title: 'Sales Order SO-2609-083 Requires Production', description: 'Stock insufficient for 50 MT order. PO-MFG-091 scheduled.', timestamp: '3 hours ago', module: 'Production', read: false },
-  { id: 'alt-4', type: 'info', title: 'QC Inspection Pending for Incoming Dolomite', description: 'Upcoming truck arrival from Udaipur requires sampling upon weighbridge verification.', timestamp: 'Yesterday', module: 'Raw Material', read: true },
+  { id: 'alt-4', type: 'info', title: 'Verification Pending for Incoming Dolomite', description: 'Upcoming truck arrival from Udaipur requires weighbridge verification.', timestamp: 'Yesterday', module: 'Raw Material', read: true },
   { id: 'alt-5', type: 'warning', title: 'Machine Preventive Maintenance Due in 3 Days', description: 'Auto Rotary Bagging & Stitching Line MC-BAG-01 scheduled for check on Oct 5.', timestamp: 'Yesterday', module: 'Maintenance', read: true }
 ];

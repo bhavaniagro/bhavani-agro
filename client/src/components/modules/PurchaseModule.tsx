@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   ShoppingCart, 
@@ -14,6 +14,8 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { PurchaseOrder, GRN } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const PurchaseModule: React.FC = () => {
   const { 
@@ -36,7 +38,10 @@ export const PurchaseModule: React.FC = () => {
 
   // GRN Creation State
   const [showGRNModal, setShowGRNModal] = useState(false);
+  const [isManualGRN, setIsManualGRN] = useState(false);
   const [selectedPO, setSelectedPO] = useState<any | null>(null);
+  const [manualSupplierId, setManualSupplierId] = useState('');
+  const [manualMaterialId, setManualMaterialId] = useState('');
   const [receivedQty, setReceivedQty] = useState(50);
   const [acceptedQty, setAcceptedQty] = useState(49.5);
   const [vehicleNo, setVehicleNo] = useState('GJ-12-BW-9901');
@@ -65,52 +70,97 @@ export const PurchaseModule: React.FC = () => {
   const [editGRNQCStatus, setEditGRNQCStatus] = useState<'Pending QC' | 'Approved' | 'Rejected'>('Approved');
   const [editGRNRemarks, setEditGRNRemarks] = useState('');
 
-  const filteredPOs = purchaseOrders.filter(po => 
+  const filteredPOs = sortByLatest(purchaseOrders.filter(po => 
     po.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.materialName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
-  const filteredGRNs = grns.filter(g =>
+  const filteredGRNs = sortByLatest(grns.filter(g =>
     g.grnNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     g.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     g.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     g.materialName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const handleCreateGRN = (po: any) => {
+    setIsManualGRN(false);
     setSelectedPO(po);
     setReceivedQty(po.quantity);
     setAcceptedQty(po.quantity);
+    setVehicleNo('GJ-12-BW-9901');
+    setSupplierBatch(`MINE-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(10 + Math.random() * 90)}`);
+    setShowGRNModal(true);
+  };
+
+  const handleOpenAddGRN = () => {
+    setIsManualGRN(true);
+    setSelectedPO(null);
+    setManualSupplierId(suppliers[0]?.id || '');
+    setManualMaterialId(rawMaterials[0]?.id || '');
+    setReceivedQty(50);
+    setAcceptedQty(50);
+    setVehicleNo('GJ-12-BW-9901');
+    setSupplierBatch(`MINE-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(10 + Math.random() * 90)}`);
     setShowGRNModal(true);
   };
 
   const submitGRN = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPO) return;
 
-    addGRN({
-      poNumber: selectedPO.poNumber,
-      poId: selectedPO.id,
-      supplierId: selectedPO.supplierId,
-      supplierName: selectedPO.supplierName,
-      materialId: selectedPO.materialId,
-      materialName: selectedPO.materialName,
-      orderedQuantity: selectedPO.quantity,
-      receivedQuantity: Number(receivedQty),
-      acceptedQuantity: Number(acceptedQty),
-      rejectedQuantity: Math.max(0, Number(receivedQty) - Number(acceptedQty)),
-      unit: selectedPO.unit,
-      supplierBatchNumber: supplierBatch || 'MINE-BATCH-01',
-      internalLotNumber: `LOT-${selectedPO.materialName.substring(0, 3).toUpperCase()}-2609-${Math.floor(10 + Math.random() * 90)}`,
-      manufacturingDate: new Date().toISOString().split('T')[0],
-      vehicleNumber: vehicleNo || 'GJ-12-BW-1234',
-      weightReceiptMT: Number(receivedQty),
-      date: new Date().toISOString().split('T')[0],
-      remarks: 'Goods received at factory weighbridge and accepted into raw stores.'
-    });
+    if (isManualGRN) {
+      const sup = suppliers.find(s => s.id === manualSupplierId) || suppliers[0];
+      const mat = rawMaterials.find(rm => rm.id === manualMaterialId) || rawMaterials[0];
+
+      addGRN({
+        poNumber: '-',
+        poId: '',
+        supplierId: sup?.id || 'manual-sup',
+        supplierName: sup?.supplierName || 'Direct Supplier',
+        materialId: mat?.id || 'manual-mat',
+        materialName: mat?.materialName || 'Raw Material',
+        orderedQuantity: Number(receivedQty),
+        receivedQuantity: Number(receivedQty),
+        acceptedQuantity: Number(acceptedQty),
+        rejectedQuantity: Math.max(0, Number(receivedQty) - Number(acceptedQty)),
+        unit: mat?.unit || 'MT',
+        supplierBatchNumber: supplierBatch || 'MINE-BATCH-01',
+        internalLotNumber: `LOT-${(mat?.materialName || 'RAW').substring(0, 3).toUpperCase()}-2609-${Math.floor(10 + Math.random() * 90)}`,
+        manufacturingDate: new Date().toISOString().split('T')[0],
+        vehicleNumber: vehicleNo || 'GJ-12-BW-1234',
+        weightReceiptMT: Number(receivedQty),
+        date: new Date().toISOString().split('T')[0],
+        remarks: 'Manual Goods Receipt Note entered directly without PO.'
+      });
+    } else if (selectedPO) {
+      addGRN({
+        poNumber: selectedPO.poNumber,
+        poId: selectedPO.id,
+        supplierId: selectedPO.supplierId,
+        supplierName: selectedPO.supplierName,
+        materialId: selectedPO.materialId,
+        materialName: selectedPO.materialName,
+        orderedQuantity: selectedPO.quantity,
+        receivedQuantity: Number(receivedQty),
+        acceptedQuantity: Number(acceptedQty),
+        rejectedQuantity: Math.max(0, Number(receivedQty) - Number(acceptedQty)),
+        unit: selectedPO.unit || 'MT',
+        supplierBatchNumber: supplierBatch || 'MINE-BATCH-01',
+        internalLotNumber: `LOT-${(selectedPO.materialName || 'RAW').substring(0, 3).toUpperCase()}-2609-${Math.floor(10 + Math.random() * 90)}`,
+        manufacturingDate: new Date().toISOString().split('T')[0],
+        vehicleNumber: vehicleNo || 'GJ-12-BW-1234',
+        weightReceiptMT: Number(receivedQty),
+        date: new Date().toISOString().split('T')[0],
+        remarks: 'Goods received at factory weighbridge and accepted into raw stores.'
+      });
+
+      if (selectedPO.id && selectedPO.id !== 'direct') {
+        updatePurchaseOrder(selectedPO.id, { status: 'GRN Completed' });
+      }
+    }
 
     setSelectedPO(null);
+    setIsManualGRN(false);
     setReceivedQty(0);
     setAcceptedQty(0);
     setVehicleNo('');
@@ -135,8 +185,10 @@ export const PurchaseModule: React.FC = () => {
   const handleSavePOEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPO) return;
+    const poToEdit = editingPO;
+    setEditingPO(null);
     const totalAmount = editPOQuantity * editPORate;
-    await updatePurchaseOrder(editingPO.id, {
+    await updatePurchaseOrder(poToEdit.id, {
       supplierName: editPOSupplierName,
       materialName: editPOMaterialName,
       quantity: Number(editPOQuantity),
@@ -147,13 +199,13 @@ export const PurchaseModule: React.FC = () => {
       paymentTerms: editPOPaymentTerms,
       status: editPOStatus
     });
-    setEditingPO(null);
   };
 
   const handleDeletePOConfirm = async () => {
     if (!deletingPO) return;
-    await deletePurchaseOrder(deletingPO.id);
+    const id = deletingPO.id;
     setDeletingPO(null);
+    await deletePurchaseOrder(id);
   };
 
   // GRN Edit handlers
@@ -171,7 +223,9 @@ export const PurchaseModule: React.FC = () => {
   const handleSaveGRNEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingGRN) return;
-    await updateGRN(editingGRN.id, {
+    const grnToEdit = editingGRN;
+    setEditingGRN(null);
+    await updateGRN(grnToEdit.id, {
       receivedQuantity: Number(editGRNReceivedQty),
       acceptedQuantity: Number(editGRNAcceptedQty),
       rejectedQuantity: Number(editGRNRejectedQty),
@@ -181,19 +235,71 @@ export const PurchaseModule: React.FC = () => {
       qcStatus: editGRNQCStatus,
       remarks: editGRNRemarks
     });
-    setEditingGRN(null);
   };
 
   const handleDeleteGRNConfirm = async () => {
     if (!deletingGRN) return;
-    await deleteGRN(deletingGRN.id);
+    const id = deletingGRN.id;
     setDeletingGRN(null);
+    await deleteGRN(id);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showGRNModal) {
+          setShowGRNModal(false);
+          setSelectedPO(null);
+          setIsManualGRN(false);
+        }
+        if (editingPO) setEditingPO(null);
+        if (editingGRN) setEditingGRN(null);
+        if (deletingPO) setDeletingPO(null);
+        if (deletingGRN) setDeletingGRN(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showGRNModal, editingPO, editingGRN, deletingPO, deletingGRN]);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Purchase Orders ({purchaseOrders.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('grn')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'grn' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Goods Receipt Notes (GRN) ({grns.length})
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
+              <input
+                type="text"
+                placeholder="Search PO #, supplier, material..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -204,56 +310,46 @@ export const PurchaseModule: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            Create Purchase Orders, record weighbridge delivery via GRN, and automatically credit Raw Material Inventory after QC.
+            Create Purchase Orders, record weighbridge delivery via GRN, and automatically credit Raw Material Inventory upon verification.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setQuickAddType('Purchase Order');
-              setIsQuickAddOpen(true);
-            }}
-            className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Purchase Order</span>
-          </button>
+          {activeTab === 'grn' ? (
+            <>
+              <button
+                id="btn-add-grn"
+                onClick={handleOpenAddGRN}
+                className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add GRN</span>
+              </button>
+              <button
+                onClick={() => {
+                  setQuickAddType('Purchase Order');
+                  setIsQuickAddOpen(true);
+                }}
+                className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>New Purchase Order</span>
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => {
+                setQuickAddType('Purchase Order');
+                setIsQuickAddOpen(true);
+              }}
+              className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Purchase Order</span>
+            </button>
+          )}
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Purchase Orders ({purchaseOrders.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('grn')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'grn' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Goods Receipt Notes (GRN) ({grns.length})
-          </button>
-        </div>
-
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
-          <input
-            type="text"
-            placeholder="Search PO #, supplier, material..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
-          />
-        </div>
-      </div>
+      </ModuleHeader>
 
       {/* TAB 1: PURCHASE ORDERS */}
       {activeTab === 'orders' && (
@@ -357,7 +453,7 @@ export const PurchaseModule: React.FC = () => {
                   <th className="p-3">Supplier &amp; Vehicle</th>
                   <th className="p-3">Material &amp; Batch</th>
                   <th className="p-3 text-right">Received vs Accepted</th>
-                  <th className="p-3">QC Status</th>
+                  <th className="p-3">Receipt Status</th>
                   <th className="p-3 text-right">Inventory Entry</th>
                   <th className="p-3 text-center">Actions</th>
                 </tr>
@@ -369,7 +465,13 @@ export const PurchaseModule: React.FC = () => {
                       <div className="font-mono font-bold text-neutral-900">{g.grnNumber}</div>
                       <div className="text-[11px] text-neutral-400">{g.date}</div>
                     </td>
-                    <td className="p-3 font-mono text-neutral-700">{g.poNumber}</td>
+                    <td className="p-3 font-mono text-neutral-700">
+                      {!g.poNumber || g.poNumber === '-' || g.poNumber === 'NA' || g.poNumber === 'PO-DIRECT' ? (
+                        <span className="text-neutral-400 font-semibold">-</span>
+                      ) : (
+                        g.poNumber
+                      )}
+                    </td>
                     <td className="p-3">
                       <div className="font-semibold text-neutral-900">{g.supplierName}</div>
                       <div className="text-[11px] text-neutral-500 font-mono">Truck: {g.vehicleNumber}</div>
@@ -387,7 +489,7 @@ export const PurchaseModule: React.FC = () => {
                     </td>
                     <td className="p-3">
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase">
-                        {g.qcStatus}
+                        Verified
                       </span>
                     </td>
                     <td className="p-3 text-right">
@@ -420,43 +522,150 @@ export const PurchaseModule: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+                {filteredGRNs.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-neutral-500">
+                      <p className="mb-2 text-xs">No Goods Receipt Notes found.</p>
+                      <button
+                        type="button"
+                        onClick={handleOpenAddGRN}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add First GRN</span>
+                      </button>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* CREATE GRN MODAL */}
-      {showGRNModal && selectedPO && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
-            <h3 className="text-sm font-bold text-neutral-900 mb-1">
-              Create Goods Receipt Note (GRN) for {selectedPO.poNumber}
-            </h3>
-            <p className="text-[11px] text-neutral-500 mb-4">
-              Material: {selectedPO.materialName} · Supplier: {selectedPO.supplierName}
-            </p>
+      {/* CREATE / ADD GRN MODAL */}
+      {showGRNModal && (isManualGRN || selectedPO) && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowGRNModal(false); setSelectedPO(null); setIsManualGRN(false); } }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                  <FileCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-neutral-900">
+                    {isManualGRN ? 'Add Goods Receipt Note (GRN)' : `Create Goods Receipt Note (GRN) for ${selectedPO?.poNumber}`}
+                  </h3>
+                  <p className="text-[11px] text-neutral-500">
+                    {isManualGRN ? 'Manual GRN Entry · Direct Delivery Receipt' : 'Weighbridge verification & incoming goods receipt'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => { setShowGRNModal(false); setSelectedPO(null); setIsManualGRN(false); }}
+                className="text-neutral-400 hover:text-neutral-600 cursor-pointer p-1 rounded-md hover:bg-neutral-100 transition-colors"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-            <form onSubmit={submitGRN} className="space-y-3">
+            <form onSubmit={submitGRN} className="space-y-3.5">
+              {isManualGRN ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-neutral-700 font-semibold mb-1">
+                      Supplier
+                    </label>
+                    <select
+                      value={manualSupplierId}
+                      onChange={(e) => setManualSupplierId(e.target.value)}
+                      required
+                      className="w-full border border-neutral-300 rounded-lg p-2 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    >
+                      {suppliers.map(s => (
+                        <option key={s.id} value={s.id}>{s.supplierName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-neutral-700 font-semibold mb-1">
+                      Raw Material
+                    </label>
+                    <select
+                      value={manualMaterialId}
+                      onChange={(e) => setManualMaterialId(e.target.value)}
+                      required
+                      className="w-full border border-neutral-300 rounded-lg p-2 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    >
+                      {rawMaterials.map(rm => (
+                        <option key={rm.id} value={rm.id}>{rm.materialName} ({rm.unit})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                selectedPO && (
+                  <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-2.5 text-[11px] grid grid-cols-3 gap-2">
+                    <div>
+                      <span className="text-neutral-500 block text-[10px] uppercase font-semibold">PO Reference</span>
+                      <span className="font-mono font-bold text-neutral-900">{selectedPO.poNumber}</span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[10px] uppercase font-semibold">Supplier</span>
+                      <span className="font-semibold text-neutral-900 truncate block" title={selectedPO.supplierName}>
+                        {selectedPO.supplierName}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[10px] uppercase font-semibold">Material</span>
+                      <span className="font-semibold text-neutral-900 truncate block" title={selectedPO.materialName}>
+                        {selectedPO.materialName}
+                      </span>
+                    </div>
+                  </div>
+                )
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Weighbridge Received Qty</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Weighbridge Received Qty ({isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')})
+                  </label>
                   <input
                     type="number"
                     step="0.1"
+                    min="0"
+                    required
                     value={receivedQty}
-                    onChange={(e) => setReceivedQty(Number(e.target.value))}
-                    className="w-full border border-neutral-300 rounded p-2"
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setReceivedQty(val);
+                      if (acceptedQty > val) setAcceptedQty(val);
+                    }}
+                    className="w-full border border-neutral-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">QC Accepted Qty ({selectedPO.unit})</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Ordered Quantity ({isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')})
+                  </label>
                   <input
                     type="number"
                     step="0.1"
+                    min="0"
+                    max={receivedQty}
+                    required
                     value={acceptedQty}
                     onChange={(e) => setAcceptedQty(Number(e.target.value))}
-                    className="w-full border border-neutral-300 rounded p-2"
+                    className="w-full border border-neutral-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
               </div>
@@ -466,39 +675,50 @@ export const PurchaseModule: React.FC = () => {
                   <label className="block text-neutral-700 font-medium mb-1">Vehicle Truck No.</label>
                   <input
                     type="text"
+                    required
                     value={vehicleNo}
                     onChange={(e) => setVehicleNo(e.target.value)}
                     placeholder="GJ-12-BW-8910"
-                    className="w-full border border-neutral-300 rounded p-2"
+                    className="w-full border border-neutral-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Supplier Mine Batch No.</label>
                   <input
                     type="text"
+                    required
                     value={supplierBatch}
                     onChange={(e) => setSupplierBatch(e.target.value)}
                     placeholder="KBM-2609-B8"
-                    className="w-full border border-neutral-300 rounded p-2"
+                    className="w-full border border-neutral-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
               </div>
 
-              <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-800">
+              {Number(receivedQty) > Number(acceptedQty) && (
+                <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-800 flex items-center justify-between">
+                  <span>Rejected Quantity:</span>
+                  <strong className="font-mono">
+                    {Number(receivedQty) - Number(acceptedQty)} {isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')}
+                  </strong>
+                </div>
+              )}
+
+              <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-[11px] text-emerald-800">
                 <strong>Automation Trigger:</strong> Accepted quantity will automatically be credited to Raw Material Stock and available for production planning upon submission.
               </div>
 
-              <div className="pt-2 flex justify-end gap-2 border-t border-neutral-200">
+              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200">
                 <button
                   type="button"
-                  onClick={() => setShowGRNModal(false)}
-                  className="px-3 py-1.5 border border-neutral-300 rounded text-neutral-700 hover:bg-neutral-50 cursor-pointer"
+                  onClick={() => { setShowGRNModal(false); setSelectedPO(null); setIsManualGRN(false); }}
+                  className="px-3.5 py-1.5 border border-neutral-300 rounded-lg text-neutral-700 hover:bg-neutral-50 cursor-pointer font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded cursor-pointer"
+                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg cursor-pointer shadow-xs"
                 >
                   Confirm GRN &amp; Update Stock
                 </button>
@@ -510,8 +730,14 @@ export const PurchaseModule: React.FC = () => {
 
       {/* EDIT PO MODAL */}
       {editingPO && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingPO(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit Purchase Order ({editingPO.poNumber})
@@ -637,8 +863,14 @@ export const PurchaseModule: React.FC = () => {
 
       {/* EDIT GRN MODAL */}
       {editingGRN && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingGRN(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit GRN ({editingGRN.grnNumber})
@@ -709,14 +941,14 @@ export const PurchaseModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">QC Status</label>
+                <label className="block text-neutral-700 font-medium mb-1">Receipt Status</label>
                 <select
                   value={editGRNQCStatus}
                   onChange={(e) => setEditGRNQCStatus(e.target.value as any)}
                   className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
                 >
-                  <option value="Approved">Approved</option>
-                  <option value="Pending QC">Pending QC</option>
+                  <option value="Approved">Verified</option>
+                  <option value="Pending QC">Pending Verification</option>
                   <option value="Rejected">Rejected</option>
                 </select>
               </div>

@@ -16,6 +16,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const DashboardModule: React.FC = () => {
   const {
@@ -120,7 +122,7 @@ export const DashboardModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner with Quick Actions */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -136,7 +138,6 @@ export const DashboardModule: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-
           <button
             onClick={() => {
               setQuickAddType('Sales Order');
@@ -147,7 +148,7 @@ export const DashboardModule: React.FC = () => {
             + New Sales Order
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* 12 Top KPI Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
@@ -235,7 +236,7 @@ export const DashboardModule: React.FC = () => {
             </div>
 
             <div className="divide-y divide-neutral-100 mt-2">
-              {productionOrders.slice(0, 4).map(po => (
+              {sortByLatest(productionOrders).slice(0, 4).map(po => (
                 <div key={po.id} className="py-2.5 flex items-center justify-between gap-4 text-xs">
                   <div>
                     <div className="flex items-center gap-2">
@@ -278,7 +279,7 @@ export const DashboardModule: React.FC = () => {
             </div>
 
             <div className="space-y-2.5 mt-3">
-              {alerts.slice(0, 4).map(al => (
+              {sortByLatest(alerts).slice(0, 4).map(al => (
                 <div 
                   key={al.id} 
                   className={`p-2.5 rounded-lg border text-xs ${
@@ -352,7 +353,7 @@ export const DashboardModule: React.FC = () => {
             </div>
 
             <div className="divide-y divide-neutral-100 mt-2">
-              {dispatches.slice(0, 3).map(d => (
+              {sortByLatest(dispatches).slice(0, 3).map(d => (
                 <div key={d.id} className="py-2 text-xs">
                   <div className="flex items-center justify-between font-medium">
                     <span className="font-mono text-neutral-900">{d.dispatchNumber}</span>

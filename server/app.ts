@@ -21,6 +21,7 @@ import paymentRoutes from "./routes/payment.routes";
 import expenseRoutes from "./routes/expense.routes";
 import employeeRoutes from "./routes/employee.routes";
 import machineryRoutes from "./routes/machinery.routes";
+import machineHistoryRoutes from "./routes/machineHistory.routes";
 import documentRoutes from "./routes/document.routes";
 import companyRoutes from "./routes/company.routes";
 
@@ -28,6 +29,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { getUploadsDir } from "./config/upload";
+
+import { apiCacheMiddleware, clearMemoryCache } from "./middlewares/cache.middleware";
 
 const app = express();
 
@@ -43,6 +46,17 @@ app.get("/api/health", (_req, res) => {
         message: "Bhavani Agro API is running",
     });
 });
+
+app.post("/api/cache/clear", (_req, res) => {
+    clearMemoryCache();
+    res.status(200).json({
+        success: true,
+        message: "Memory cache cleared successfully",
+    });
+});
+
+// Protect all /api routes with smart in-memory cache and delta filtering
+app.use("/api", apiCacheMiddleware);
 
 app.use("/api/leads", leadRoutes);
 app.use("/api/customers", customerRoutes);
@@ -64,6 +78,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/machinery", machineryRoutes);
+app.use("/api/machine-history", machineHistoryRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/company", companyRoutes);
 

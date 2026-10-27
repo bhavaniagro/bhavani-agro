@@ -10,15 +10,52 @@ import {
   Download
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const CostingProfitabilityModule: React.FC = () => {
   const { products, boms, customers, salesOrders } = useERP();
   const [activeTab, setActiveTab] = useState<'products' | 'costing_breakdown' | 'customers'>('products');
 
+  const sortedProducts = sortByLatest(products);
+  const sortedBoms = sortByLatest(boms);
+  const sortedCustomers = sortByLatest(customers);
+
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'products' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Product-Wise Margins &amp; ROI
+              </button>
+              <button
+                onClick={() => setActiveTab('costing_breakdown')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'costing_breakdown' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Standard vs Actual Cost per MT / Bag
+              </button>
+              <button
+                onClick={() => setActiveTab('customers')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'customers' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Customer-Wise Profit Contribution
+              </button>
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -29,40 +66,10 @@ export const CostingProfitabilityModule: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            <strong>Manufacturing Formula:</strong> Raw Material Cost + Labour + Electricity + Packaging + Overheads = Cost / MT &amp; Cost / 50kg Bag.
+            Unit economics tracking raw material, labour, electricity, packaging, and overhead costs per MT and 50kg bag.
           </p>
         </div>
-      </div>
-
-      {/* Segmented Tab Controls */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
-          <button
-            onClick={() => setActiveTab('products')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'products' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Product-Wise Margins &amp; ROI
-          </button>
-          <button
-            onClick={() => setActiveTab('costing_breakdown')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'costing_breakdown' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Standard vs Actual Cost per MT / Bag
-          </button>
-          <button
-            onClick={() => setActiveTab('customers')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'customers' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Customer-Wise Profit Contribution
-          </button>
-        </div>
-      </div>
+      </ModuleHeader>
 
       {/* TAB 1: PRODUCT-WISE PROFIT MARGINS */}
       {activeTab === 'products' && (
@@ -80,7 +87,7 @@ export const CostingProfitabilityModule: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {products.map(p => {
+              {sortedProducts.map(p => {
                 const marginPerMT = p.sellingPricePerMT - p.standardCostPerMT;
                 const marginPct = ((marginPerMT / p.sellingPricePerMT) * 100).toFixed(1);
                 const costPerBag = (p.standardCostPerMT / 20).toFixed(1); // 20 bags in 1 MT
@@ -126,7 +133,7 @@ export const CostingProfitabilityModule: React.FC = () => {
       {/* TAB 2: DETAILED COSTING BREAKDOWN */}
       {activeTab === 'costing_breakdown' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {boms.map(bom => {
+          {sortedBoms.map(bom => {
             const prod = products.find(p => p.id === bom.productId) || products[0];
             const margin = prod.sellingPricePerMT - bom.totalStandardCostPerMT;
 
@@ -195,7 +202,7 @@ export const CostingProfitabilityModule: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {customers.map(c => {
+              {sortedCustomers.map(c => {
                 const grossProfit = c.totalSales * 0.285;
                 const netProfit = c.totalSales * 0.192;
 

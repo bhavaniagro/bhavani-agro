@@ -1,10 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Download, Eye, Plus, Search, CheckCircle2, Edit, Trash2, Upload, ExternalLink } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ErpDocument } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
 import { uploadDocumentFileInApi } from '../../services/api/documentApi.service';
 import { resolveDocumentUrl } from '../../config/apiConfig';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const DocumentsModule: React.FC = () => {
   const { documents, addDocument, updateDocument, deleteDocument } = useERP();
@@ -35,22 +37,37 @@ export const DocumentsModule: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showAddModal) {
+          setShowAddModal(false);
+          resetDocForm();
+        }
+        if (editingDoc) setEditingDoc(null);
+        if (deletingDocId) setDeletingDocId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAddModal, editingDoc, deletingDocId]);
+
   const docTypes = [
     'All',
     'GST & Statutory',
-    'Quality Lab Report',
+    'Technical & Lab Report',
     'E-Way Bill',
     'Supplier Invoice',
     'Delivery Challan'
   ];
 
-  const filteredDocs = documents.filter(d => {
+  const filteredDocs = sortByLatest(documents.filter(d => {
     const matchesType = typeFilter === 'All' || d.documentType === typeFilter;
     const matchesSearch = d.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       d.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       d.relatedEntity.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesType && matchesSearch;
-  });
+  }));
 
   const handleCreateDocument = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,27 +110,58 @@ export const DocumentsModule: React.FC = () => {
   const handleUpdateDocument = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDoc) return;
-    await updateDocument(editingDoc.id, editingDoc);
+    const targetDoc = editingDoc;
     setEditingDoc(null);
+    await updateDocument(targetDoc.id, targetDoc);
   };
 
   const handleDeleteDocumentConfirm = async () => {
     if (!deletingDocId) return;
-    await deleteDocument(deletingDocId);
+    const id = deletingDocId;
     setDeletingDocId(null);
+    await deleteDocument(id);
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
+            <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
+              {docTypes.map(t => (
+                <button
+                  key={t}
+                  onClick={() => setTypeFilter(t)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                    typeFilter === t ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full sm:w-60">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search document..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
               Electronic Document Management (EDM)
             </h1>
             <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">
-              Statutory &amp; Quality Repositories
+              Statutory &amp; Compliance Repositories
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
@@ -131,35 +179,7 @@ export const DocumentsModule: React.FC = () => {
           <Upload className="w-3.5 h-3.5" />
           <span>Upload Document</span>
         </button>
-      </div>
-
-      {/* Filter tabs */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
-        <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
-          {docTypes.map(t => (
-            <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                typeFilter === t ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full sm:w-60">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search document..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
-          />
-        </div>
-      </div>
+      </ModuleHeader>
 
       {/* Document Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -229,8 +249,19 @@ export const DocumentsModule: React.FC = () => {
 
       {/* UPLOAD MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddModal(false);
+              resetDocForm();
+            }
+          }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Upload Real Document File</h3>
             
             {uploadError && (
@@ -323,8 +354,14 @@ export const DocumentsModule: React.FC = () => {
 
       {/* EDIT MODAL */}
       {editingDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingDoc(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Edit Document Details</h3>
             <form onSubmit={handleUpdateDocument} className="space-y-3">
               <div>

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserCheck, Plus, Search, Phone, Briefcase, Edit, Trash2 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Employee } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const EmployeesModule: React.FC = () => {
   const { employees, addEmployee, updateEmployee, deleteEmployee } = useERP();
@@ -33,15 +35,27 @@ export const EmployeesModule: React.FC = () => {
     setEmpSalary('');
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showAddModal) setShowAddModal(false);
+        if (editingEmployee) setEditingEmployee(null);
+        if (deletingEmployeeId) setDeletingEmployeeId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAddModal, editingEmployee, deletingEmployeeId]);
+
   const departments = ['All', 'Production', 'Sales', 'Purchase', 'Accounts', 'Warehouse', 'Dispatch', 'Administration'];
 
-  const filteredEmployees = employees.filter(e => {
+  const filteredEmployees = sortByLatest(employees.filter(e => {
     const matchesDept = deptFilter === 'All' || e.department === deptFilter;
     const matchesSearch = e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.employeeCode.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesDept && matchesSearch;
-  });
+  }));
 
   const totalPayroll = employees.reduce((acc, curr) => acc + curr.monthlySalary, 0);
 
@@ -64,20 +78,51 @@ export const EmployeesModule: React.FC = () => {
   const handleUpdateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingEmployee) return;
-    await updateEmployee(editingEmployee.id, editingEmployee);
+    const targetEmp = editingEmployee;
     setEditingEmployee(null);
+    await updateEmployee(targetEmp.id, targetEmp);
   };
 
   const handleDeleteEmployeeConfirm = async () => {
     if (!deletingEmployeeId) return;
-    await deleteEmployee(deletingEmployeeId);
+    const id = deletingEmployeeId;
     setDeletingEmployeeId(null);
+    await deleteEmployee(id);
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
+            <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
+              {departments.map(d => (
+                <button
+                  key={d}
+                  onClick={() => setDeptFilter(d)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                    deptFilter === d ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full sm:w-60">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search employee..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -88,7 +133,7 @@ export const EmployeesModule: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            Plant management across 7 departments: Production, Sales, Purchase, Quality Lab, Accounts, and Dispatch.
+            Plant management across departments: Production, Sales, Purchase, Warehouse, Accounts, and Dispatch.
           </p>
         </div>
 
@@ -102,35 +147,7 @@ export const EmployeesModule: React.FC = () => {
           <Plus className="w-3.5 h-3.5" />
           <span>Add Employee</span>
         </button>
-      </div>
-
-      {/* Dept filter */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
-        <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
-          {departments.map(d => (
-            <button
-              key={d}
-              onClick={() => setDeptFilter(d)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                deptFilter === d ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-              }`}
-            >
-              {d}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full sm:w-60">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search employee..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
-          />
-        </div>
-      </div>
+      </ModuleHeader>
 
       {/* Employees Table */}
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
@@ -190,8 +207,14 @@ export const EmployeesModule: React.FC = () => {
 
       {/* ADD EMPLOYEE MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAddModal(false); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Add New Employee</h3>
             <form onSubmit={handleCreateEmployee} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -287,8 +310,14 @@ export const EmployeesModule: React.FC = () => {
 
       {/* EDIT EMPLOYEE MODAL */}
       {editingEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingEmployee(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">Edit Employee {editingEmployee.employeeCode}</h3>
             <form onSubmit={handleUpdateEmployee} className="space-y-3">
               <div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, 
   Plus, 
@@ -16,6 +16,8 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { Supplier } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const SuppliersModule: React.FC = () => {
   const { suppliers, rawMaterials, purchaseOrders, setActiveModule, setIsQuickAddOpen, setQuickAddType, addSupplier, updateSupplier, deleteSupplier } = useERP();
@@ -28,12 +30,23 @@ export const SuppliersModule: React.FC = () => {
   const [deletingSupplierId, setDeletingSupplierId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isAddOpen) setIsAddOpen(false);
+        if (editingSupplier) setEditingSupplier(null);
+        if (deletingSupplierId) setDeletingSupplierId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAddOpen, editingSupplier, deletingSupplierId]);
+
   // Add Supplier form state
   const [newSupp, setNewSupp] = useState({
     supplierName: '',
     contactPerson: '',
     mobile: '',
-    email: '',
     address: '',
     gstin: '',
     materialSupplied: '',
@@ -49,7 +62,6 @@ export const SuppliersModule: React.FC = () => {
       supplierName: '',
       contactPerson: '',
       mobile: '',
-      email: '',
       address: '',
       gstin: '',
       materialSupplied: '',
@@ -61,21 +73,21 @@ export const SuppliersModule: React.FC = () => {
     });
   };
 
-  const filteredSuppliers = suppliers.filter(s => 
+  const filteredSuppliers = sortByLatest(suppliers.filter(s => 
     s.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.materialSupplied.some(m => m.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  ));
 
   const activeSupplier = selectedSupplier || filteredSuppliers[0];
-  const suppPOs = activeSupplier ? purchaseOrders.filter(p => p.supplierId === activeSupplier.id) : [];
+  const suppPOs = activeSupplier ? sortByLatest(purchaseOrders.filter(p => p.supplierId === activeSupplier.id)) : [];
 
   const totalPayables = suppliers.reduce((acc, curr) => acc + curr.outstandingBalance, 0);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -109,7 +121,7 @@ export const SuppliersModule: React.FC = () => {
             <span>New Purchase Order</span>
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Split view */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -178,7 +190,7 @@ export const SuppliersModule: React.FC = () => {
                     {activeSupplier.supplierName}
                   </h2>
                   <div className="text-[11px] text-neutral-500">
-                    {activeSupplier.contactPerson} · {activeSupplier.mobile} · {activeSupplier.email}
+                    {activeSupplier.contactPerson} · {activeSupplier.mobile}{activeSupplier.email ? ` · ${activeSupplier.email}` : ''}
                   </div>
                 </div>
 
@@ -294,8 +306,14 @@ export const SuppliersModule: React.FC = () => {
 
       {/* Add Supplier Modal */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setIsAddOpen(false); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Add New Supplier</div>
               <button onClick={() => setIsAddOpen(false)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">
@@ -311,7 +329,6 @@ export const SuppliersModule: React.FC = () => {
                     supplierName: newSupp.supplierName,
                     contactPerson: newSupp.contactPerson,
                     mobile: newSupp.mobile,
-                    email: newSupp.email,
                     address: newSupp.address,
                     gstin: newSupp.gstin,
                     materialSupplied: [newSupp.materialSupplied],
@@ -323,20 +340,7 @@ export const SuppliersModule: React.FC = () => {
                     rating: 5
                   });
                   setIsAddOpen(false);
-                  setNewSupp({
-                    supplierName: '',
-                    contactPerson: '',
-                    mobile: '',
-                    email: '',
-                    address: '',
-                    gstin: '',
-                    materialSupplied: '',
-                    paymentTerms: 'Net 30 Days',
-                    creditPeriodDays: 30,
-                    bankName: '',
-                    accountNo: '',
-                    ifscCode: ''
-                  });
+                  resetSuppForm();
                 } finally {
                   setIsSubmitting(false);
                 }
@@ -378,18 +382,6 @@ export const SuppliersModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={newSupp.email}
-                    onChange={(e) => setNewSupp({ ...newSupp, email: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">GSTIN</label>
                   <input
                     type="text"
@@ -398,31 +390,32 @@ export const SuppliersModule: React.FC = () => {
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono uppercase"
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Material Supplied</label>
-                  {rawMaterials.length > 0 ? (
-                    <select
-                      value={newSupp.materialSupplied}
-                      onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
-                      className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                    >
-                      <option value="">Select Raw Material</option>
-                      {rawMaterials.map((rm) => (
-                        <option key={rm.id} value={rm.materialName}>
-                          {rm.materialName} ({rm.category})
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      placeholder="e.g. Bentonite Ore"
-                      value={newSupp.materialSupplied}
-                      onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
-                      className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                    />
-                  )}
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Material Supplied</label>
+                {rawMaterials.length > 0 ? (
+                  <select
+                    value={newSupp.materialSupplied}
+                    onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  >
+                    <option value="">Select Raw Material</option>
+                    {rawMaterials.map((rm) => (
+                      <option key={rm.id} value={rm.materialName}>
+                        {rm.materialName} ({rm.category})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="e.g. Bentonite Ore"
+                    value={newSupp.materialSupplied}
+                    onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -481,8 +474,14 @@ export const SuppliersModule: React.FC = () => {
 
       {/* Edit Supplier Modal */}
       {editingSupplier && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingSupplier(null); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Edit Supplier: {editingSupplier.code}</div>
               <button onClick={() => setEditingSupplier(null)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">
@@ -537,18 +536,6 @@ export const SuppliersModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={editingSupplier.email}
-                    onChange={(e) => setEditingSupplier({ ...editingSupplier, email: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">GSTIN</label>
                   <input
                     type="text"
@@ -557,15 +544,16 @@ export const SuppliersModule: React.FC = () => {
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono uppercase"
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Credit Days</label>
-                  <input
-                    type="number"
-                    value={editingSupplier.creditPeriodDays}
-                    onChange={(e) => setEditingSupplier({ ...editingSupplier, creditPeriodDays: Number(e.target.value) })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Credit Days</label>
+                <input
+                  type="number"
+                  value={editingSupplier.creditPeriodDays}
+                  onChange={(e) => setEditingSupplier({ ...editingSupplier, creditPeriodDays: Number(e.target.value) })}
+                  className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                />
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -630,14 +618,10 @@ export const SuppliersModule: React.FC = () => {
         onClose={() => setDeletingSupplierId(null)}
         onConfirm={async () => {
           if (!deletingSupplierId) return;
-          setIsSubmitting(true);
-          try {
-            await deleteSupplier(deletingSupplierId);
-            if (selectedSupplier?.id === deletingSupplierId) setSelectedSupplier(null);
-            setDeletingSupplierId(null);
-          } finally {
-            setIsSubmitting(false);
-          }
+          const id = deletingSupplierId;
+          setDeletingSupplierId(null);
+          if (selectedSupplier?.id === id) setSelectedSupplier(null);
+          await deleteSupplier(id);
         }}
       />
     </div>

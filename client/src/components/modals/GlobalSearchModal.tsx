@@ -12,6 +12,7 @@ import {
   Building 
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 export const GlobalSearchModal: React.FC = () => {
   const { 
@@ -27,10 +28,14 @@ export const GlobalSearchModal: React.FC = () => {
     products, 
     rawMaterials,
     dispatches,
-    qcInspections,
     setActiveModule,
     setPrintableDoc
   } = useERP();
+
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    isSearchOpen,
+    () => setIsSearchOpen(false)
+  );
 
   const [selectedBatch, setSelectedBatch] = useState<any | null>(null);
 
@@ -70,12 +75,18 @@ export const GlobalSearchModal: React.FC = () => {
   const activeBatch = selectedBatch || matchedBatches[0];
 
   // Trace data for activeBatch
-  const batchQC = activeBatch ? qcInspections.find(q => q.batchLotNumber === activeBatch.batchNumber) : null;
   const batchDispatches = activeBatch ? dispatches.filter(d => d.batchNumber === activeBatch.batchNumber) : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-20 bg-neutral-900/60 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-4xl overflow-hidden flex flex-col max-h-[85vh]">
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-20 bg-neutral-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+    >
+      <div
+        ref={contentRef}
+        className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-4xl overflow-hidden flex flex-col max-h-[85vh]"
+      >
         {/* Search Input Bar */}
         <div className="p-4 border-b border-neutral-200 flex items-center gap-3 bg-neutral-50">
           <Search className="w-5 h-5 text-neutral-400 shrink-0" />
@@ -146,7 +157,7 @@ export const GlobalSearchModal: React.FC = () => {
                       <div className="text-[10px] text-neutral-400 mt-1 flex items-center gap-2">
                         <span>Mfg: {b.productionDate}</span>
                         <span>·</span>
-                        <span className="text-emerald-700 font-medium">QC: {b.qcStatus}</span>
+                        <span className="text-emerald-700 font-medium">Status: {b.status || 'In Stock'}</span>
                       </div>
                     </div>
                   ))}
@@ -271,25 +282,10 @@ export const GlobalSearchModal: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Step 3: Quality Control Lab Testing */}
+                  {/* Step 3: Finished Goods Storage */}
                   <div className="relative">
                     <div className="absolute -left-[23px] top-0.5 w-3.5 h-3.5 rounded-full bg-emerald-600 border-2 border-white" />
-                    <div className="font-semibold text-neutral-900">3. Quality Control Inspection</div>
-                    <div className="text-[11px] text-emerald-700 font-medium mt-0.5 flex items-center gap-1">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span>Lab Approval Status: {activeBatch.qcStatus}</span>
-                    </div>
-                    {batchQC && (
-                      <div className="text-[10px] text-neutral-500 mt-1">
-                        Inspector: {batchQC.inspector} · Sieve &amp; Swell Tests Passed
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Step 4: Finished Goods Storage */}
-                  <div className="relative">
-                    <div className="absolute -left-[23px] top-0.5 w-3.5 h-3.5 rounded-full bg-emerald-600 border-2 border-white" />
-                    <div className="font-semibold text-neutral-900">4. Inventory Storage</div>
+                    <div className="font-semibold text-neutral-900">3. Finished Goods Storage</div>
                     <div className="text-[11px] text-neutral-600 mt-0.5">
                       Location: <span className="font-medium text-neutral-800">{activeBatch.storageLocation}</span>
                     </div>
@@ -298,10 +294,10 @@ export const GlobalSearchModal: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Step 5: Customer Dispatches */}
+                  {/* Step 4: Customer Dispatches */}
                   <div className="relative">
                     <div className="absolute -left-[23px] top-0.5 w-3.5 h-3.5 rounded-full bg-emerald-600 border-2 border-white" />
-                    <div className="font-semibold text-neutral-900">5. Dispatches &amp; Customer Invoices</div>
+                    <div className="font-semibold text-neutral-900">4. Dispatches &amp; Customer Invoices</div>
                     {batchDispatches.length > 0 ? (
                       <div className="mt-1 space-y-1.5">
                         {batchDispatches.map(d => (

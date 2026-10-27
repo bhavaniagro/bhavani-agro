@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Landmark, 
   Receipt, 
@@ -17,6 +17,8 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { SalesInvoice, PaymentTransaction } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const FinanceAccountsModule: React.FC = () => {
   const { 
@@ -51,10 +53,10 @@ export const FinanceAccountsModule: React.FC = () => {
   const [editingPayment, setEditingPayment] = useState<PaymentTransaction | null>(null);
   const [deletePaymentId, setDeletePaymentId] = useState<string | null>(null);
 
-  const filteredInvoices = invoices.filter(inv => 
+  const filteredInvoices = sortByLatest(invoices.filter(inv => 
     inv.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     inv.customerName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const totalReceivables = invoices.reduce((acc, curr) => acc + curr.balanceAmount, 0);
   const totalPayables = suppliers.reduce((acc, curr) => acc + curr.outstandingBalance, 0);
@@ -96,27 +98,89 @@ export const FinanceAccountsModule: React.FC = () => {
 
   const handleDeleteInvoice = async () => {
     if (!deleteInvoiceId) return;
-    await deleteSalesInvoice(deleteInvoiceId);
+    const id = deleteInvoiceId;
     setDeleteInvoiceId(null);
+    await deleteSalesInvoice(id);
   };
 
   const handleUpdatePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPayment) return;
-    await updatePayment(editingPayment.id, editingPayment);
+    const targetPay = editingPayment;
     setEditingPayment(null);
+    await updatePayment(targetPay.id, targetPay);
   };
 
   const handleDeletePayment = async () => {
     if (!deletePaymentId) return;
-    await deletePayment(deletePaymentId);
+    const id = deletePaymentId;
     setDeletePaymentId(null);
+    await deletePayment(id);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showPaymentModal) {
+          setShowPaymentModal(false);
+          setSelectedInvoice(null);
+        }
+        if (editingInvoice) setEditingInvoice(null);
+        if (editingPayment) setEditingPayment(null);
+        if (deleteInvoiceId) setDeleteInvoiceId(null);
+        if (deletePaymentId) setDeletePaymentId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showPaymentModal, editingInvoice, editingPayment, deleteInvoiceId, deletePaymentId]);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setActiveTab('receivables')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'receivables' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Customer Invoices &amp; Aging ({invoices.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('payables')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'payables' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Supplier Payables ({suppliers.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('payments')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'payments' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Bank Receipts &amp; Ledger ({payments.length})
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
+              <input
+                type="text"
+                placeholder="Search invoice #, customer..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -130,7 +194,7 @@ export const FinanceAccountsModule: React.FC = () => {
             Real-time customer receivables aging, automated payment reconciliation, and supplier accounts payable.
           </p>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
@@ -164,47 +228,6 @@ export const FinanceAccountsModule: React.FC = () => {
             ₹{totalPayables.toLocaleString('en-IN')}
           </div>
           <div className="text-[10px] text-neutral-400 mt-1">Mine ores &amp; packaging balance</div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
-          <button
-            onClick={() => setActiveTab('receivables')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'receivables' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Customer Invoices &amp; Aging ({invoices.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('payables')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'payables' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Supplier Payables ({suppliers.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('payments')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'payments' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Bank Receipts &amp; Ledger ({payments.length})
-          </button>
-        </div>
-
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
-          <input
-            type="text"
-            placeholder="Search invoice #, customer..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
-          />
         </div>
       </div>
 
@@ -327,7 +350,7 @@ export const FinanceAccountsModule: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {suppliers.map(s => (
+              {sortByLatest(suppliers).map(s => (
                 <tr key={s.id} className="hover:bg-neutral-50/50">
                   <td className="p-3 font-semibold text-neutral-900">{s.supplierName}</td>
                   <td className="p-3 text-neutral-600">{s.materialSupplied.join(', ')}</td>
@@ -369,7 +392,7 @@ export const FinanceAccountsModule: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {payments.map(p => (
+              {sortByLatest(payments).map(p => (
                 <tr key={p.id} className="hover:bg-neutral-50/50">
                   <td className="p-3 font-mono font-bold text-neutral-900">{p.transactionNumber}</td>
                   <td className="p-3 font-semibold text-neutral-900">{p.partyName}</td>
@@ -413,8 +436,14 @@ export const FinanceAccountsModule: React.FC = () => {
 
       {/* RECORD PAYMENT MODAL */}
       {showPaymentModal && selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowPaymentModal(false); setSelectedInvoice(null); } }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-1">
               Record Customer Receipt for {selectedInvoice.invoiceNumber}
             </h3>
@@ -484,8 +513,14 @@ export const FinanceAccountsModule: React.FC = () => {
 
       {/* EDIT INVOICE MODAL */}
       {editingInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingInvoice(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">
               Edit Sales Invoice {editingInvoice.invoiceNumber}
             </h3>
@@ -567,8 +602,14 @@ export const FinanceAccountsModule: React.FC = () => {
 
       {/* EDIT PAYMENT MODAL */}
       {editingPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingPayment(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-md p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-3">
               Edit Payment Voucher {editingPayment.transactionNumber}
             </h3>

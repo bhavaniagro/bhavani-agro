@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   PackageCheck, 
   Boxes, 
@@ -16,6 +16,8 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { FinishedProduct } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const FinishedGoodsModule: React.FC = () => {
   const { 
@@ -35,6 +37,18 @@ export const FinishedGoodsModule: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<(Omit<FinishedProduct, 'currentStockMT' | 'reservedStockMT'> & { currentStockMT?: number | string; reservedStockMT?: number | string }) | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isAddOpen) setIsAddOpen(false);
+        if (editingProduct) setEditingProduct(null);
+        if (deletingProductId) setDeletingProductId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAddOpen, editingProduct, deletingProductId]);
 
   // New product state
   const [newProd, setNewProd] = useState<{
@@ -91,11 +105,11 @@ export const FinishedGoodsModule: React.FC = () => {
     });
   };
 
-  const filteredProducts = products.filter(p => 
+  const filteredProducts = sortByLatest(products.filter(p => 
     p.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const totalFinishedValuation = products.reduce((acc, curr) => 
     acc + ((Number(curr.currentStockMT) || 0) * (Number(curr.standardCostPerMT) || 0)), 0
@@ -108,7 +122,7 @@ export const FinishedGoodsModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -119,7 +133,7 @@ export const FinishedGoodsModule: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            Only <strong>QC Approved</strong> batches become Available for Sale. Manage warehouse bays, packaging bags, and dispatch reservations.
+            Completed batches immediately become Available for Sale. Manage warehouse bays, packaging bags, and dispatch reservations.
           </p>
         </div>
 
@@ -139,7 +153,7 @@ export const FinishedGoodsModule: React.FC = () => {
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Summary Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -170,7 +184,7 @@ export const FinishedGoodsModule: React.FC = () => {
         <div className="bg-white p-3 rounded-lg border border-neutral-200">
           <div className="text-neutral-500 text-[11px]">Certified Batches in Stock</div>
           <div className="font-bold text-base font-mono text-neutral-900 mt-1">
-            {productionBatches.filter(b => b.qcStatus === 'Approved').length} Batches
+            {productionBatches.filter(b => (b.status || 'In Stock') === 'In Stock').length} Batches
           </div>
           <div className="text-[10px] text-neutral-400">Complete lot traceability</div>
         </div>
@@ -277,8 +291,14 @@ export const FinishedGoodsModule: React.FC = () => {
 
       {/* Add Product Modal */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setIsAddOpen(false); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Add Finished Product</div>
               <button onClick={() => setIsAddOpen(false)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">
@@ -431,8 +451,14 @@ export const FinishedGoodsModule: React.FC = () => {
 
       {/* Edit Product Modal */}
       {editingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingProduct(null); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Edit Product: {editingProduct.sku}</div>
               <button onClick={() => setEditingProduct(null)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">
@@ -554,13 +580,9 @@ export const FinishedGoodsModule: React.FC = () => {
         onClose={() => setDeletingProductId(null)}
         onConfirm={async () => {
           if (!deletingProductId) return;
-          setIsSubmitting(true);
-          try {
-            await deleteProduct(deletingProductId);
-            setDeletingProductId(null);
-          } finally {
-            setIsSubmitting(false);
-          }
+          const id = deletingProductId;
+          setDeletingProductId(null);
+          await deleteProduct(id);
         }}
       />
     </div>

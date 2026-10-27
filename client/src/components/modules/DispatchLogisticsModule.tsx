@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Truck, 
   Plus, 
@@ -17,6 +17,8 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { DispatchChallan, VehicleMaster, DispatchStatus } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const DispatchLogisticsModule: React.FC = () => {
   const { 
@@ -58,12 +60,12 @@ export const DispatchLogisticsModule: React.FC = () => {
   const [vehPhone, setVehPhone] = useState('');
   const [vehCapacity, setVehCapacity] = useState(30);
 
-  const filteredDispatches = dispatches.filter(d => 
+  const filteredDispatches = sortByLatest(dispatches.filter(d => 
     d.dispatchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     d.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     d.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     d.destination.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const statuses: DispatchStatus[] = ['Ready', 'Loaded', 'Dispatched', 'In Transit', 'Delivered'];
 
@@ -96,8 +98,9 @@ export const DispatchLogisticsModule: React.FC = () => {
 
   const handleDeleteDispatchConfirm = async () => {
     if (!deletingDispatch) return;
-    await deleteDispatch(deletingDispatch.id);
+    const id = deletingDispatch.id;
     setDeletingDispatch(null);
+    await deleteDispatch(id);
   };
 
   // Vehicle Handlers
@@ -114,7 +117,9 @@ export const DispatchLogisticsModule: React.FC = () => {
   const handleSaveVehicleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingVehicle) return;
-    await updateVehicle(editingVehicle.id, {
+    const targetVeh = editingVehicle;
+    setEditingVehicle(null);
+    await updateVehicle(targetVeh.id, {
       vehicleNumber: vehNumber,
       vehicleType: vehType as any,
       transporterName: vehTransporter,
@@ -122,13 +127,13 @@ export const DispatchLogisticsModule: React.FC = () => {
       driverPhone: vehPhone,
       capacityMT: Number(vehCapacity)
     });
-    setEditingVehicle(null);
   };
 
   const handleDeleteVehicleConfirm = async () => {
     if (!deletingVehicle) return;
-    await deleteVehicle(deletingVehicle.id);
+    const id = deletingVehicle.id;
     setDeletingVehicle(null);
+    await deleteVehicle(id);
   };
 
   const handleCreateVehicle = async (e: React.FormEvent) => {
@@ -161,10 +166,60 @@ export const DispatchLogisticsModule: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (editingDispatch) setEditingDispatch(null);
+        if (showAddVehicleModal || editingVehicle) {
+          setShowAddVehicleModal(false);
+          setEditingVehicle(null);
+        }
+        if (deletingDispatch) setDeletingDispatch(null);
+        if (deletingVehicle) setDeletingVehicle(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingDispatch, showAddVehicleModal, editingVehicle, deletingDispatch, deletingVehicle]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setActiveTab('challans')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'challans' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Delivery Challans ({dispatches.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('vehicles')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'vehicles' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Vehicle &amp; Transporter Fleet ({vehicles.length})
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
+              <input
+                type="text"
+                placeholder="Search challan, vehicle, customer..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -182,45 +237,13 @@ export const DispatchLogisticsModule: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveModule('CRM & Sales')}
-            className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
+            className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
           >
-            + Dispatch from Sales Order
+            <Plus className="w-3.5 h-3.5" />
+            <span>Dispatch from Sales Order</span>
           </button>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
-          <button
-            onClick={() => setActiveTab('challans')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'challans' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Delivery Challans ({dispatches.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('vehicles')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'vehicles' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Vehicle &amp; Transporter Fleet ({vehicles.length})
-          </button>
-        </div>
-
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
-          <input
-            type="text"
-            placeholder="Search challan, vehicle, customer..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
-          />
-        </div>
-      </div>
+      </ModuleHeader>
 
       {/* TAB 1: DELIVERY CHALLANS */}
       {activeTab === 'challans' && (
@@ -298,7 +321,7 @@ export const DispatchLogisticsModule: React.FC = () => {
                           onClick={() => generateInvoiceFromDispatch(d.id)}
                           className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold cursor-pointer shadow-2xs"
                         >
-                          + Generate GST Invoice
+                          Generate GST Invoice
                         </button>
                       ) : (
                         <span className="text-[11px] font-mono text-emerald-800 font-semibold">
@@ -354,7 +377,7 @@ export const DispatchLogisticsModule: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {vehicles.map(v => (
+            {sortByLatest(vehicles).map(v => (
               <div key={v.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-2">
                 <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
                   <div>
@@ -417,8 +440,14 @@ export const DispatchLogisticsModule: React.FC = () => {
 
       {/* EDIT DISPATCH MODAL */}
       {editingDispatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingDispatch(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit Dispatch ({editingDispatch.dispatchNumber})
@@ -528,8 +557,19 @@ export const DispatchLogisticsModule: React.FC = () => {
 
       {/* CREATE / EDIT VEHICLE MODAL */}
       {(showAddVehicleModal || editingVehicle) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddVehicleModal(false);
+              setEditingVehicle(null);
+            }
+          }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 {editingVehicle ? `Edit Vehicle (${editingVehicle.vehicleNumber})` : 'Register New Transport Vehicle'}

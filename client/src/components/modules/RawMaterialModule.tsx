@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   Boxes, 
@@ -16,6 +16,8 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { RawMaterial } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const RawMaterialModule: React.FC = () => {
   const { 
@@ -36,6 +38,18 @@ export const RawMaterialModule: React.FC = () => {
   const [editingRM, setEditingRM] = useState<RawMaterial | null>(null);
   const [deletingRMId, setDeletingRMId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isAddOpen) setIsAddOpen(false);
+        if (editingRM) setEditingRM(null);
+        if (deletingRMId) setDeletingRMId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAddOpen, editingRM, deletingRMId]);
 
   // Add form state
   const [newRM, setNewRM] = useState({
@@ -78,13 +92,13 @@ export const RawMaterialModule: React.FC = () => {
     'Consumable'
   ];
 
-  const filteredMaterials = rawMaterials.filter(rm => {
+  const filteredMaterials = sortByLatest(rawMaterials.filter(rm => {
     const matchesCat = categoryFilter === 'All' || rm.category === categoryFilter;
     const matchesSearch = rm.materialName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       rm.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
       rm.primarySupplier.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCat && matchesSearch;
-  });
+  }));
 
   const totalRawStockValue = rawMaterials.reduce((acc, curr) => {
     const qty = curr.unit === 'MT' ? curr.currentStock : curr.currentStock;
@@ -96,7 +110,36 @@ export const RawMaterialModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
+            <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(cat)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                    categoryFilter === cat ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full sm:w-64">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search material SKU, name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -112,7 +155,7 @@ export const RawMaterialModule: React.FC = () => {
             )}
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            <strong>Stock Formula:</strong> Opening Stock + Purchases + Production Returns − Consumption − Issues = Current Stock
+            Stock ledger tracking opening stock, purchases, production consumption, and current available balance.
           </p>
         </div>
 
@@ -135,35 +178,7 @@ export const RawMaterialModule: React.FC = () => {
             <span>Reorder Raw Material</span>
           </button>
         </div>
-      </div>
-
-      {/* Category Pills & Search */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
-        <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                categoryFilter === cat ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search material SKU, name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
-          />
-        </div>
-      </div>
+      </ModuleHeader>
 
       {/* Raw Materials Table */}
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
@@ -174,9 +189,9 @@ export const RawMaterialModule: React.FC = () => {
                 <th className="p-3">Material &amp; SKU</th>
                 <th className="p-3">Category &amp; Location</th>
                 <th className="p-3 text-right">Opening Stock</th>
-                <th className="p-3 text-right">+ Purchases</th>
-                <th className="p-3 text-right">− Consumed</th>
-                <th className="p-3 text-right font-bold text-neutral-900">= Current Stock</th>
+                <th className="p-3 text-right">Purchases</th>
+                <th className="p-3 text-right">Consumed</th>
+                <th className="p-3 text-right font-bold text-neutral-900">Current Stock</th>
                 <th className="p-3 text-right">Reserved</th>
                 <th className="p-3 text-right">Avail. to Use</th>
                 <th className="p-3">Reorder Alert</th>
@@ -202,10 +217,10 @@ export const RawMaterialModule: React.FC = () => {
                       {rm.openingStock} {rm.unit}
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums text-emerald-700">
-                      +{rm.totalPurchases} {rm.unit}
+                      {rm.totalPurchases} {rm.unit}
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums text-neutral-600">
-                      −{rm.totalConsumption} {rm.unit}
+                      {rm.totalConsumption} {rm.unit}
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums font-bold text-sm text-neutral-900">
                       {rm.currentStock} {rm.unit}
@@ -257,8 +272,14 @@ export const RawMaterialModule: React.FC = () => {
 
       {/* Add Raw Material Modal */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setIsAddOpen(false); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Add Raw Material</div>
               <button onClick={() => setIsAddOpen(false)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">
@@ -389,8 +410,14 @@ export const RawMaterialModule: React.FC = () => {
 
       {/* Edit Raw Material Modal */}
       {editingRM && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingRM(null); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Edit Material: {editingRM.sku}</div>
               <button onClick={() => setEditingRM(null)} className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer">
@@ -475,13 +502,9 @@ export const RawMaterialModule: React.FC = () => {
         onClose={() => setDeletingRMId(null)}
         onConfirm={async () => {
           if (!deletingRMId) return;
-          setIsSubmitting(true);
-          try {
-            await deleteRawMaterial(deletingRMId);
-            setDeletingRMId(null);
-          } finally {
-            setIsSubmitting(false);
-          }
+          const id = deletingRMId;
+          setDeletingRMId(null);
+          await deleteRawMaterial(id);
         }}
       />
     </div>

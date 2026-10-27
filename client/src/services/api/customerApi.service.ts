@@ -1,8 +1,9 @@
 import type { Customer } from "../../types/erp";
 import { API_BASE_URL } from "../../config/apiConfig";
 
-export async function getCustomersFromApi(): Promise<Customer[]> {
-    const response = await fetch(`${API_BASE_URL}/customers`);
+export async function getCustomersFromApi(since?: string): Promise<Customer[]> {
+    const url = since ? `${API_BASE_URL}/customers?since=${encodeURIComponent(since)}` : `${API_BASE_URL}/customers`;
+    const response = await fetch(url);
 
     if (!response.ok) {
         throw new Error("Failed to fetch customers");

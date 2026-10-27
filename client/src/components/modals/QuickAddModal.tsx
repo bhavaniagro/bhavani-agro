@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { X, Check } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { X, Check, AlertTriangle } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { LeadFormFields, LeadFormState, validateLeadForm } from '../crm/LeadFormFields';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 export const QuickAddModal: React.FC = () => {
   const { 
@@ -13,6 +14,8 @@ export const QuickAddModal: React.FC = () => {
     suppliers,
     products,
     rawMaterials,
+    salesOrders,
+    getCustomerCredit,
     addLead,
     addCustomer,
     addSalesOrder,
@@ -21,13 +24,34 @@ export const QuickAddModal: React.FC = () => {
     addExpense
   } = useERP();
 
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    isQuickAddOpen,
+    () => setIsQuickAddOpen(false)
+  );
+
   const [activeType, setActiveType] = useState<string>(quickAddType || 'Sales Order');
+  const [creditError, setCreditError] = useState<string | null>(null);
 
   // Form states
   const [soCustomer, setSoCustomer] = useState(customers[0]?.id || '');
   const [soProduct, setSoProduct] = useState(products[0]?.id || '');
   const [soQuantity, setSoQuantity] = useState(25);
   const [soRate, setSoRate] = useState(6200);
+
+  const selectedSoCustomer = customers.find(c => c.id === soCustomer) || customers[0];
+  const selectedSoProduct = products.find(p => p.id === soProduct) || products[0];
+  const estOrderTotal = Number(soQuantity) * Number(soRate || selectedSoProduct?.sellingPricePerMT || 0) * 1.05;
+
+  const currentCredit = useMemo(() => {
+    return getCustomerCredit(selectedSoCustomer);
+  }, [selectedSoCustomer, salesOrders, getCustomerCredit]);
+
+  const isCreditExceeded = (Number(selectedSoCustomer?.creditLimit) || 0) > 0 && estOrderTotal > currentCredit.availableCredit;
+
+  // Clear credit error on input change or modal toggle
+  useEffect(() => {
+    setCreditError(null);
+  }, [soCustomer, soProduct, soQuantity, soRate, isQuickAddOpen]);
 
   const [poSupplier, setPoSupplier] = useState(suppliers[0]?.id || '');
   const [poMaterial, setPoMaterial] = useState(rawMaterials[0]?.id || '');
@@ -110,13 +134,20 @@ export const QuickAddModal: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreditError(null);
 
     try {
       if (currentType === 'Sales Order') {
-        const cust = customers.find(c => c.id === soCustomer) || customers[0];
-        const prod = products.find(p => p.id === soProduct) || products[0];
+        const cust = selectedSoCustomer;
+        const prod = selectedSoProduct;
         if (!cust || !prod) return;
-        const total = soQuantity * (soRate || prod.sellingPricePerMT) * 1.05;
+        const total = estOrderTotal;
+
+        if (Number(cust.creditLimit) > 0 && total > currentCredit.availableCredit) {
+          const errMsg = `Order Rejected: Credit limit exceeded for ${cust.customerName}. Available credit limit is ₹${currentCredit.availableCredit.toLocaleString('en-IN')}, but order amount is ₹${total.toLocaleString('en-IN')}. (Total Credit Limit: ₹${currentCredit.creditLimit.toLocaleString('en-IN')}, Already Utilized: ₹${currentCredit.usedCredit.toLocaleString('en-IN')}).`;
+          setCreditError(errMsg);
+          return;
+        }
 
         await addSalesOrder({
           customerId: cust.id,
@@ -125,6 +156,7 @@ export const QuickAddModal: React.FC = () => {
           deliveryDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
           productId: prod.id,
           productName: prod.productName,
+          hsnCode: prod.hsnCode,
           quantityMT: Number(soQuantity),
           ratePerMT: Number(soRate || prod.sellingPricePerMT),
           discountPercent: 0,
@@ -230,10 +262,17 @@ export const QuickAddModal: React.FC = () => {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-      <div className={`bg-white rounded-xl shadow-2xl border border-neutral-200 w-full overflow-hidden flex flex-col max-h-[90vh] ${
-        currentType === 'Lead' ? 'max-w-2xl' : 'max-w-xl'
-      }`}>
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+    >
+      <div
+        ref={contentRef}
+        className={`bg-white rounded-xl shadow-2xl border border-neutral-200 w-full overflow-hidden flex flex-col max-h-[90vh] ${
+          currentType === 'Lead' ? 'max-w-2xl' : 'max-w-xl'
+        }`}
+      >
         {/* Header */}
         <div className="p-4 border-b border-neutral-200 flex items-center justify-between bg-neutral-50">
           <div className="font-bold text-sm text-neutral-900 flex items-center gap-2">
@@ -269,6 +308,25 @@ export const QuickAddModal: React.FC = () => {
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs overflow-y-auto max-h-[calc(90vh-130px)]">
+          {creditError && (
+            <div className="p-3 bg-rose-50 border-2 border-rose-400 rounded-lg text-rose-900 text-xs flex items-start justify-between gap-2 shadow-xs animate-in fade-in">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <div className="font-bold text-rose-800">🚫 ORDER REJECTED: CREDIT LIMIT EXCEEDED</div>
+                  <div className="text-[11px] leading-relaxed text-rose-950 font-medium">{creditError}</div>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setCreditError(null)} 
+                className="text-rose-500 hover:text-rose-700 p-0.5 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {currentType === 'Sales Order' && (
             <>
               <div>
@@ -283,22 +341,66 @@ export const QuickAddModal: React.FC = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Customer Credit Limit Live Badge / Warning */}
+              {selectedSoCustomer && Number(selectedSoCustomer.creditLimit) > 0 && (
+                <div className={`p-3 rounded-lg border text-xs transition-colors ${
+                  isCreditExceeded ? 'bg-rose-50 border-rose-300' : 'bg-neutral-50 border-neutral-200'
+                }`}>
+                  <div className="flex items-center justify-between font-medium">
+                    <span className="text-neutral-700">Credit Limit Status:</span>
+                    <span className={`font-mono font-bold ${isCreditExceeded ? 'text-rose-700' : 'text-emerald-700'}`}>
+                      Available: ₹{currentCredit.availableCredit.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-neutral-500 mt-1">
+                    <span>Total Limit: ₹{currentCredit.creditLimit.toLocaleString('en-IN')}</span>
+                    <span>Utilized: ₹{currentCredit.usedCredit.toLocaleString('en-IN')} ({currentCredit.orderCount} active orders)</span>
+                  </div>
+
+                  {isCreditExceeded ? (
+                    <div className="mt-2 p-2 bg-rose-100 border border-rose-300 rounded text-rose-900 font-semibold text-[11px] flex items-start gap-1.5 animate-in fade-in">
+                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                      <div>
+                        ⛔ <strong>ORDER WILL BE REJECTED:</strong> This order (₹{estOrderTotal.toLocaleString('en-IN')}) exceeds available credit (₹{currentCredit.availableCredit.toLocaleString('en-IN')}) by ₹{(estOrderTotal - currentCredit.availableCredit).toLocaleString('en-IN')}.
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-1.5 text-[11px] text-emerald-700 font-medium flex items-center justify-between border-t border-neutral-200/60 pt-1">
+                      <span>Remaining after this order:</span>
+                      <span className="font-mono font-bold">₹{Math.max(0, currentCredit.availableCredit - estOrderTotal).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Finished Product</label>
+                <select
+                  value={soProduct}
+                  onChange={(e) => {
+                    setSoProduct(e.target.value);
+                    const prod = products.find(p => p.id === e.target.value);
+                    if (prod) setSoRate(prod.sellingPricePerMT);
+                  }}
+                  className="w-full border border-neutral-300 rounded p-2 bg-white"
+                >
+                  {products.map(p => (
+                    <option key={p.id} value={p.id}>{p.productName}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Finished Product</label>
-                  <select
-                    value={soProduct}
-                    onChange={(e) => {
-                      setSoProduct(e.target.value);
-                      const prod = products.find(p => p.id === e.target.value);
-                      if (prod) setSoRate(prod.sellingPricePerMT);
-                    }}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.productName}</option>
-                    ))}
-                  </select>
+                  <label className="block text-neutral-700 font-medium mb-1">HSN Code</label>
+                  <input
+                    type="text"
+                    value={selectedSoProduct?.hsnCode || '31059000'}
+                    readOnly
+                    disabled
+                    placeholder="Auto-fetched HSN"
+                    className="w-full border border-neutral-200 rounded p-2 bg-neutral-100 text-neutral-600 font-mono cursor-not-allowed select-none"
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Quantity (MT)</label>
@@ -555,11 +657,11 @@ export const QuickAddModal: React.FC = () => {
                     onChange={(e) => setCustType(e.target.value)}
                     className="w-full border border-neutral-300 rounded p-2 bg-white"
                   >
-                    <option value="Distributor">Distributor</option>
                     <option value="Dealer">Dealer</option>
-                    <option value="Fertilizer Blender">Fertilizer Blender</option>
-                    <option value="Cooperative">Cooperative</option>
-                    <option value="Institutional Buyer">Institutional Buyer</option>
+                    <option value="Supplier">Supplier</option>
+                    <option value="Vendor">Vendor</option>
+                    <option value="End User">End User</option>
+                    <option value="Fertilizer">Fertilizer</option>
                   </select>
                 </div>
               </div>

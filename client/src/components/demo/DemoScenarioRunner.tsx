@@ -11,6 +11,7 @@ import {
   ChevronRight 
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 interface ScenarioStep {
   stepNumber: number;
@@ -32,6 +33,11 @@ export const DemoScenarioRunner: React.FC = () => {
     setActiveModule, 
     resetAllData 
   } = useERP();
+
+  const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
+    isDemoRunnerOpen,
+    () => setIsDemoRunnerOpen(false)
+  );
 
   const [isRunningAll, setIsRunningAll] = useState(false);
 
@@ -112,19 +118,19 @@ export const DemoScenarioRunner: React.FC = () => {
     },
     {
       stepNumber: 9,
-      phase: 'Batch Quality Review',
-      title: 'Batch Quality Verification (Moisture 6.5%, Swell 28ml, 16-30 Mesh 94.2%)',
-      description: 'QC Chemist Manish Trivedi verifies sieve retention, moisture analysis, and swelling index tests. All parameters pass standard.',
-      actionLabel: '9. Verify & Approve Batch',
+      phase: 'Batch Verification',
+      title: 'Batch Completion & Production Verification',
+      description: 'Production team verifies completed batch BNT-2609-100 and marks batch as In Stock with full mine lot traceability.',
+      actionLabel: '9. Confirm Batch Completion',
       moduleTarget: 'Production',
-      metricChange: 'Inspection QC-2609-065: Approved'
+      metricChange: 'Batch BNT-2609-100: In Stock'
     },
     {
       stepNumber: 10,
       phase: 'Inventory Release',
       title: 'Batch Released to Finished Goods Available for Sale',
-      description: 'Upon QC approval, 100 MT is added to Finished Goods inventory and made immediately available for commercial dispatch.',
-      actionLabel: '10. Release to Finished Goods',
+      description: 'Upon completion, 100 MT is credited to Finished Goods inventory and made immediately available for commercial dispatch.',
+      actionLabel: '10. View Finished Goods',
       moduleTarget: 'Finished Goods',
       metricChange: 'Finished stock increased by +100 MT'
     },
@@ -200,8 +206,15 @@ export const DemoScenarioRunner: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/70 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+    >
+      <div
+        ref={contentRef}
+        className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+      >
         {/* Header */}
         <div className="p-4 border-b border-neutral-200 bg-neutral-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">

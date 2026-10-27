@@ -10,6 +10,8 @@ import {
   Download
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const InventoryModule: React.FC = () => {
   const { 
@@ -22,8 +24,8 @@ export const InventoryModule: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'raw' | 'finished' | 'packaging' | 'damaged'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const packagingItems = rawMaterials.filter(r => r.category === 'Packaging');
-  const rawMineralItems = rawMaterials.filter(r => r.category !== 'Packaging');
+  const packagingItems = sortByLatest(rawMaterials.filter(r => r.category === 'Packaging'));
+  const rawMineralItems = sortByLatest(rawMaterials.filter(r => r.category !== 'Packaging'));
 
   const rawValuation = rawMaterials.reduce((acc, curr) => acc + (curr.currentStock * curr.averageCost), 0);
   const finishedValuation = products.reduce((acc, curr) => acc + (curr.currentStockMT * curr.standardCostPerMT), 0);
@@ -32,7 +34,57 @@ export const InventoryModule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg overflow-x-auto">
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'all' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Valuation Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('raw')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'raw' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Raw Materials ({rawMineralItems.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('finished')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'finished' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Finished Goods ({products.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('packaging')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'packaging' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Packaging Materials ({packagingItems.length})
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
+              <input
+                type="text"
+                placeholder="Search stock..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-48 outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -56,56 +108,7 @@ export const InventoryModule: React.FC = () => {
             <span>Export Stock Ledger</span>
           </button>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'all' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Valuation Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('raw')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'raw' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Raw Materials ({rawMineralItems.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('finished')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'finished' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Finished Goods ({products.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('packaging')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'packaging' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Packaging Materials ({packagingItems.length})
-          </button>
-        </div>
-
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
-          <input
-            type="text"
-            placeholder="Search stock..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-48 outline-none text-neutral-800"
-          />
-        </div>
-      </div>
+      </ModuleHeader>
 
       {/* OVERVIEW STATS */}
       {activeTab === 'all' && (
@@ -177,7 +180,7 @@ export const InventoryModule: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {products.map(p => (
+                {sortByLatest(products).map(p => (
                   <tr key={p.id} className="hover:bg-neutral-50/50">
                     <td className="p-3 font-semibold text-neutral-900">{p.productName}</td>
                     <td className="p-3 text-neutral-600">Finished Goods</td>

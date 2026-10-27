@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   Factory, 
@@ -17,6 +17,8 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { SalesOrder } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const SalesOrdersModule: React.FC = () => {
   const { 
@@ -72,7 +74,9 @@ export const SalesOrdersModule: React.FC = () => {
     const taxAmount = (subtotal * editTaxPercent) / 100;
     const totalAmount = subtotal + taxAmount;
 
-    await updateSalesOrder(editingOrder.id, {
+    const targetOrder = editingOrder;
+    setEditingOrder(null);
+    await updateSalesOrder(targetOrder.id, {
       customerName: editCustomerName,
       productName: editProductName,
       quantityMT: Number(editQuantityMT),
@@ -84,29 +88,69 @@ export const SalesOrdersModule: React.FC = () => {
       shippingAddress: editShippingAddress,
       notes: editRemarks,
     });
-    setEditingOrder(null);
   };
 
   const handleDeleteConfirm = async () => {
     if (!deletingOrder) return;
-    await deleteSalesOrder(deletingOrder.id);
+    const id = deletingOrder.id;
     setDeletingOrder(null);
+    await deleteSalesOrder(id);
   };
 
-  const filteredOrders = salesOrders.filter(so => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (editingOrder) setEditingOrder(null);
+        if (deletingOrder) setDeletingOrder(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingOrder, deletingOrder]);
+
+  const filteredOrders = sortByLatest(salesOrders.filter(so => {
     const matchesStatus = statusFilter === 'All' || so.status === statusFilter;
     const matchesSearch = so.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       so.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       so.productName.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
-  });
+  }));
 
   const totalOrderValue = salesOrders.reduce((acc, curr) => acc + curr.totalAmount, 0);
 
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
+            <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
+              {['All', 'Pending', 'Production Required', 'Ready', 'Dispatched', 'Completed', 'Rejected'].map(st => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                    statusFilter === st ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full sm:w-64">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search order #, customer, product..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -133,35 +177,7 @@ export const SalesOrdersModule: React.FC = () => {
             <span>New Sales Order</span>
           </button>
         </div>
-      </div>
-
-      {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-neutral-200 pb-3">
-        <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto p-1 bg-neutral-100 rounded-lg">
-          {['All', 'Pending', 'Production Required', 'Ready', 'Dispatched', 'Completed'].map(st => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                statusFilter === st ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-              }`}
-            >
-              {st}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search order #, customer, product..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
-          />
-        </div>
-      </div>
+      </ModuleHeader>
 
       {/* Sales Orders Table */}
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
@@ -230,6 +246,7 @@ export const SalesOrdersModule: React.FC = () => {
                         so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                         so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
                         so.status === 'Production Required' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
+                        so.status === 'Rejected' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
                         'bg-neutral-100 text-neutral-800'
                       }`}>
                         {so.status}
@@ -336,8 +353,14 @@ export const SalesOrdersModule: React.FC = () => {
 
       {/* EDIT SALES ORDER MODAL */}
       {editingOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingOrder(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit Sales Order ({editingOrder.orderNumber})

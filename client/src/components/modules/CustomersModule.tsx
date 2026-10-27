@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   Plus, 
@@ -17,6 +17,8 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Customer } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const CustomersModule: React.FC = () => {
   const { 
@@ -40,12 +42,23 @@ export const CustomersModule: React.FC = () => {
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredCustomers = customers.filter(c => 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (editingCustomer) setEditingCustomer(null);
+        if (deletingCustomerId) setDeletingCustomerId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingCustomer, deletingCustomerId]);
+
+  const filteredCustomers = sortByLatest(customers.filter(c => 
     c.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.state.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const activeCustomer = selectedCustomer || filteredCustomers[0];
 
@@ -70,14 +83,18 @@ export const CustomersModule: React.FC = () => {
   };
 
   // 360 Degree Customer Profile data
-  const custOrders = activeCustomer ? salesOrders.filter(s => isCustomerMatch(s.customerId, s.customerName, activeCustomer)) : [];
-  const custInvoices = activeCustomer ? invoices.filter(i => isCustomerMatch(i.customerId, i.customerName, activeCustomer)) : [];
-  const custDispatches = activeCustomer ? dispatches.filter(d => isCustomerMatch(d.customerId, d.customerName, activeCustomer)) : [];
+  const custOrders = activeCustomer ? sortByLatest(salesOrders.filter(s => isCustomerMatch(s.customerId, s.customerName, activeCustomer))) : [];
+  const custInvoices = activeCustomer ? sortByLatest(invoices.filter(i => isCustomerMatch(i.customerId, i.customerName, activeCustomer))) : [];
+  const custDispatches = activeCustomer ? sortByLatest(dispatches.filter(d => isCustomerMatch(d.customerId, d.customerName, activeCustomer))) : [];
+
+  const activeCustOrders = custOrders.filter(o => o.status !== 'Cancelled' && o.status !== 'Rejected');
+  const usedCustCredit = activeCustOrders.reduce((acc, curr) => acc + curr.totalAmount, 0);
+  const availableCustCredit = activeCustomer ? Math.max(0, activeCustomer.creditLimit - usedCustCredit) : 0;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -104,7 +121,7 @@ export const CustomersModule: React.FC = () => {
             <span>Add Customer</span>
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Main Split: Directory on Left, Profile View on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -180,7 +197,11 @@ export const CustomersModule: React.FC = () => {
                     <div className="font-mono font-bold text-sm text-neutral-900">
                       ₹{activeCustomer.creditLimit.toLocaleString('en-IN')}
                     </div>
-                    <div className="text-[10px] font-mono text-neutral-400">Terms: {activeCustomer.paymentTerms}</div>
+                    <div className="text-[11px] text-neutral-500 mt-1">Available Credit:</div>
+                    <div className={`font-mono font-bold text-sm ${availableCustCredit > 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      ₹{availableCustCredit.toLocaleString('en-IN')}
+                    </div>
+                    <div className="text-[10px] font-mono text-neutral-400">Utilized: ₹{usedCustCredit.toLocaleString('en-IN')} · {activeCustomer.paymentTerms}</div>
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
                     <button
@@ -211,10 +232,11 @@ export const CustomersModule: React.FC = () => {
                 </div>
 
                 <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-200">
-                  <div className="text-neutral-500 text-[10px]">Outstanding Balance</div>
-                  <div className="font-mono font-bold text-sm text-amber-800 mt-1">
-                    ₹{custInvoices.reduce((acc, curr) => acc + curr.balanceAmount, 0).toLocaleString('en-IN')}
+                  <div className="text-neutral-500 text-[10px]">Available Credit Limit</div>
+                  <div className={`font-mono font-bold text-sm mt-1 ${availableCustCredit > 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    ₹{availableCustCredit.toLocaleString('en-IN')}
                   </div>
+                  <div className="text-[9px] text-neutral-400">of ₹{activeCustomer.creditLimit.toLocaleString('en-IN')}</div>
                 </div>
 
                 <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-200">
@@ -222,6 +244,7 @@ export const CustomersModule: React.FC = () => {
                   <div className="font-mono font-bold text-sm text-neutral-900 mt-1">
                     {custOrders.length} Bookings
                   </div>
+                  <div className="text-[9px] text-neutral-400">{activeCustOrders.length} active</div>
                 </div>
 
                 <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-200">
@@ -361,8 +384,14 @@ export const CustomersModule: React.FC = () => {
 
       {/* Edit Customer Modal */}
       {editingCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingCustomer(null); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
+          >
             <div className="flex items-center justify-between p-4 border-b border-neutral-200 bg-neutral-50">
               <div className="font-bold text-neutral-900">Edit Customer: {editingCustomer.code}</div>
               <button
@@ -470,11 +499,14 @@ export const CustomersModule: React.FC = () => {
                     onChange={(e) => setEditingCustomer({ ...editingCustomer, customerType: e.target.value as any })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   >
-                    <option value="Distributor">Distributor</option>
                     <option value="Dealer">Dealer</option>
-                    <option value="Fertilizer Blender">Fertilizer Blender</option>
-                    <option value="Cooperative">Cooperative</option>
-                    <option value="Institutional Buyer">Institutional Buyer</option>
+                    <option value="Supplier">Supplier</option>
+                    <option value="Vendor">Vendor</option>
+                    <option value="End User">End User</option>
+                    <option value="Fertilizer">Fertilizer</option>
+                    {editingCustomer.customerType && !['Dealer', 'Supplier', 'Vendor', 'End User', 'Fertilizer'].includes(editingCustomer.customerType) && (
+                      <option value={editingCustomer.customerType}>{editingCustomer.customerType}</option>
+                    )}
                   </select>
                 </div>
               </div>
@@ -563,16 +595,12 @@ export const CustomersModule: React.FC = () => {
         onClose={() => setDeletingCustomerId(null)}
         onConfirm={async () => {
           if (!deletingCustomerId) return;
-          setIsSubmitting(true);
-          try {
-            await deleteCustomer(deletingCustomerId);
-            if (selectedCustomer?.id === deletingCustomerId) {
-              setSelectedCustomer(null);
-            }
-            setDeletingCustomerId(null);
-          } finally {
-            setIsSubmitting(false);
+          const id = deletingCustomerId;
+          setDeletingCustomerId(null);
+          if (selectedCustomer?.id === id) {
+            setSelectedCustomer(null);
           }
+          await deleteCustomer(id);
         }}
       />
     </div>

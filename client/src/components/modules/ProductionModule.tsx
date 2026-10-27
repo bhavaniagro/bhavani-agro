@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Factory, 
   Layers, 
@@ -18,6 +18,8 @@ import {
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ProductionOrder, ProductionBatch, BOM } from '../../types/erp';
+import { ModuleHeader } from '../common/ModuleHeader';
+import { sortByLatest } from '../../utils/sortUtils';
 
 export const ProductionModule: React.FC = () => {
   const { 
@@ -33,11 +35,9 @@ export const ProductionModule: React.FC = () => {
     addBOM,
     updateBOM,
     deleteBOM,
-    startProductionOrder, 
+    startProductionOrder,
     completeProductionOrder,
-    approveQC,
     approveProductionBatch,
-    qcInspections,
     setPrintableDoc,
     setActiveModule,
     setIsDemoRunnerOpen
@@ -79,11 +79,11 @@ export const ProductionModule: React.FC = () => {
   const [bomNotes, setBomNotes] = useState('');
   const [bomItems, setBomItems] = useState<any[]>([]);
 
-  const filteredOrders = productionOrders.filter(po => 
+  const filteredOrders = sortByLatest(productionOrders.filter(po => 
     po.productionOrderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.productionLine.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const handleOpenEntry = (po: any) => {
     setSelectedOrder(po);
@@ -123,8 +123,9 @@ export const ProductionModule: React.FC = () => {
 
   const handleDeleteOrderConfirm = async () => {
     if (!deletingOrder) return;
-    await deleteProductionOrder(deletingOrder.id);
+    const id = deletingOrder.id;
     setDeletingOrder(null);
+    await deleteProductionOrder(id);
   };
 
   // Production Batch handlers
@@ -144,19 +145,12 @@ export const ProductionModule: React.FC = () => {
     setEditingBatch(null);
   };
 
-  const handleApproveBatch = (batch: ProductionBatch) => {
-    const qc = qcInspections.find(q => q.batchLotNumber === batch.batchNumber || q.referenceId === batch.batchNumber);
-    if (qc) {
-      approveQC(qc.id);
-    } else {
-      approveProductionBatch(batch.id);
-    }
-  };
 
   const handleDeleteBatchConfirm = async () => {
     if (!deletingBatch) return;
-    await deleteProductionBatch(deletingBatch.id);
+    const id = deletingBatch.id;
     setDeletingBatch(null);
+    await deleteProductionBatch(id);
   };
 
   // BOM Handlers
@@ -211,8 +205,9 @@ export const ProductionModule: React.FC = () => {
 
   const handleDeleteBOMConfirm = async () => {
     if (!deletingBOM) return;
-    await deleteBOM(deletingBOM.id);
+    const id = deletingBOM.id;
     setDeletingBOM(null);
+    await deleteBOM(id);
   };
 
   const handleCreateBOM = async (e: React.FormEvent) => {
@@ -258,10 +253,75 @@ export const ProductionModule: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showLogEntryModal) {
+          setShowLogEntryModal(false);
+          setSelectedOrder(null);
+        }
+        if (editingOrder) setEditingOrder(null);
+        if (editingBatch) setEditingBatch(null);
+        if (showAddBOMModal || editingBOM) {
+          setShowAddBOMModal(false);
+          setEditingBOM(null);
+          resetBOMForm();
+        }
+        if (deletingOrder) setDeletingOrder(null);
+        if (deletingBatch) setDeletingBatch(null);
+        if (deletingBOM) setDeletingBOM(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showLogEntryModal, editingOrder, editingBatch, showAddBOMModal, editingBOM, deletingOrder, deletingBatch, deletingBOM]);
+
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Production Orders ({productionOrders.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('boms')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'boms' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Bill of Materials (BOM Recipes) ({boms.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('batches')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'batches' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Produced Batches &amp; Yield ({productionBatches.length})
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
+              <input
+                type="text"
+                placeholder="Search orders, line, product..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -275,50 +335,7 @@ export const ProductionModule: React.FC = () => {
             Automatic BOM explosion, material shortage check, production entry logging, yield and efficiency tracking.
           </p>
         </div>
-
-
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-        <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Production Orders ({productionOrders.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('boms')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'boms' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Bill of Materials (BOM Recipes) ({boms.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('batches')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              activeTab === 'batches' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Produced Batches &amp; Yield ({productionBatches.length})
-          </button>
-        </div>
-
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
-          <input
-            type="text"
-            placeholder="Search orders, line, product..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
-          />
-        </div>
-      </div>
+      </ModuleHeader>
 
       {/* TAB 1: PRODUCTION ORDERS */}
       {activeTab === 'orders' && (
@@ -400,25 +417,6 @@ export const ProductionModule: React.FC = () => {
                             <CheckCircle2 className="w-3 h-3" />
                             <span>Log Entry</span>
                           </button>
-                        ) : po.status === 'QC' ? (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <span className="text-[11px] text-amber-700 font-mono font-medium">
-                              Batch {po.actualBatchNumber || 'Produced'}
-                            </span>
-                            <button
-                              onClick={() => {
-                                const batch = productionBatches.find(b => b.productionOrderId === po.id || b.batchNumber === po.actualBatchNumber);
-                                if (batch) {
-                                  handleApproveBatch(batch);
-                                }
-                              }}
-                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold flex items-center gap-1 cursor-pointer shadow-2xs transition-colors"
-                              title="Verify quality and release batch to Finished Goods"
-                            >
-                              <CheckCircle2 className="w-3 h-3" />
-                              <span>Approve &amp; Release</span>
-                            </button>
-                          </div>
                         ) : (
                           <span className="text-[11px] text-emerald-700 font-mono font-medium">
                             Batch {po.actualBatchNumber || 'Produced'}
@@ -473,7 +471,7 @@ export const ProductionModule: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {boms.length > 0 ? (
-              boms.map(bom => (
+              sortByLatest(boms).map(bom => (
                 <div key={bom.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-3">
                   <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
                     <div>
@@ -562,13 +560,13 @@ export const ProductionModule: React.FC = () => {
                   <th className="p-3 text-right">Produced Qty</th>
                   <th className="p-3 text-right">Std vs Actual Cost</th>
                   <th className="p-3">Storage Bay</th>
-                  <th className="p-3">Quality Status</th>
-                  <th className="p-3 text-right">Inventory Release</th>
+                  <th className="p-3">Batch Status</th>
+                  <th className="p-3 text-right">Inventory Status</th>
                   <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {productionBatches.map(b => (
+                {sortByLatest(productionBatches).map(b => (
                   <tr key={b.id} className="hover:bg-neutral-50/70 transition-colors">
                     <td className="p-3">
                       <span className="font-mono font-bold text-emerald-800">{b.batchNumber}</span>
@@ -585,38 +583,22 @@ export const ProductionModule: React.FC = () => {
                     </td>
                     <td className="p-3 text-neutral-700">{b.storageLocation}</td>
                     <td className="p-3">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
-                        b.qcStatus === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
-                        b.qcStatus === 'Pending' ? 'bg-amber-100 text-amber-800' :
-                        'bg-rose-100 text-rose-800'
-                      }`}>
-                        {b.qcStatus}
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded uppercase bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span>In Stock</span>
                       </span>
                     </td>
                     <td className="p-3 text-right">
-                      {b.qcStatus === 'Pending' ? (
+                      <div className="flex items-center justify-end gap-1.5">
+                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Released to FG</span>
                         <button
-                          onClick={() => handleApproveBatch(b)}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer shadow-2xs transition-colors"
-                          title="Verify quality and release batch to Finished Goods inventory"
+                          onClick={() => setPrintableDoc({ type: 'batch_cert', data: b })}
+                          className="p-1 hover:bg-neutral-100 rounded text-neutral-500 hover:text-neutral-800 cursor-pointer"
+                          title="Print Batch Report"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Approve &amp; Release</span>
+                          <Printer className="w-3.5 h-3.5" />
                         </button>
-                      ) : b.qcStatus === 'Approved' ? (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">✓ In Stock</span>
-                          <button
-                            onClick={() => setPrintableDoc({ type: 'qc_cert', data: b })}
-                            className="p-1 hover:bg-neutral-100 rounded text-neutral-500 hover:text-neutral-800 cursor-pointer"
-                            title="Print Batch Quality Certificate"
-                          >
-                            <Printer className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-[11px] font-medium text-rose-600">Rejected</span>
-                      )}
+                      </div>
                     </td>
                     <td className="p-3 text-center">
                       <div className="flex items-center justify-center gap-1.5">
@@ -646,8 +628,14 @@ export const ProductionModule: React.FC = () => {
 
       {/* PRODUCTION ENTRY MODAL */}
       {showLogEntryModal && selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowLogEntryModal(false); setSelectedOrder(null); } }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <h3 className="text-sm font-bold text-neutral-900 mb-1">
               Log Production Entry for {selectedOrder.productionOrderNumber}
             </h3>
@@ -656,43 +644,77 @@ export const ProductionModule: React.FC = () => {
             </p>
 
             <form onSubmit={submitProductionEntry} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Finished Goods Output (MT)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={entryOutputMT}
-                    onChange={(e) => setEntryOutputMT(Number(e.target.value))}
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Process Loss / Dust (MT)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={entryLossMT}
-                    onChange={(e) => setEntryLossMT(Number(e.target.value))}
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
-              </div>
+              {(() => {
+                const output = Number(entryOutputMT) || 0;
+                const loss = Number(entryLossMT) || 0;
+                const totalFeed = output + loss;
 
-              <div className="p-3 bg-neutral-50 border border-neutral-200 rounded space-y-1 text-[11px]">
-                <div className="flex justify-between">
-                  <span className="text-neutral-600">Calculated Yield %:</span>
-                  <span className="font-mono font-bold text-emerald-700">
-                    {((entryOutputMT / (entryOutputMT + entryLossMT)) * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-600">Production Efficiency:</span>
-                  <span className="font-mono font-bold text-neutral-900">
-                    {((entryOutputMT / selectedOrder.targetQuantityMT) * 100).toFixed(1)}%
-                  </span>
-                </div>
-              </div>
+                const yieldVal = totalFeed > 0 ? (output / totalFeed) * 100 : 0;
+                const lossVal = totalFeed > 0 ? (loss / totalFeed) * 100 : 0;
+                const target = Number(selectedOrder?.targetQuantityMT) || 0;
+                const efficiencyVal = target > 0 ? (output / target) * 100 : 0;
+
+                // 2 decimal point precision ensures Yield % + Loss % always perfectly totals 100.00%
+                const yieldPercent = yieldVal.toFixed(2);
+                const lossPercent = lossVal.toFixed(2);
+                const efficiencyPercent = efficiencyVal.toFixed(2);
+
+                return (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-neutral-700 font-medium mb-1">Finished Goods Output (MT)</label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={entryOutputMT}
+                          onChange={(e) => setEntryOutputMT(e.target.value === '' ? ('' as any) : Number(e.target.value))}
+                          className="w-full border border-neutral-300 rounded p-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-neutral-700 font-medium mb-1">Process Loss / Dust (MT)</label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={entryLossMT}
+                          onChange={(e) => setEntryLossMT(e.target.value === '' ? ('' as any) : Number(e.target.value))}
+                          className="w-full border border-neutral-300 rounded p-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-neutral-50 border border-neutral-200 rounded space-y-1.5 text-[11px]">
+                      <div className="flex justify-between items-center text-neutral-600">
+                        <span>Total Material Processed:</span>
+                        <span className="font-mono font-semibold text-neutral-800">
+                          {totalFeed.toFixed(2)} MT <span className="text-[10px] text-neutral-400 font-normal">({output.toFixed(2)} FG + {loss.toFixed(2)} Loss)</span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-neutral-600">Calculated Yield %:</span>
+                        <span className="font-mono font-bold text-emerald-700">
+                          {yieldPercent}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-neutral-600">Process Loss / Dust %:</span>
+                        <span className="font-mono font-bold text-amber-700">
+                          {lossPercent}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-neutral-600">Production Efficiency:</span>
+                        <span className="font-mono font-bold text-neutral-900">
+                          {efficiencyPercent}% <span className="text-[10px] text-neutral-400 font-normal">(Target: {target} MT)</span>
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-800">
                 <strong>Automation Note:</strong> Submitting will generate a new Production Batch and update finished goods inventory automatically.
@@ -720,8 +742,14 @@ export const ProductionModule: React.FC = () => {
 
       {/* EDIT PRODUCTION ORDER MODAL */}
       {editingOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingOrder(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit Production Order ({editingOrder.productionOrderNumber})
@@ -804,8 +832,14 @@ export const ProductionModule: React.FC = () => {
 
       {/* EDIT PRODUCTION BATCH MODAL */}
       {editingBatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs">
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingBatch(null); }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-lg p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 Edit Production Batch ({editingBatch.batchNumber})
@@ -861,8 +895,20 @@ export const ProductionModule: React.FC = () => {
 
       {/* CREATE / EDIT BOM MODAL */}
       {(showAddBOMModal || editingBOM) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-xl p-5 text-xs">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddBOMModal(false);
+              setEditingBOM(null);
+              resetBOMForm();
+            }
+          }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-neutral-900/60 backdrop-blur-xs p-4 sm:p-6 flex items-start justify-center animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-xl p-5 text-xs my-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
               <h3 className="text-sm font-bold text-neutral-900">
                 {editingBOM ? `Edit BOM Recipe (${editingBOM.productName})` : 'Create New BOM Recipe'}
