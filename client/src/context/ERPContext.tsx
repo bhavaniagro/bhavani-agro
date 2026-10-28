@@ -824,6 +824,19 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
     
+    // Check if lead has already been converted to customer
+    const existingCust = customers.find(c =>
+      (c.companyName && lead.company && c.companyName.trim().toLowerCase() === lead.company.trim().toLowerCase()) ||
+      (c.customerName && lead.leadName && c.customerName.trim().toLowerCase() === lead.leadName.trim().toLowerCase()) ||
+      (c.mobile && lead.mobile && c.mobile.replace(/\D/g, '').length >= 10 && lead.mobile.replace(/\D/g, '').slice(-10) === c.mobile.replace(/\D/g, '').slice(-10))
+    );
+
+    if (existingCust) {
+      showToast(`${lead.leadName} (${lead.company}) is already in Customer Master (${existingCust.code})`, 'info');
+      await updateLead(leadId, { status: 'Won' });
+      return;
+    }
+
     await addCustomer({
       customerName: lead.leadName,
       companyName: lead.company,
