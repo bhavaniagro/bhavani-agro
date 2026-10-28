@@ -458,8 +458,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const defaultCompanyProfile: CompanyProfile = {
     id: 'profile',
-    name: 'Bhavani Agro & Minerals',
-    formation: 'Sole Proprietorship',
+    name: 'Amar Mine Chems',
+    formation: 'Private Limited',
     established: '1985',
     gstin: '24AAAAA0000A1Z5',
     pan: 'AAAAA0000A',

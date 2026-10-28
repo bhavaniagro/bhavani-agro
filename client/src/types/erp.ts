@@ -1,4 +1,4 @@
-// Types for Bhavani Agro & Minerals ERP
+// Types for Amar Mine Chems ERP
 
 export type UserRole = 
   | 'Owner / Admin'

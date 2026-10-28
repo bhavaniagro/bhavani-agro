@@ -261,7 +261,7 @@ export const PrintableDocumentModal: React.FC = () => {
                 <div className="border-l border-neutral-200 pl-4 space-y-1">
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Production Unit:</span>
-                    <span className="font-medium">Bhavani Central Manufacturing Plant</span>
+                    <span className="font-medium">Amar Central Manufacturing Plant</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Standard:</span>

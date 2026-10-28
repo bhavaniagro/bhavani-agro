@@ -22,12 +22,12 @@ import {
 } from '../types/erp';
 
 export const initialCompanyProfile: CompanyProfile = {
-  name: 'Bhavani Agro & Minerals',
-  legalName: 'Bhavani Agro & Minerals Industries Pvt Ltd',
-  formation: 'Sole Proprietorship (Est. 1985)',
+  name: 'Amar Mine Chems',
+  legalName: 'Amar Mine Chems Pvt Ltd',
+  formation: 'Private Limited (Est. 1985)',
   established: '01/04/1985',
   businessType: 'Manufacturer & Exporter',
-  industry: 'Agriculture & Agro Mineral Processing',
+  industry: 'Minerals, Chemicals & Agro Mineral Processing',
   gstin: '24AABCB4821F1ZX',
   pan: 'AABCB4821F',
   address: 'Plot No. 48-52, GIDC Industrial Estate, Chitra',
@@ -35,7 +35,7 @@ export const initialCompanyProfile: CompanyProfile = {
   state: 'Gujarat',
   pincode: '364004',
   phone: '+91 278 244 8920',
-  email: 'contact@bhavaniagrominerals.com',
+  email: 'contact@amarminechems.com',
   bankName: 'State Bank of India, Commercial Branch',
   accountNo: '30982245910',
   ifscCode: 'SBIN0001248',
@@ -713,7 +713,7 @@ export const initialRawMaterials: RawMaterial[] = [
   {
     id: 'rm-11',
     sku: 'RM-BAG-50KG',
-    materialName: '50kg HDPE Woven Bags (Bhavani Branded)',
+    materialName: '50kg HDPE Woven Bags (Amar Branded)',
     category: 'Packaging',
     unit: 'Units',
     minimumStock: 5000,

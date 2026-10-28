@@ -133,7 +133,7 @@ export const DashboardModule: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
-            Bhavani Agro &amp; Minerals · Live production, inventory, dispatches, receivables and cash flow summary.
+            Amar Mine Chems · Live production, inventory, dispatches, receivables and cash flow summary.
           </p>
         </div>
 

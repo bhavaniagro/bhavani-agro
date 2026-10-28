@@ -83,7 +83,7 @@ export const Navbar: React.FC = () => {
           className="text-base sm:text-lg font-bold tracking-tight text-neutral-900 flex items-center gap-2 whitespace-nowrap"
         >
           <span className="w-2.5 h-2.5 rounded-sm bg-emerald-600 inline-block"></span>
-          Bhavani Agro &amp; Minerals ERP
+          Amar Mine Chems ERP
         </a>
         <span className="hidden md:inline-block text-neutral-300">/</span>
         <span className="hidden md:inline-block text-xs font-medium text-neutral-500 whitespace-nowrap">
