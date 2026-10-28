@@ -9,10 +9,7 @@
 
     @page {
       size: A4;
-      margin: 14mm 14mm 16mm 14mm;
-      @bottom-right {
-        content: counter(page);
-      }
+      margin: 12mm 14mm 12mm 14mm;
     }
 
     * {
@@ -44,16 +41,18 @@
 
     /* Cover Page */
     .cover-page {
-      height: 100vh;
-      min-height: 260mm;
+      height: 250mm;
+      min-height: 245mm;
+      max-height: 252mm;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 24mm 18mm 20mm 18mm;
+      padding: 20mm 18mm 18mm 18mm;
       background: linear-gradient(135deg, #064e3b 0%, #065f46 45%, #0f172a 100%);
       color: #ffffff;
       border-radius: 8px;
       page-break-after: always;
+      break-after: page;
       position: relative;
       overflow: hidden;
     }
@@ -477,8 +476,8 @@
           <p>Lead-to-Quote, Sales Order, Automatic Shortage Check, Batch Mine-Lot Traceability, Weighbridge GRN, Dispatch Challan, GST Invoice &amp; Payment.</p>
         </div>
         <div class="feature-box">
-          <h4>⚡ High-Speed Architecture</h4>
-          <p>React 19 + TypeScript + Tailwind CSS, Express REST API, In-Memory Smart Cache with Delta Sync &amp; Google Cloud Firestore.</p>
+          <h4>🏭 Plant Operations &amp; QC</h4>
+          <p>19 Core Plant Modules, Granulation Lines, Weighbridge Fleet Management, Lab QC Approvals &amp; Preventative Asset Maintenance.</p>
         </div>
         <div class="feature-box">
           <h4>📊 Real-Time Financials</h4>
@@ -494,9 +493,9 @@
         <div style="font-size:7.5pt; color:#a7f3d0;">Chitra GIDC, Bhavnagar, Gujarat</div>
       </div>
       <div class="meta-item">
-        <div class="meta-label">Internship Company</div>
-        <div class="meta-val">DZ Infotech</div>
-        <div style="font-size:7.5pt; color:#a7f3d0;">Full-Stack Engineering Program</div>
+        <div class="meta-label">Plant &amp; Facility</div>
+        <div class="meta-val">Plot No. 48–52, GIDC Estate</div>
+        <div style="font-size:7.5pt; color:#a7f3d0;">Industrial Area, Bhavnagar - 364004</div>
       </div>
       <div class="meta-item">
         <div class="meta-label">Document Release</div>
@@ -506,91 +505,15 @@
     </div>
   </div>
 
-  <!-- ================= SYSTEM ARCHITECTURE ================= -->
-  <div class="doc-header">
-    <span>Amar Mine Chems ERP</span>
-    <span>System Architecture &amp; Technology Stack</span>
-  </div>
-
-  <div class="section-title">
-    <span>1. SYSTEM ARCHITECTURE &amp; TECH STACK</span>
-    <span class="badge">Section 01</span>
-  </div>
-  <div class="section-subtitle-gu">ટેકનિકલ આર્કિટેક્ચર, ઇન-મેમરી કેશિંગ અને ક્લાઉડ સિંક્રોનાઇઝેશન</div>
-
-  <p>
-    Amar Mine Chems ERP એ હાઇ-પરફોર્મન્સ, સ્કેલેબલ 3-ટાયર ક્લાઉડ આર્કિટેક્ચર પર આધારિત છે. તે મિલીસેકન્ડ રિસ્પોન્સ ટાઇમ અને ક્લાઉડ ખર્ચમાં 85% બચત માટે કસ્ટમ ઇન-મેમરી ડેલ્ટા કેશિંગ એન્જિનનો ઉપયોગ કરે છે:
-  </p>
-
-  <!-- SVG Architecture Diagram -->
-  <div class="avoid-break">
-    <svg class="svg-diagram" viewBox="0 0 760 270" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Client Tier -->
-      <rect x="20" y="20" width="220" height="230" rx="8" fill="#F0FDF4" stroke="#10B981" stroke-width="2"/>
-      <rect x="35" y="35" width="190" height="30" rx="4" fill="#065F46"/>
-      <text x="130" y="55" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="700" text-anchor="middle">CLIENT TIER (React 19)</text>
-      <text x="45" y="90" fill="#0F172A" font-size="9" font-weight="600">• Vite + TypeScript + Tailwind CSS</text>
-      <text x="45" y="112" fill="#0F172A" font-size="9" font-weight="600">• React Router v7 (Stateful Routes)</text>
-      <text x="45" y="134" fill="#0F172A" font-size="9" font-weight="600">• ERPContext (Central State)</text>
-      <text x="45" y="156" fill="#0F172A" font-size="9" font-weight="600">• Lucide Icons &amp; Motion UI</text>
-      <text x="45" y="178" fill="#0F172A" font-size="9" font-weight="600">• Printable Tax Invoices &amp; Challans</text>
-      <text x="45" y="200" fill="#0F172A" font-size="9" font-weight="600">• 1-Click Interactive Demo Runner</text>
-      <rect x="35" y="220" width="190" height="20" rx="4" fill="#A7F3D0"/>
-      <text x="130" y="234" fill="#065F46" font-size="8" font-weight="700" text-anchor="middle">Port 3000 (Vite Dev / Prod)</text>
-
-      <!-- Middle Arrow 1 -->
-      <path d="M240 135 H270" stroke="#047857" stroke-width="2"/>
-      <text x="255" y="125" fill="#047857" font-size="7.5" font-weight="700" text-anchor="middle">REST / JSON</text>
-
-      <!-- Server Tier -->
-      <rect x="270" y="20" width="230" height="230" rx="8" fill="#F8FAFC" stroke="#0284C7" stroke-width="2"/>
-      <rect x="285" y="35" width="200" height="30" rx="4" fill="#0369A1"/>
-      <text x="385" y="55" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="700" text-anchor="middle">SERVER TIER (Node.js/Express)</text>
-      <text x="295" y="90" fill="#0F172A" font-size="9" font-weight="600">• TypeScript + tsx Watch Engine</text>
-      <text x="295" y="112" fill="#0284C7" font-size="9" font-weight="700">• apiCacheMiddleware (In-Memory)</text>
-      <text x="295" y="134" fill="#0F172A" font-size="9" font-weight="600">• Delta Filtering (?since=timestamp)</text>
-      <text x="295" y="156" fill="#0F172A" font-size="9" font-weight="600">• 23 Dedicated Express Routers</text>
-      <text x="295" y="178" fill="#0F172A" font-size="9" font-weight="600">• Multer /uploads static server</text>
-      <text x="295" y="200" fill="#0F172A" font-size="9" font-weight="600">• CORS &amp; 50MB Payload Protection</text>
-      <rect x="285" y="220" width="200" height="20" rx="4" fill="#BAE6FD"/>
-      <text x="385" y="234" fill="#0369A1" font-size="8" font-weight="700" text-anchor="middle">Port 4000 (Express API Server)</text>
-
-      <!-- Middle Arrow 2 -->
-      <path d="M500 135 H530" stroke="#0369A1" stroke-width="2"/>
-      <text x="515" y="125" fill="#0369A1" font-size="7.5" font-weight="700" text-anchor="middle">Admin SDK</text>
-
-      <!-- Data Tier -->
-      <rect x="530" y="20" width="210" height="230" rx="8" fill="#FFFBEB" stroke="#D97706" stroke-width="2"/>
-      <rect x="545" y="35" width="180" height="30" rx="4" fill="#B45309"/>
-      <text x="635" y="55" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="700" text-anchor="middle">DATA &amp; CLOUD TIER</text>
-      <text x="555" y="90" fill="#0F172A" font-size="9" font-weight="600">• Google Cloud Firestore</text>
-      <text x="555" y="112" fill="#0F172A" font-size="9" font-weight="600">• 23 Realtime Collections</text>
-      <text x="555" y="134" fill="#0F172A" font-size="9" font-weight="600">• Service Account Auth (IAM)</text>
-      <text x="555" y="156" fill="#0F172A" font-size="9" font-weight="600">• Automatic Cloud Backup</text>
-      <text x="555" y="178" fill="#0F172A" font-size="9" font-weight="600">• Document File Vault (/uploads)</text>
-      <text x="555" y="200" fill="#0F172A" font-size="9" font-weight="600">• Millisecond Document Indexing</text>
-      <rect x="545" y="220" width="180" height="20" rx="4" fill="#FDE68A"/>
-      <text x="635" y="234" fill="#B45309" font-size="8" font-weight="700" text-anchor="middle">Firestore (Multi-region Cloud)</text>
-    </svg>
-  </div>
-
-  <div class="card avoid-break" style="margin-top: 10px;">
-    <h3>⚡ સ્માર્ટ ઇન-મેમરી કેશિંગ અને ડેલ્ટા સિંક (Delta Sync Engine)</h3>
-    <p>
-      સામાન્ય રીતે Cloud Firestore માં દરેક વાંચન (Read) માટે ચાર્જ લાગે છે. Amar Mine Chems ના સર્વરમાં <code>apiCacheMiddleware</code> બનાવવામાં આવ્યું છે. જ્યારે યુઝર પહેલી વાર ડેટા માંગે ત્યારે સર્વર Firestore માંથી લાવીને RAM માં મૂકી દે છે. પછીના તમામ યુઝર્સને તે RAM માંથી 0-delay માં મળે છે. જ્યારે કોઈ રેકોર્ડ ઉમેરાય કે બદલાય (POST/PUT/DELETE), ત્યારે કેશ આપમેળે અપડેટ અથવા ક્લિયર થઈ જાય છે. પરિણામે ડેટાબેઝ રીડ ખર્ચમાં <strong>85% નો સીધો ઘટાડો</strong> થાય છે.
-    </p>
-  </div>
-
   <!-- ================= 16-STEP WORKFLOW ================= -->
-  <div class="page-break"></div>
   <div class="doc-header">
     <span>Amar Mine Chems ERP</span>
     <span>End-to-End Business Workflow (Steps 1 to 4)</span>
   </div>
 
   <div class="section-title">
-    <span>2. COMPLETE 16-STEP BUSINESS WORKFLOW</span>
-    <span class="badge">Section 02</span>
+    <span>1. COMPLETE 16-STEP BUSINESS WORKFLOW</span>
+    <span class="badge">Section 01</span>
   </div>
   <div class="section-subtitle-gu">ભાવનગર ફેક્ટરીનો સંપૂર્ણ એન્ડ-ટુ-એન્ડ ૧૬-તબક્કાનો બિઝનેસ ફ્લો</div>
 
@@ -874,8 +797,8 @@
   </div>
 
   <div class="section-title">
-    <span>3. COMPREHENSIVE MODULE BREAKDOWN</span>
-    <span class="badge">Section 03</span>
+    <span>2. COMPREHENSIVE MODULE BREAKDOWN</span>
+    <span class="badge">Section 02</span>
   </div>
   <div class="section-subtitle-gu">સિસ્ટમના તમામ ૧૯ મુખ્ય મોડ્યુલ્સની કાર્યપદ્ધતિ અને વિશેષતાઓ</div>
 
@@ -1083,17 +1006,6 @@
         • ઇન્વોઇસ પ્રીફિક્સ, ફાઇનાન્સિયલ યર અને પ્લાન્ટ શિફ્ટ ટાઇમિંગ્સ.<br>
         • ડેટાબેઝ સિંક અને સિસ્ટમ સ્ટેટસ મોનિટરિંગ.
       </p>
-    </div>
-  </div>
-
-  <div style="margin-top: 32px; padding-top: 16px; border-top: 2px solid #cbd5e1; display: flex; justify-content: space-between; font-size: 8.5pt; color: #475569;" class="avoid-break">
-    <div>
-      <strong>Amar Mine Chems ERP</strong> • Enterprise Workflow &amp; System Architecture<br>
-      <strong>Plant:</strong> Chitra GIDC, Bhavnagar, Gujarat • Client: Amar Mine Chems Pvt Ltd
-    </div>
-    <div style="text-align: right;">
-      <strong>Engineering Partner:</strong> DZ Infotech Software Engineering Team<br>
-      <strong>Document Version:</strong> 1.0.0 (Production Verified)
     </div>
   </div>
 
