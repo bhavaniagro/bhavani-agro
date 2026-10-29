@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { UserRole } from '../../types/erp';
+import logo from '../../assets/logo.jpg';
 
 export const Navbar: React.FC = () => {
   const {
@@ -80,10 +81,10 @@ export const Navbar: React.FC = () => {
       <div className="flex items-center gap-3">
         <a
           href="#dashboard"
-          className="text-base sm:text-lg font-bold tracking-tight text-neutral-900 flex items-center gap-2 whitespace-nowrap"
+          className="flex items-center gap-2 whitespace-nowrap"
         >
-          <span className="w-2.5 h-2.5 rounded-sm bg-emerald-600 inline-block"></span>
-          Amar Mine Chems ERP
+          <img src={logo} alt="Bhavani Agro Logo" className="h-9 w-auto object-contain" />
+          <span className="text-base sm:text-lg font-bold tracking-tight text-neutral-900">Amar Mine Chems ERP</span>
         </a>
         <span className="hidden md:inline-block text-neutral-300">/</span>
         <span className="hidden md:inline-block text-xs font-medium text-neutral-500 whitespace-nowrap">
