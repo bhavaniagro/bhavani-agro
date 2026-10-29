@@ -183,9 +183,9 @@ export const RawMaterialModule: React.FC = () => {
       {/* Raw Materials Table */}
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
+          <table className="w-full text-xs text-left min-w-[900px]">
             <thead>
-              <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+              <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                 <th className="p-3">Material &amp; SKU</th>
                 <th className="p-3">Category &amp; Location</th>
                 <th className="p-3 text-right">Opening Stock</th>
@@ -198,7 +198,7 @@ export const RawMaterialModule: React.FC = () => {
                 <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
               {filteredMaterials.map(rm => {
                 const isBelowReorder = rm.currentStock <= rm.reorderLevel;
                 const freeToUse = Math.max(0, rm.currentStock - rm.reservedStock);

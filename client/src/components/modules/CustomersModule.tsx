@@ -283,10 +283,10 @@ export const CustomersModule: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="border border-neutral-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-xs text-left">
+                <div className="border border-neutral-200 rounded-lg overflow-x-auto">
+                  <table className="w-full text-xs text-left min-w-[500px]">
                     <thead>
-                      <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+                      <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                         <th className="p-2">Order #</th>
                         <th className="p-2">Product</th>
                         <th className="p-2 text-right">Quantity</th>
@@ -327,10 +327,10 @@ export const CustomersModule: React.FC = () => {
                 <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-900 mb-2">
                   Invoices &amp; Payment Ledger
                 </h3>
-                <div className="border border-neutral-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-xs text-left">
+                <div className="border border-neutral-200 rounded-lg overflow-x-auto">
+                  <table className="w-full text-xs text-left min-w-[500px]">
                     <thead>
-                      <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+                      <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                         <th className="p-2">Invoice #</th>
                         <th className="p-2">Date</th>
                         <th className="p-2 text-right">Total (₹)</th>

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  ShoppingCart, 
-  FileCheck, 
-  Truck, 
-  Search, 
-  CheckCircle2, 
+import {
+  Plus,
+  ShoppingCart,
+  FileCheck,
+  Truck,
+  Search,
+  CheckCircle2,
   AlertTriangle,
   Pencil,
   Trash2,
@@ -18,17 +18,17 @@ import { ModuleHeader } from '../common/ModuleHeader';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const PurchaseModule: React.FC = () => {
-  const { 
-    purchaseOrders, 
-    grns, 
-    suppliers, 
-    rawMaterials, 
+  const {
+    purchaseOrders,
+    grns,
+    suppliers,
+    rawMaterials,
     addGRN,
     updatePurchaseOrder,
     deletePurchaseOrder,
     updateGRN,
     deleteGRN,
-    setIsQuickAddOpen, 
+    setIsQuickAddOpen,
     setQuickAddType,
     setActiveModule
   } = useERP();
@@ -42,8 +42,9 @@ export const PurchaseModule: React.FC = () => {
   const [selectedPO, setSelectedPO] = useState<any | null>(null);
   const [manualSupplierId, setManualSupplierId] = useState('');
   const [manualMaterialId, setManualMaterialId] = useState('');
-  const [receivedQty, setReceivedQty] = useState(50);
-  const [acceptedQty, setAcceptedQty] = useState(49.5);
+  const [receivedQty, setReceivedQty] = useState<number | string>(50);
+  const [orderedQty, setOrderedQty] = useState<number | string>(50);
+  const [isOrderCompleted, setIsOrderCompleted] = useState(true);
   const [vehicleNo, setVehicleNo] = useState('GJ-12-BW-9901');
   const [supplierBatch, setSupplierBatch] = useState('MINE-2609-08');
 
@@ -70,7 +71,7 @@ export const PurchaseModule: React.FC = () => {
   const [editGRNQCStatus, setEditGRNQCStatus] = useState<'Pending QC' | 'Approved' | 'Rejected'>('Approved');
   const [editGRNRemarks, setEditGRNRemarks] = useState('');
 
-  const filteredPOs = sortByLatest(purchaseOrders.filter(po => 
+  const filteredPOs = sortByLatest(purchaseOrders.filter(po =>
     po.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.materialName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -87,7 +88,8 @@ export const PurchaseModule: React.FC = () => {
     setIsManualGRN(false);
     setSelectedPO(po);
     setReceivedQty(po.quantity);
-    setAcceptedQty(po.quantity);
+    setOrderedQty(po.quantity);
+    setIsOrderCompleted(true);
     setVehicleNo('GJ-12-BW-9901');
     setSupplierBatch(`MINE-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(10 + Math.random() * 90)}`);
     setShowGRNModal(true);
@@ -99,7 +101,8 @@ export const PurchaseModule: React.FC = () => {
     setManualSupplierId(suppliers[0]?.id || '');
     setManualMaterialId(rawMaterials[0]?.id || '');
     setReceivedQty(50);
-    setAcceptedQty(50);
+    setOrderedQty(50);
+    setIsOrderCompleted(true);
     setVehicleNo('GJ-12-BW-9901');
     setSupplierBatch(`MINE-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(10 + Math.random() * 90)}`);
     setShowGRNModal(true);
@@ -119,10 +122,10 @@ export const PurchaseModule: React.FC = () => {
         supplierName: sup?.supplierName || 'Direct Supplier',
         materialId: mat?.id || 'manual-mat',
         materialName: mat?.materialName || 'Raw Material',
-        orderedQuantity: Number(receivedQty),
+        orderedQuantity: Number(orderedQty) || Number(receivedQty),
         receivedQuantity: Number(receivedQty),
-        acceptedQuantity: Number(acceptedQty),
-        rejectedQuantity: Math.max(0, Number(receivedQty) - Number(acceptedQty)),
+        acceptedQuantity: Number(receivedQty),
+        rejectedQuantity: Math.max(0, (Number(orderedQty) || Number(receivedQty)) - Number(receivedQty)),
         unit: mat?.unit || 'MT',
         supplierBatchNumber: supplierBatch || 'MINE-BATCH-01',
         internalLotNumber: `LOT-${(mat?.materialName || 'RAW').substring(0, 3).toUpperCase()}-2609-${Math.floor(10 + Math.random() * 90)}`,
@@ -140,10 +143,10 @@ export const PurchaseModule: React.FC = () => {
         supplierName: selectedPO.supplierName,
         materialId: selectedPO.materialId,
         materialName: selectedPO.materialName,
-        orderedQuantity: selectedPO.quantity,
+        orderedQuantity: Number(orderedQty) || selectedPO.quantity,
         receivedQuantity: Number(receivedQty),
-        acceptedQuantity: Number(acceptedQty),
-        rejectedQuantity: Math.max(0, Number(receivedQty) - Number(acceptedQty)),
+        acceptedQuantity: Number(receivedQty),
+        rejectedQuantity: Math.max(0, (Number(orderedQty) || Number(receivedQty)) - Number(receivedQty)),
         unit: selectedPO.unit || 'MT',
         supplierBatchNumber: supplierBatch || 'MINE-BATCH-01',
         internalLotNumber: `LOT-${(selectedPO.materialName || 'RAW').substring(0, 3).toUpperCase()}-2609-${Math.floor(10 + Math.random() * 90)}`,
@@ -155,14 +158,16 @@ export const PurchaseModule: React.FC = () => {
       });
 
       if (selectedPO.id && selectedPO.id !== 'direct') {
-        updatePurchaseOrder(selectedPO.id, { status: 'GRN Completed' });
+        const targetStatus: PurchaseOrder['status'] = isOrderCompleted ? 'GRN Completed' : 'Partial GRN';
+        updatePurchaseOrder(selectedPO.id, { status: targetStatus });
       }
     }
 
     setSelectedPO(null);
     setIsManualGRN(false);
     setReceivedQty(0);
-    setAcceptedQty(0);
+    setOrderedQty(0);
+    setIsOrderCompleted(true);
     setVehicleNo('');
     setSupplierBatch('');
     setShowGRNModal(false);
@@ -267,34 +272,32 @@ export const PurchaseModule: React.FC = () => {
       {/* Header */}
       <ModuleHeader
         tabs={
-          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg overflow-x-auto">
               <button
                 onClick={() => setActiveTab('orders')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                  activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Purchase Orders ({purchaseOrders.length})
               </button>
               <button
                 onClick={() => setActiveTab('grn')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                  activeTab === 'grn' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${activeTab === 'grn' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Goods Receipt Notes (GRN) ({grns.length})
               </button>
             </div>
 
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
               <input
                 type="text"
                 placeholder="Search PO #, supplier, material..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-full sm:w-60 outline-none text-neutral-800"
               />
             </div>
           </div>
@@ -355,9 +358,9 @@ export const PurchaseModule: React.FC = () => {
       {activeTab === 'orders' && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
+            <table className="w-full text-xs text-left min-w-[800px]">
               <thead>
-                <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+                <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                   <th className="p-3">PO Number &amp; Date</th>
                   <th className="p-3">Supplier Name</th>
                   <th className="p-3">Material Required</th>
@@ -368,7 +371,7 @@ export const PurchaseModule: React.FC = () => {
                   <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
                 {filteredPOs.map(po => (
                   <tr key={po.id} className="hover:bg-neutral-50/70 transition-colors">
                     <td className="p-3">
@@ -392,12 +395,12 @@ export const PurchaseModule: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-3">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
-                        po.status === 'GRN Completed' || po.status === 'Billed' ? 'bg-emerald-100 text-emerald-800' :
-                        po.status === 'Issued' ? 'bg-blue-100 text-blue-800' :
-                        'bg-neutral-100 text-neutral-700'
-                      }`}>
-                        {po.status}
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${po.status === 'GRN Completed' || po.status === 'Billed' ? 'bg-emerald-100 text-emerald-800' :
+                          po.status === 'Partial GRN' ? 'bg-amber-100 text-amber-800' :
+                          po.status === 'Issued' ? 'bg-blue-100 text-blue-800' :
+                            'bg-neutral-100 text-neutral-700'
+                        }`}>
+                        {po.status === 'Partial GRN' ? 'Pending (Partial)' : po.status}
                       </span>
                     </td>
                     <td className="p-3 text-right">
@@ -445,9 +448,9 @@ export const PurchaseModule: React.FC = () => {
       {activeTab === 'grn' && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
+            <table className="w-full text-xs text-left min-w-[800px]">
               <thead>
-                <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+                <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                   <th className="p-3">GRN # &amp; Date</th>
                   <th className="p-3">PO Reference</th>
                   <th className="p-3">Supplier &amp; Vehicle</th>
@@ -458,7 +461,7 @@ export const PurchaseModule: React.FC = () => {
                   <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
                 {filteredGRNs.map(g => (
                   <tr key={g.id} className="hover:bg-neutral-50/70 transition-colors">
                     <td className="p-3">
@@ -567,7 +570,7 @@ export const PurchaseModule: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 type="button"
                 onClick={() => { setShowGRNModal(false); setSelectedPO(null); setIsManualGRN(false); }}
                 className="text-neutral-400 hover:text-neutral-600 cursor-pointer p-1 rounded-md hover:bg-neutral-100 transition-colors"
@@ -646,9 +649,14 @@ export const PurchaseModule: React.FC = () => {
                     required
                     value={receivedQty}
                     onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setReceivedQty(val);
-                      if (acceptedQty > val) setAcceptedQty(val);
+                      const raw = e.target.value;
+                      setReceivedQty(raw === '' ? '' : Number(raw));
+
+                      if (e.target.value !== '') {
+                        const rec = Number(e.target.value);
+                        const ord = Number(orderedQty) || 0;
+                        if (ord > 0) setIsOrderCompleted(rec >= ord);
+                      }
                     }}
                     className="w-full border border-neutral-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
@@ -661,10 +669,18 @@ export const PurchaseModule: React.FC = () => {
                     type="number"
                     step="0.1"
                     min="0"
-                    max={receivedQty}
+
                     required
-                    value={acceptedQty}
-                    onChange={(e) => setAcceptedQty(Number(e.target.value))}
+                    value={orderedQty}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      setOrderedQty(raw === '' ? '' : Number(raw));
+                      if (raw !== '') {
+                        const ord = Number(raw);
+                        const rec = Number(receivedQty) || 0;
+                        if (ord > 0) setIsOrderCompleted(rec >= ord);
+                      }
+                    }}
                     className="w-full border border-neutral-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
@@ -695,12 +711,89 @@ export const PurchaseModule: React.FC = () => {
                 </div>
               </div>
 
-              {Number(receivedQty) > Number(acceptedQty) && (
-                <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-800 flex items-center justify-between">
-                  <span>Rejected Quantity:</span>
-                  <strong className="font-mono">
-                    {Number(receivedQty) - Number(acceptedQty)} {isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')}
-                  </strong>
+              {/* Live Calculation: Difference / Shortage / Excess */}
+              {(() => {
+                const numRec = Number(receivedQty) || 0;
+                const numOrd = Number(orderedQty) || 0;
+                const currentUnit = isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT');
+                const diff = numOrd - numRec;
+
+                return (
+                  <div className="space-y-2">
+                    {numOrd > 0 && numRec > 0 && (
+                      <div className={`p-2.5 rounded-lg text-xs flex items-center justify-between border ${
+                        diff > 0
+                          ? 'bg-amber-50 border-amber-200 text-amber-900'
+                          : diff < 0
+                            ? 'bg-blue-50 border-blue-200 text-blue-900'
+                            : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                      }`}>
+                        <div className="flex items-center gap-1.5 font-medium">
+                          {diff > 0 ? (
+                            <>
+                              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                              <span>Pending / Shortage Quantity:</span>
+                            </>
+                          ) : diff < 0 ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              <span>Excess Quantity Received:</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>Quantity Status:</span>
+                            </>
+                          )}
+                        </div>
+                        <strong className="font-mono">
+                          {diff > 0
+                            ? `${diff.toFixed(1).replace(/\.0$/, '')} ${currentUnit} pending`
+                            : diff < 0
+                              ? `+${Math.abs(diff).toFixed(1).replace(/\.0$/, '')} ${currentUnit} excess`
+                              : `Fully matched (${numRec} ${currentUnit})`}
+                        </strong>
+      
+                      </div>
+                    )}
+
+                    {!isManualGRN && selectedPO && (
+                      <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-lg space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={isOrderCompleted}
+                              onChange={(e) => setIsOrderCompleted(e.target.checked)}
+                              className="w-4 h-4 rounded text-emerald-600 border-neutral-300 focus:ring-emerald-500 cursor-pointer"
+                            />
+                            <span className="text-xs font-semibold text-neutral-800">
+                              {isOrderCompleted ? 'Mark Order as Completed' : 'Keep Order as Pending (Partial Delivery)'}
+                            </span>
+                          </label>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                            isOrderCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {isOrderCompleted ? 'Completed ✓' : 'Pending ⏳'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-neutral-500">
+                          {isOrderCompleted
+                            ? 'Purchase Order will be marked Completed upon submission.'
+                            : 'Purchase Order will remain Pending (Partial GRN) for remaining shipments.'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+              {false && (
+                <div>
+
+
+
+
+
                 </div>
               )}
 
@@ -824,6 +917,7 @@ export const PurchaseModule: React.FC = () => {
                   >
                     <option value="Draft">Draft</option>
                     <option value="Issued">Issued</option>
+                    <option value="Partial GRN">Partial GRN (Pending)</option>
                     <option value="GRN Completed">GRN Completed</option>
                     <option value="Billed">Billed</option>
                     <option value="Cancelled">Cancelled</option>
@@ -1005,4 +1099,3 @@ export const PurchaseModule: React.FC = () => {
     </div>
   );
 };
-

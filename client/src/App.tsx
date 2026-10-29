@@ -51,7 +51,7 @@ const MainContent: React.FC = () => {
       <div className="flex-1 flex overflow-hidden min-h-0">
         <Sidebar />
         <main className="flex-1 overflow-y-auto min-h-0">
-          <div className="p-4 sm:p-6 max-w-[1600px] w-full mx-auto">
+          <div className="p-2.5 sm:p-4 md:p-6 max-w-[1600px] w-full mx-auto">
             <Routes>
               <Route path="/" element={<DashboardModule />} />
               <Route path="/dashboard" element={<Navigate to="/" replace />} />
