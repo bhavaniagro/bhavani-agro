@@ -65,7 +65,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
         TotalAmount: i.totalInvoiceAmount,
         PaymentStatus: i.paymentStatus
       }));
-      exportToCSV(exportData, 'Bhavani_Sales_Register');
+      exportToCSV(exportData, 'Amar_Sales_Register');
     } else if (activeReport === 'production') {
       const exportData = productionBatches.map(b => ({
         BatchNumber: b.batchNumber,
@@ -77,7 +77,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
         ActualCostPerMT: b.actualCostPerMT,
         StorageLocation: b.storageLocation
       }));
-      exportToCSV(exportData, 'Bhavani_Production_Batches');
+      exportToCSV(exportData, 'Amar_Production_Batches');
     } else if (activeReport === 'inventory') {
       const exportData = products.map(p => ({
         Product: p.productName,
@@ -88,7 +88,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
         CostPerMT: p.standardCostPerMT,
         TotalValuation: p.currentStockMT * p.standardCostPerMT
       }));
-      exportToCSV(exportData, 'Bhavani_Inventory_Valuation');
+      exportToCSV(exportData, 'Amar_Inventory_Valuation');
     } else if (activeReport === 'finance') {
       const exportData = expenses.map(e => ({
         VoucherNumber: e.expenseNumber,
@@ -99,7 +99,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
         Vendor: e.vendorName,
         Description: e.description
       }));
-      exportToCSV(exportData, 'Bhavani_Expense_Register');
+      exportToCSV(exportData, 'Amar_Expense_Register');
     } else if (activeReport === 'dispatch') {
       const exportData = dispatches.map(d => ({
         ChallanNumber: d.dispatchNumber,
@@ -113,7 +113,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
         Date: d.dispatchDate,
         Status: d.status
       }));
-      exportToCSV(exportData, 'Bhavani_Dispatch_Logistics');
+      exportToCSV(exportData, 'Amar_Dispatch_Logistics');
     }
   };
 

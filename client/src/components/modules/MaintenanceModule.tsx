@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, AlertTriangle, CheckCircle2, Clock, Calendar, Plus, Edit, Trash2, History, Cpu } from 'lucide-react';
+import { Wrench, AlertTriangle, CheckCircle2, Clock, Calendar, Plus, Edit, Trash2, History, Cpu, Search } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Machinery } from '../../types/erp';
@@ -47,6 +47,7 @@ export const MaintenanceModule: React.FC = () => {
   const { machinery, machineHistory, addMachinery, updateMachinery, deleteMachinery } = useERP();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('machines');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Modal state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -128,10 +129,70 @@ export const MaintenanceModule: React.FC = () => {
     new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
   );
 
+  const filteredMachinery = sortByLatest(machinery).filter(m => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      m.machineCode.toLowerCase().includes(term) ||
+      m.machineName.toLowerCase().includes(term) ||
+      m.department.toLowerCase().includes(term) ||
+      m.currentStatus.toLowerCase().includes(term)
+    );
+  });
+
+  const filteredHistory = sortedHistory.filter(h => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      h.machineCode.toLowerCase().includes(term) ||
+      h.machineName.toLowerCase().includes(term) ||
+      (h.previousStatus && h.previousStatus.toLowerCase().includes(term)) ||
+      (h.newStatus && h.newStatus.toLowerCase().includes(term))
+    );
+  });
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <ModuleHeader>
+      {/* Header with Standardized Tabs */}
+      <ModuleHeader
+        tabs={
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setActiveTab('machines')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'machines'
+                    ? 'bg-white text-neutral-900 shadow-xs font-semibold'
+                    : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Machinery Master ({machinery.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'history'
+                    ? 'bg-white text-neutral-900 shadow-xs font-semibold'
+                    : 'text-neutral-600 hover:text-neutral-900'
+                }`}
+              >
+                Maintenance History ({sortedHistory.length})
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
+              <input
+                type="text"
+                placeholder={activeTab === 'machines' ? "Search machine code, name, dept..." : "Search history..."}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
+              />
+            </div>
+          </div>
+        }
+      >
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight text-neutral-900">
@@ -160,41 +221,10 @@ export const MaintenanceModule: React.FC = () => {
         )}
       </ModuleHeader>
 
-      {/* Tab Toggle */}
-      <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg w-fit border border-neutral-200 shadow-xs">
-        <button
-          onClick={() => setActiveTab('machines')}
-          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 cursor-pointer ${
-            activeTab === 'machines'
-              ? 'bg-white text-neutral-900 shadow-sm border border-neutral-200'
-              : 'text-neutral-500 hover:text-neutral-700'
-          }`}
-        >
-          <Cpu className="w-3.5 h-3.5" />
-          Machine
-        </button>
-        <button
-          onClick={() => setActiveTab('history')}
-          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 cursor-pointer ${
-            activeTab === 'history'
-              ? 'bg-white text-neutral-900 shadow-sm border border-neutral-200'
-              : 'text-neutral-500 hover:text-neutral-700'
-          }`}
-        >
-          <History className="w-3.5 h-3.5" />
-          History
-          {sortedHistory.length > 0 && (
-            <span className="ml-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-bold px-1">
-              {sortedHistory.length}
-            </span>
-          )}
-        </button>
-      </div>
-
       {/* MACHINES TAB */}
       {activeTab === 'machines' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {sortByLatest(machinery).map(m => {
+          {filteredMachinery.map(m => {
             const cfg = getStatusConfig(m.currentStatus);
             return (
               <div key={m.id} className="bg-white border border-neutral-200 rounded-xl p-4 text-xs space-y-3 shadow-2xs hover:shadow-sm transition-shadow">
@@ -285,7 +315,7 @@ export const MaintenanceModule: React.FC = () => {
 
               {/* Timeline rows */}
               <div className="divide-y divide-neutral-100">
-                {sortedHistory.map((h, idx) => {
+                {filteredHistory.map((h, idx) => {
                   const fromCfg = getStatusConfig(h.previousStatus);
                   const toCfg = getStatusConfig(h.newStatus);
                   return (
