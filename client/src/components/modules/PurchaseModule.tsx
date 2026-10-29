@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  ShoppingCart, 
-  FileCheck, 
-  Truck, 
-  Search, 
-  CheckCircle2, 
+import {
+  Plus,
+  ShoppingCart,
+  FileCheck,
+  Truck,
+  Search,
+  CheckCircle2,
   AlertTriangle,
   Pencil,
   Trash2,
@@ -18,17 +18,17 @@ import { ModuleHeader } from '../common/ModuleHeader';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const PurchaseModule: React.FC = () => {
-  const { 
-    purchaseOrders, 
-    grns, 
-    suppliers, 
-    rawMaterials, 
+  const {
+    purchaseOrders,
+    grns,
+    suppliers,
+    rawMaterials,
     addGRN,
     updatePurchaseOrder,
     deletePurchaseOrder,
     updateGRN,
     deleteGRN,
-    setIsQuickAddOpen, 
+    setIsQuickAddOpen,
     setQuickAddType,
     setActiveModule
   } = useERP();
@@ -70,7 +70,7 @@ export const PurchaseModule: React.FC = () => {
   const [editGRNQCStatus, setEditGRNQCStatus] = useState<'Pending QC' | 'Approved' | 'Rejected'>('Approved');
   const [editGRNRemarks, setEditGRNRemarks] = useState('');
 
-  const filteredPOs = sortByLatest(purchaseOrders.filter(po => 
+  const filteredPOs = sortByLatest(purchaseOrders.filter(po =>
     po.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.materialName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -271,17 +271,15 @@ export const PurchaseModule: React.FC = () => {
             <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
               <button
                 onClick={() => setActiveTab('orders')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                  activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Purchase Orders ({purchaseOrders.length})
               </button>
               <button
                 onClick={() => setActiveTab('grn')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                  activeTab === 'grn' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${activeTab === 'grn' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Goods Receipt Notes (GRN) ({grns.length})
               </button>
@@ -392,11 +390,10 @@ export const PurchaseModule: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-3">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
-                        po.status === 'GRN Completed' || po.status === 'Billed' ? 'bg-emerald-100 text-emerald-800' :
-                        po.status === 'Issued' ? 'bg-blue-100 text-blue-800' :
-                        'bg-neutral-100 text-neutral-700'
-                      }`}>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${po.status === 'GRN Completed' || po.status === 'Billed' ? 'bg-emerald-100 text-emerald-800' :
+                          po.status === 'Issued' ? 'bg-blue-100 text-blue-800' :
+                            'bg-neutral-100 text-neutral-700'
+                        }`}>
                         {po.status}
                       </span>
                     </td>
@@ -567,7 +564,7 @@ export const PurchaseModule: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 type="button"
                 onClick={() => { setShowGRNModal(false); setSelectedPO(null); setIsManualGRN(false); }}
                 className="text-neutral-400 hover:text-neutral-600 cursor-pointer p-1 rounded-md hover:bg-neutral-100 transition-colors"
@@ -1005,4 +1002,3 @@ export const PurchaseModule: React.FC = () => {
     </div>
   );
 };
-
