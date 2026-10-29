@@ -272,8 +272,8 @@ export const PurchaseModule: React.FC = () => {
       {/* Header */}
       <ModuleHeader
         tabs={
-          <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-200 pb-2">
+            <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg overflow-x-auto">
               <button
                 onClick={() => setActiveTab('orders')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
@@ -290,14 +290,14 @@ export const PurchaseModule: React.FC = () => {
               </button>
             </div>
 
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2" />
               <input
                 type="text"
                 placeholder="Search PO #, supplier, material..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-60 outline-none text-neutral-800"
+                className="text-xs pl-8 pr-3 py-1 bg-white border border-neutral-200 rounded-md w-full sm:w-60 outline-none text-neutral-800"
               />
             </div>
           </div>
@@ -358,9 +358,9 @@ export const PurchaseModule: React.FC = () => {
       {activeTab === 'orders' && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
+            <table className="w-full text-xs text-left min-w-[800px]">
               <thead>
-                <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+                <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                   <th className="p-3">PO Number &amp; Date</th>
                   <th className="p-3">Supplier Name</th>
                   <th className="p-3">Material Required</th>
@@ -371,7 +371,7 @@ export const PurchaseModule: React.FC = () => {
                   <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
                 {filteredPOs.map(po => (
                   <tr key={po.id} className="hover:bg-neutral-50/70 transition-colors">
                     <td className="p-3">
@@ -448,9 +448,9 @@ export const PurchaseModule: React.FC = () => {
       {activeTab === 'grn' && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
+            <table className="w-full text-xs text-left min-w-[800px]">
               <thead>
-                <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+                <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                   <th className="p-3">GRN # &amp; Date</th>
                   <th className="p-3">PO Reference</th>
                   <th className="p-3">Supplier &amp; Vehicle</th>
@@ -461,7 +461,7 @@ export const PurchaseModule: React.FC = () => {
                   <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
                 {filteredGRNs.map(g => (
                   <tr key={g.id} className="hover:bg-neutral-50/70 transition-colors">
                     <td className="p-3">

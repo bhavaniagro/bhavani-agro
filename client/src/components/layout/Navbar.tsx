@@ -8,7 +8,8 @@ import {
   Check,
   Trash2,
   Layers,
-  ExternalLink
+  ExternalLink,
+  Menu
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { UserRole } from '../../types/erp';
@@ -26,7 +27,9 @@ export const Navbar: React.FC = () => {
     setIsQuickAddOpen,
     setQuickAddType,
     setIsSearchOpen,
-    setIsDemoRunnerOpen
+    setIsDemoRunnerOpen,
+    isSidebarCollapsed,
+    toggleSidebar
   } = useERP();
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -78,7 +81,16 @@ export const Navbar: React.FC = () => {
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 sm:px-6 bg-white border-b border-neutral-200 shrink-0">
       {/* Zone 1: Single text element wordmark */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2.5">
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          className="p-1.5 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors cursor-pointer"
+          title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label="Toggle sidebar"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
         <a
           href="#dashboard"
           className="flex items-center gap-2 whitespace-nowrap"

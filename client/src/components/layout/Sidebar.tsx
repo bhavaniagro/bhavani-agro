@@ -17,7 +17,9 @@ import {
   FileText,
   BarChart3,
   Settings,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useERP, ERPModule } from '../../context/ERPContext';
@@ -38,7 +40,10 @@ export const Sidebar: React.FC = () => {
     activeRole, 
     salesOrders, 
     rawMaterials, 
-    dispatches 
+    dispatches,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
+    toggleSidebar
   } = useERP();
 
   const pendingOrders = salesOrders.filter(s => s.status === 'Production Required' || s.status === 'Pending').length;
@@ -87,15 +92,53 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-60 bg-white border-r border-neutral-200 flex flex-col shrink-0 h-full overflow-hidden">
-      {/* Plant quick identity */}
-      <div className="p-3 border-b border-neutral-100 flex items-center justify-between shrink-0">
-        <div className="text-xs">
-          <div className="font-semibold text-neutral-900 truncate">Plant 1 · Bhavnagar GIDC</div>
-          <div className="text-[11px] text-neutral-500">Sole Prop · Est. 1985</div>
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {!isSidebarCollapsed && (
+        <div
+          onClick={() => setIsSidebarCollapsed(true)}
+          className="fixed inset-0 bg-neutral-900/50 z-40 md:hidden backdrop-blur-2xs transition-opacity"
+        />
+      )}
+
+      <aside
+        className={`bg-white border-r border-neutral-200 flex flex-col shrink-0 h-full overflow-hidden transition-all duration-200 ease-in-out z-40 ${
+          isSidebarCollapsed
+            ? 'w-0 -translate-x-full md:translate-x-0 md:w-16 border-r-0 md:border-r'
+            : 'w-64 fixed inset-y-0 left-0 md:static md:w-60 shadow-xl md:shadow-none'
+        }`}
+      >
+      {/* Sidebar Header & Collapse Toggle */}
+      {!isSidebarCollapsed ? (
+        <div className="p-3 border-b border-neutral-100 flex items-center justify-between shrink-0">
+          <div className="text-xs min-w-0 pr-2">
+            <div className="font-semibold text-neutral-900 truncate">Plant 1 · Bhavnagar GIDC</div>
+            <div className="text-[11px] text-neutral-500">Sole Prop · Est. 1985</div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="System operational" />
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="p-1 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded cursor-pointer transition-colors"
+              title="Collapse sidebar"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="System operational" />
-      </div>
+      ) : (
+        <div className="p-2.5 border-b border-neutral-100 flex items-center justify-center shrink-0">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-md cursor-pointer transition-colors"
+            title="Expand sidebar"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Navigation List */}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto min-h-0">
@@ -108,8 +151,16 @@ export const Sidebar: React.FC = () => {
             <Link
               key={item.id}
               to={path}
-              onClick={() => setActiveModule(item.id)}
-              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer text-left ${
+              title={item.label}
+              onClick={() => {
+                setActiveModule(item.id);
+                if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                  setIsSidebarCollapsed(true);
+                }
+              }}
+              className={`w-full flex items-center ${
+                isSidebarCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-2.5 py-1.5'
+              } rounded-md text-xs font-medium transition-colors cursor-pointer text-left relative ${
                 isActive
                   ? 'bg-neutral-900 text-white font-semibold'
                   : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
@@ -117,9 +168,12 @@ export const Sidebar: React.FC = () => {
             >
               <div className="flex items-center gap-2.5 truncate">
                 <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
-                <span className="truncate">{item.label}</span>
+                {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
               </div>
               {item.badge !== undefined && item.badge > 0 && (
+                isSidebarCollapsed ? (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500" />
+                ) :
                 <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono tabular-nums ${
                   isActive ? 'bg-neutral-800 text-emerald-300' : 'bg-neutral-200 text-neutral-800'
                 }`}>
@@ -132,18 +186,25 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       {/* Role Notice */}
-      <div className="p-3 border-t border-neutral-200 bg-neutral-50/70 text-[11px] text-neutral-600 shrink-0">
-        <div className="flex items-center justify-between">
-          <span className="font-medium text-neutral-800">Active View</span>
-          <span className="font-mono text-[10px] text-neutral-500">{activeRole}</span>
-        </div>
-        {activeRole !== 'Owner / Admin' && (
-          <div className="text-[10px] text-amber-700 mt-1 flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3 shrink-0" />
-            <span>Filtered for {activeRole}</span>
+      {!isSidebarCollapsed ? (
+        <div className="p-3 border-t border-neutral-200 bg-neutral-50/70 text-[11px] text-neutral-600 shrink-0">
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-neutral-800">Active View</span>
+            <span className="font-mono text-[10px] text-neutral-500">{activeRole}</span>
           </div>
-        )}
-      </div>
+          {activeRole !== 'Owner / Admin' && (
+            <div className="text-[10px] text-amber-700 mt-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3 shrink-0" />
+              <span>Filtered for {activeRole}</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="p-2.5 border-t border-neutral-200 bg-neutral-50/70 flex justify-center shrink-0" title={`Active View: ${activeRole}`}>
+          <div className="w-2 h-2 rounded-full bg-emerald-500" />
+        </div>
+      )}
     </aside>
+  </>
   );
 };

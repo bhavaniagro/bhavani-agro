@@ -562,9 +562,9 @@ export const CRMSalesModule: React.FC = () => {
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
           {filteredLeads.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
+              <table className="w-full text-xs text-left min-w-[800px]">
                 <thead>
-                  <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+                  <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                     <th className="p-3">Company &amp; Contact</th>
                     <th className="p-3">Address / Location</th>
                     <th className="p-3">Product Required</th>
@@ -575,7 +575,7 @@ export const CRMSalesModule: React.FC = () => {
                     <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100">
+                <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
                   {filteredLeads.map((l) => (
                     <tr key={l.id} className="hover:bg-neutral-50/70 transition-colors">
                       <td className="p-3">
@@ -803,9 +803,9 @@ export const CRMSalesModule: React.FC = () => {
               <div className="border border-neutral-200 rounded-lg overflow-hidden">
                 {salesOrders.length > 0 ? (
                   <div className="max-h-60 overflow-y-auto">
-                    <table className="w-full text-xs text-left">
+                    <table className="w-full text-xs text-left min-w-[800px]">
                       <thead>
-                        <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+                        <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                           <th className="p-2">Order #</th>
                           <th className="p-2">Customer</th>
                           <th className="p-2">Date</th>
@@ -813,7 +813,7 @@ export const CRMSalesModule: React.FC = () => {
                           <th className="p-2">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-neutral-100">
+                      <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
                         {salesOrders.slice(0, 10).map(so => (
                           <tr key={so.id} className="hover:bg-neutral-50/50">
                             <td className="p-2 font-mono font-bold text-neutral-900">{so.orderNumber}</td>

@@ -342,9 +342,9 @@ export const ProductionModule: React.FC = () => {
         <div className="space-y-4">
           <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
+              <table className="w-full text-xs text-left min-w-[850px]">
                 <thead>
-                  <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
+                  <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                     <th className="p-3">Order # &amp; Line</th>
                     <th className="p-3">Product Name</th>
                     <th className="p-3 text-right">Target Output</th>
@@ -356,7 +356,7 @@ export const ProductionModule: React.FC = () => {
                     <th className="p-3 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100">
+                <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
                   {filteredOrders.map(po => (
                     <tr key={po.id} className="hover:bg-neutral-50/70 transition-colors">
                       <td className="p-3">

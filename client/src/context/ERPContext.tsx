@@ -334,6 +334,9 @@ interface ERPContextType {
   setIsDemoRunnerOpen: (open: boolean) => void;
   demoStep: number;
   setDemoStep: (step: number) => void;
+  isSidebarCollapsed: boolean;
+  setIsSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+  toggleSidebar: () => void;
 
   // Toast Notifications
   toasts: ToastMessage[];
@@ -777,6 +780,24 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [printableDoc, setPrintableDoc] = useState<PrintableDoc | null>(null);
   const [isDemoRunnerOpen, setIsDemoRunnerOpen] = useState(false);
   const [demoStep, setDemoStep] = useState(1);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('bhavani_erp_sidebar_collapsed');
+      if (saved !== null) return saved === 'true';
+      return window.innerWidth < 1024;
+    }
+    return false;
+  });
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(prev => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('bhavani_erp_sidebar_collapsed', String(next));
+      }
+      return next;
+    });
+  };
 
 
 
@@ -2546,6 +2567,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         resetAllData,
         runDemoStepAction,
         refreshAllData: syncRealtimeData,
+        isSidebarCollapsed,
+        setIsSidebarCollapsed,
+        toggleSidebar,
         getCustomerCredit: (customer: Customer | null | undefined) => getCustomerCreditSummary(customer, salesOrders),
       }}
     >
