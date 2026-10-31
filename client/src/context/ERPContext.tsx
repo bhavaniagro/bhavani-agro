@@ -701,19 +701,19 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Real-time synchronization listeners (always perform fresh full sync on load/refresh and tab switch)
+    // Real-time synchronization listeners (initial full sync, then lightweight delta sync to protect Firebase quota)
   useEffect(() => {
-    // 1. Full sync on initial page load / refresh
+    // 1. First initial page load / refresh: Full sync once
     syncRealtimeData(false);
 
-    // 2. Cross-tab real-time sync channel
+    // 2. Cross-tab real-time sync channel: delta sync only
     let channel: BroadcastChannel | null = null;
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
         channel = new BroadcastChannel('bhavani_erp_realtime_sync');
         channel.onmessage = (event) => {
           if (event.data?.type === 'DATA_CHANGED') {
-            syncRealtimeData(false);
+            syncRealtimeData(true);
           }
         };
       } catch (e) {
@@ -721,12 +721,12 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // 3. Auto-sync when switching back to tab (if > 5 seconds)
+    // 3. Auto-sync when switching back to tab: delta sync only (only if > 15 seconds)
     let lastFocusSync = Date.now();
     const handleFocus = () => {
-      if (Date.now() - lastFocusSync > 5000) {
+      if (Date.now() - lastFocusSync > 15000) {
         lastFocusSync = Date.now();
-        syncRealtimeData(false);
+        syncRealtimeData(true);
       }
     };
     window.addEventListener('focus', handleFocus);
@@ -741,10 +741,10 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     window.addEventListener('storage', handleStorage);
 
-    // 4. Background polling sync every 15 seconds
+    // 4. Background polling: delta sync every 30 seconds (only reads newly created/updated data)
     const interval = setInterval(() => {
-      syncRealtimeData(false);
-    }, 15000);
+      syncRealtimeData(true);
+    }, 30000);
 
     return () => {
       window.removeEventListener('focus', handleFocus);

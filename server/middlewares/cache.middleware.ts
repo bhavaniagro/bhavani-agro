@@ -5,9 +5,9 @@ interface CacheEntry {
     timestamp: number;
 }
 
-// Memory cache with 10-second TTL to guarantee real-time multi-client consistency across servers
+// Memory cache with 30-second TTL to protect Firebase reads while maintaining multi-instance consistency
 const memoryCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 10 * 1000;
+const CACHE_TTL_MS = 30 * 1000;
 
 export function getItemTimestamp(item: any): number {
     if (!item || typeof item !== "object") return 0;
@@ -61,7 +61,7 @@ export function apiCacheMiddleware(req: Request, res: Response, next: NextFuncti
             if (since) {
                 const sinceTime = new Date(since).getTime();
                 if (!isNaN(sinceTime)) {
-                    // Filter delta
+                    // Filter delta from in-memory cache with 0 Firestore reads!
                     if (Array.isArray(cached.data)) {
                         const filtered = cached.data.filter((item) => getItemTimestamp(item) > sinceTime);
                         res.json(filtered);
@@ -90,6 +90,21 @@ export function apiCacheMiddleware(req: Request, res: Response, next: NextFuncti
                     data: body,
                     timestamp: Date.now(),
                 });
+
+                // If this fresh read was requested with ?since=..., filter and return only delta
+                if (since) {
+                    const sinceTime = new Date(since).getTime();
+                    if (!isNaN(sinceTime)) {
+                        if (Array.isArray(body)) {
+                            return originalJson(body.filter((item) => getItemTimestamp(item) > sinceTime));
+                        } else if (body && typeof body === "object" && Array.isArray(body.data)) {
+                            return originalJson({
+                                ...body,
+                                data: body.data.filter((item: any) => getItemTimestamp(item) > sinceTime),
+                            });
+                        }
+                    }
+                }
             }
             return originalJson(body);
         };
