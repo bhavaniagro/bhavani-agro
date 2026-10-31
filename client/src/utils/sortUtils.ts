@@ -1,5 +1,5 @@
 /**
- * Universal Sorting Utility for Amar Mine Chems ERP
+ * Universal Sorting Utility for Amar Mine Chem Industries ERP
  * Ensures latest entries (newest first) appear at the top of all tables across all modules.
  */
 export function sortByLatest<T extends Record<string, any>>(items: T[]): T[] {

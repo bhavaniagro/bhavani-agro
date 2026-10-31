@@ -22,8 +22,8 @@ import {
 } from '../types/erp';
 
 export const initialCompanyProfile: CompanyProfile = {
-  name: 'Amar Mine Chems',
-  legalName: 'Amar Mine Chems Pvt Ltd',
+  name: 'Amar Mine Chem Industries',
+  legalName: 'Amar Mine Chem Industries',
   formation: 'Private Limited (Est. 1985)',
   established: '01/04/1985',
   businessType: 'Manufacturer & Exporter',

@@ -5,7 +5,9 @@ interface CacheEntry {
     timestamp: number;
 }
 
+// Memory cache with 10-second TTL to guarantee real-time multi-client consistency across servers
 const memoryCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 10 * 1000;
 
 export function getItemTimestamp(item: any): number {
     if (!item || typeof item !== "object") return 0;
@@ -52,8 +54,10 @@ export function apiCacheMiddleware(req: Request, res: Response, next: NextFuncti
     if (isListGet) {
         const cached = memoryCache.get(resourceBase);
         const since = req.query.since as string | undefined;
+        const forceRefresh = req.query.refresh === "true" || req.headers["cache-control"] === "no-cache";
+        const isExpired = cached ? (Date.now() - cached.timestamp > CACHE_TTL_MS) : true;
 
-        if (cached) {
+        if (cached && !isExpired && !forceRefresh) {
             if (since) {
                 const sinceTime = new Date(since).getTime();
                 if (!isNaN(sinceTime)) {
@@ -73,12 +77,12 @@ export function apiCacheMiddleware(req: Request, res: Response, next: NextFuncti
                 }
             }
 
-            // Return full cached response with 0 Firestore reads
+            // Return cached response
             res.json(cached.data);
             return;
         }
 
-        // Cache miss: Intercept res.json to populate cache
+        // Cache miss, expired, or force refresh: Intercept res.json to populate cache
         const originalJson = res.json.bind(res);
         res.json = (body: any) => {
             if (res.statusCode >= 200 && res.statusCode < 300 && body !== undefined) {

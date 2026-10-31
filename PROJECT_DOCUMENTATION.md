@@ -1,12 +1,12 @@
-# 🌾 AMAR MINE CHEMS ERP
+# 🌾 AMAR MINE CHEM INDUSTRIES ERP
 ## Comprehensive Project Documentation & Business Workflow Specification
 **પ્રોજેક્ટ દસ્તાવેજીકરણ અને સંપૂર્ણ બિઝનેસ વર્કફ્લો ગાઇડ**
 
 ---
 
 ### Document Information / દસ્તાવેજ માહિતી
-* **Project Name**: Amar Mine Chems ERP (Enterprise Resource Planning System)
-* **Company**: Amar Mine Chems Pvt Ltd, Chitra GIDC, Bhavnagar, Gujarat
+* **Project Name**: Amar Mine Chem Industries ERP (Enterprise Resource Planning System)
+* **Company**: Amar Mine Chem Industries, Chitra GIDC, Bhavnagar, Gujarat
 * **Facility**: Mineral Processing, Granulation & Chemical Plant
 * **Version**: 1.0.0 (Production Architecture)
 * **Technology Stack**: React 19, TypeScript, Vite, Tailwind CSS, Node.js, Express, Google Cloud Firestore, In-Memory Delta Caching
@@ -31,8 +31,8 @@
 ## 1. EXECUTIVE SUMMARY & COMPANY OVERVIEW
 ### કંપની પરિચય અને ઉદ્દેશ્યો
 
-### 1.1 About Amar Mine Chems
-**Amar Mine Chems Pvt Ltd** (Est. 1985) એ ભાવનગર, ગુજરાત (Plot No. 48-52, GIDC Industrial Estate, Chitra) સ્થિત અગ્રણી એગ્રો-મિનરલ અને કેમિકલ પ્રોસેસિંગ કંપની છે. કંપની બેન્ટોનાઇટ ગ્રેન્યુલ્સ (Bentonite Granules 16-30 Mesh), બાયો-ફર્ટિલાઇઝર્સ (Bio-Fertilizers), ઓર્ગેનિક સોઇલ કન્ડિશનર્સ (Organic Soil Conditioners) અને મિનરલ પાઉડરનું ઉત્પાદન અને સમગ્ર ભારતમાં ખાતર બનાવતી કંપનીઓ (Fertilizer Blenders), ડીલરો અને સહકારી મંડળીઓને સપ્લાય કરે છે.
+### 1.1 About Amar Mine Chem Industries
+**Amar Mine Chem Industries** (Est. 1985) એ ભાવનગર, ગુજરાત (Plot No. 48-52, GIDC Industrial Estate, Chitra) સ્થિત અગ્રણી એગ્રો-મિનરલ અને કેમિકલ પ્રોસેસિંગ કંપની છે. કંપની બેન્ટોનાઇટ ગ્રેન્યુલ્સ (Bentonite Granules 16-30 Mesh), બાયો-ફર્ટિલાઇઝર્સ (Bio-Fertilizers), ઓર્ગેનિક સોઇલ કન્ડિશનર્સ (Organic Soil Conditioners) અને મિનરલ પાઉડરનું ઉત્પાદન અને સમગ્ર ભારતમાં ખાતર બનાવતી કંપનીઓ (Fertilizer Blenders), ડીલરો અને સહકારી મંડળીઓને સપ્લાય કરે છે.
 
 ### 1.2 Problem Statement / પહેલાંની સમસ્યાઓ
 આ ERP સિસ્ટમ અમલમાં મૂકતા પહેલાં ફેક્ટરીમાં નીચે મુજબની ગંભીર સમસ્યાઓ હતી:
@@ -42,7 +42,7 @@
 4. **GST બિલિંગ અને ચલણ વચ્ચે વિસંગતતા**: ડિસ્પેચ ટ્રક નીકળી જાય પછી બિલ બનતું, જેથી E-Way Bill અને એકાઉન્ટ્સમાં ભૂલો થતી.
 
 ### 1.3 ERP Solution / સોલ્યુશન
-આ આધુનિક **Amar Mine Chems ERP** દ્વારા કંપનીના તમામ વિભાગોને (Sales, Purchase, Stores, Production, QC, Dispatch, Accounts, Maintenance, HR) એક જ ક્લાઉડ-બેઝ્ડ પ્લેટફોર્મ પર સાંકળી લેવામાં આવ્યા છે.
+આ આધુનિક **Amar Mine Chem Industries ERP** દ્વારા કંપનીના તમામ વિભાગોને (Sales, Purchase, Stores, Production, QC, Dispatch, Accounts, Maintenance, HR) એક જ ક્લાઉડ-બેઝ્ડ પ્લેટફોર્મ પર સાંકળી લેવામાં આવ્યા છે.
 
 ---
 
@@ -492,11 +492,11 @@ cd client && npm run build
 ## 9. KEY SYSTEM ACHIEVEMENTS & PROJECT IMPACT
 ### સિસ્ટમ સિદ્ધિઓ અને ઔદ્યોગિક મૂલ્ય
 
-Amar Mine Chems Pvt Ltd માટે વિકસાવવામાં આવેલ આ ERP પ્રોજેક્ટ વાસ્તવિક ઔદ્યોગિક પડકારોને ટેકનોલોજી દ્વારા કેવી રીતે ઉકેલી શકાય તેનું ઉત્કૃષ્ટ ઉદાહરણ છે:
+Amar Mine Chem Industries માટે વિકસાવવામાં આવેલ આ ERP પ્રોજેક્ટ વાસ્તવિક ઔદ્યોગિક પડકારોને ટેકનોલોજી દ્વારા કેવી રીતે ઉકેલી શકાય તેનું ઉત્કૃષ્ટ ઉદાહરણ છે:
 1. **End-to-End Enterprise Scope**: માત્ર સાદું CRUD ન બનાવતાં સંપૂર્ણ એન્ટરપ્રાઇઝ કક્ષાની પ્રોડક્શન સાયકલ (BOM, Granulation, QC, Batch Traceability, GST Invoice) સફળતાપૂર્વક અમલી કરી.
 2. **Cloud Cost Optimization**: Google Cloud Firestore માટે સ્માર્ટ ઇન-મેમરી કેશિંગ અને ડેલ્ટા સિન્ક્રોનાઇઝેશન ડિઝાઇન કર્યું, જેથી ક્લાઉડ બિલમાં 85% નો ઘટાડો થયો.
 3. **User-Friendly UI/UX**: ફેક્ટરીના ગ્રાઉન્ડ સ્ટાફથી લઈને મેનેજિંગ ડિરેક્ટર સુધીના તમામ લોકો સરળતાથી ચલાવી શકે તેવું આધુનિક, રિસ્પોન્સિવ વેબ ઇન્ટરફેસ તૈયાર કર્યું.
 4. **Data Integrity & Traceability**: ખાણમાંથી નીકળેલા પથ્થરથી લઈને ખેડૂતના ખેતરમાં પહોંચતા ખાતરની બોરી સુધીની કડીબદ્ધ ડિજિટલ ટ્રેસિબિલિટી પ્રસ્થાપિત કરી.
 
 ---
-*દસ્તાવેજ સમાપ્ત | Amar Mine Chems Pvt Ltd • Enterprise Resource Planning Documentation*
+*દસ્તાવેજ સમાપ્ત | Amar Mine Chem Industries • Enterprise Resource Planning Documentation*

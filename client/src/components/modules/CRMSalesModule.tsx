@@ -13,6 +13,7 @@ import {
   Edit,
   Trash2,
   X,
+  RefreshCw,
   AlertCircle
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
@@ -36,7 +37,9 @@ export const CRMSalesModule: React.FC = () => {
     products,
     addLead,
     updateLead,
-    deleteLead
+    deleteLead,
+    refreshAllData,
+    isSyncing
   } = useERP();
 
   const [activeTab, setActiveTab] = useState<'pipeline' | 'leads' | 'analytics'>('pipeline');

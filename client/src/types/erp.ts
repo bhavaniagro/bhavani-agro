@@ -1,4 +1,4 @@
-// Types for Amar Mine Chems ERP
+// Types for Amar Mine Chem Industries ERP
 
 export type UserRole = 
   | 'Owner / Admin'
@@ -60,6 +60,7 @@ export interface Lead {
   notes?: string;
   lostReason?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Customer {
@@ -81,6 +82,7 @@ export interface Customer {
   totalSales: number;
   outstandingBalance: number;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Supplier {

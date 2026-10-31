@@ -7,11 +7,19 @@ function normalizeLead(
     id: string,
     data: FirebaseFirestore.DocumentData
 ): Lead {
-    const createdAt = data.createdAt?.toDate
-        ? data.createdAt.toDate().toISOString().split("T")[0]
+    const rawCreatedAt = data.createdAt?.toDate
+        ? data.createdAt.toDate().toISOString()
         : typeof data.createdAt === "string"
             ? data.createdAt
-            : new Date().toISOString().split("T")[0];
+            : new Date().toISOString();
+
+    const rawUpdatedAt = data.updatedAt?.toDate
+        ? data.updatedAt.toDate().toISOString()
+        : typeof data.updatedAt === "string"
+            ? data.updatedAt
+            : rawCreatedAt;
+
+    const createdAt = rawCreatedAt.split("T")[0];
 
     const leadName = typeof data.leadName === "string"
         ? data.leadName
@@ -78,6 +86,7 @@ function normalizeLead(
         notes: typeof data.notes === "string" ? data.notes : "",
         lostReason: typeof data.lostReason === "string" ? data.lostReason : "",
         createdAt,
+        updatedAt: rawUpdatedAt,
     };
 }
 
