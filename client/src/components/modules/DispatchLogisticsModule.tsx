@@ -249,24 +249,23 @@ export const DispatchLogisticsModule: React.FC = () => {
       {activeTab === 'challans' && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
+            <table className="w-full text-xs text-left min-w-[1050px]">
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
-                  <th className="p-3">Challan # &amp; Date</th>
-                  <th className="p-3">Customer &amp; Destination</th>
-                  <th className="p-3">Product &amp; Batch</th>
-                  <th className="p-3 text-right">Quantity</th>
-                  <th className="p-3">Vehicle &amp; Transporter</th>
-                  <th className="p-3">E-Way Bill &amp; LR</th>
-                  <th className="p-3">Dispatch Status</th>
-                  <th className="p-3 text-right">Actions</th>
-                  <th className="p-3 text-center">Actions</th>
+                  <th className="p-3 whitespace-nowrap min-w-[140px]">Challan # &amp; Date</th>
+                  <th className="p-3 min-w-[180px]">Customer &amp; Destination</th>
+                  <th className="p-3 min-w-[160px]">Product &amp; Batch</th>
+                  <th className="p-3 text-right min-w-[90px]">Quantity</th>
+                  <th className="p-3 min-w-[160px]">Vehicle &amp; Transporter</th>
+                  <th className="p-3 min-w-[140px]">E-Way Bill &amp; LR</th>
+                  <th className="p-3 min-w-[110px]">Dispatch Status</th>
+                  <th className="p-3 text-right whitespace-nowrap min-w-[200px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {filteredDispatches.map(d => (
                   <tr key={d.id} className="hover:bg-neutral-50/70 transition-colors">
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       <div className="font-mono font-bold text-neutral-900">{d.dispatchNumber}</div>
                       <div className="text-[11px] text-neutral-400 font-mono">{d.dispatchDate} · {d.orderNumber}</div>
                     </td>
@@ -307,30 +306,29 @@ export const DispatchLogisticsModule: React.FC = () => {
                         ))}
                       </select>
                     </td>
-                    <td className="p-3 text-right space-x-1.5 whitespace-nowrap">
-                      <button
-                        onClick={() => setPrintableDoc({ type: 'challan', data: d })}
-                        className="px-2 py-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-[11px] text-neutral-700 font-medium cursor-pointer"
-                        title="Print Delivery Challan"
-                      >
-                        Print Challan
-                      </button>
-
-                      {!d.invoiceNumber ? (
+                    <td className="p-3 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => generateInvoiceFromDispatch(d.id)}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold cursor-pointer shadow-2xs"
+                          onClick={() => setPrintableDoc({ type: 'challan', data: d })}
+                          className="px-2 py-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-[11px] text-neutral-700 font-medium cursor-pointer"
+                          title="Print Delivery Challan"
                         >
-                          Generate GST Invoice
+                          Print Challan
                         </button>
-                      ) : (
-                        <span className="text-[11px] font-mono text-emerald-800 font-semibold">
-                          {d.invoiceNumber}
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
+
+                        {!d.invoiceNumber ? (
+                          <button
+                            onClick={() => generateInvoiceFromDispatch(d.id)}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold cursor-pointer shadow-2xs"
+                          >
+                            Generate GST Invoice
+                          </button>
+                        ) : (
+                          <span className="text-[11px] font-mono text-emerald-800 font-semibold px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded">
+                            {d.invoiceNumber}
+                          </span>
+                        )}
+
                         <button
                           onClick={() => openEditDispatchModal(d)}
                           className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
