@@ -1035,9 +1035,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    const targetProduct = products.find(p => p.id === soData.productId);
-    const availableStock = targetProduct ? targetProduct.currentStockMT - targetProduct.reservedStockMT : 0;
-    const isStockAvailable = availableStock >= soData.quantityMT;
+    const targetProduct = products.find(p => p.id === soData.productId || (p.productName && soData.productName && p.productName.toLowerCase().trim() === soData.productName.toLowerCase().trim()));
+    const physicalStock = targetProduct ? Number(targetProduct.currentStockMT) : 0;
+    const isStockAvailable = physicalStock >= soData.quantityMT;
 
     const orderNum = `SO-2609-0${salesOrders.length + 90}`;
     const newOrder: SalesOrder = {
@@ -1045,7 +1045,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `so-${Date.now()}`,
       orderNumber: orderNum,
       stockAvailable: isStockAvailable,
-      status: isStockAvailable ? 'Ready' : 'Production Required'
+      status: isStockAvailable ? 'Dispatched' : 'Production Required'
     };
 
     try {
@@ -1058,17 +1058,77 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Update customer total sales
       setCustomers(prev => prev.map(c => c.id === soData.customerId ? { ...c, totalSales: c.totalSales + soData.totalAmount } : c));
 
-      if (!isStockAvailable) {
+      if (isStockAvailable) {
+        // Physical stock available: Route directly to Dispatch & Logistics
+        const dispNum = `DC-2609-0${dispatches.length + 65}`;
+        const newDispatch: DispatchChallan = {
+          id: `disp-${Date.now()}`,
+          dispatchNumber: dispNum,
+          salesOrderId: savedOrder.id,
+          orderNumber: savedOrder.orderNumber,
+          customerId: savedOrder.customerId,
+          customerName: savedOrder.customerName,
+          productName: savedOrder.productName,
+          batchNumber: productionBatches.find(b => b.productName === savedOrder.productName)?.batchNumber || `BNT-2609-${Math.floor(100 + Math.random() * 900)}`,
+          quantityMT: savedOrder.quantityMT,
+          bagsCount: Math.round(savedOrder.quantityMT * 20),
+          vehicleNumber: vehicles[0]?.vehicleNumber || 'GJ-12-BV-9908',
+          driverName: vehicles[0]?.driverName || 'Ramesh Rabari',
+          driverMobile: vehicles[0]?.driverPhone || '+91 98250 12345',
+          transporterName: vehicles[0]?.transporterName || 'Gujarat Freight Logistics',
+          dispatchDate: new Date().toISOString().split('T')[0],
+          destination: savedOrder.shippingAddress || targetCustomer?.shippingAddress || 'Plant Destination',
+          eWayBillNumber: `2410${Math.floor(10000000 + Math.random() * 90000000)}`,
+          lrNumber: `LR-2609-${Math.floor(100 + Math.random() * 900)}`,
+          freightAmountRs: 12500,
+          freightPaidBy: 'Customer',
+          status: 'Dispatched',
+          remarks: `Auto-generated delivery challan from Sales Order ${savedOrder.orderNumber} (Physical Stock Available).`
+        };
+
+        setDispatches(prev => sortByLatest([newDispatch, ...prev]));
+        createDispatchInApi(newDispatch).catch(console.error);
+        persistDispatch(newDispatch).catch((error) => {
+          console.error('Failed to save dispatch to Firebase:', error);
+        });
+
+        // Deduct finished goods stock accurately
+        if (targetProduct) {
+          const newStock = Math.max(0, Number((targetProduct.currentStockMT - savedOrder.quantityMT).toFixed(2)));
+          setProducts(prev => prev.map(p => p.id === targetProduct.id ? { ...p, currentStockMT: newStock } : p));
+          updateProductFromApi(targetProduct.id, { currentStockMT: newStock }).catch(console.error);
+          persistFinishedProduct({ ...targetProduct, currentStockMT: newStock }).catch((error) => {
+            console.error('Failed to save finished product stock deduction to Firebase:', error);
+          });
+        }
+
+        setSalesOrders(prev => prev.map(s => s.id === savedOrder.id ? { ...s, status: 'Dispatched' } : s));
+        updateSalesOrderFromApi(savedOrder.id, { status: 'Dispatched' }).catch(console.error);
+
+        setAlerts(prev => [{
+          id: `alt-${Date.now()}`,
+          type: 'info',
+          title: `Dispatch Created: ${dispNum}`,
+          description: `Physical stock available (${physicalStock.toFixed(1)} MT). Order ${orderNum} routed to Dispatch & Logistics.`,
+          timestamp: 'Just now',
+          module: 'Dispatch & Logistics',
+          read: false
+        }, ...prev]);
+
+        setActiveModule('Dispatch & Logistics');
+      } else {
+        // Physical stock not available: Route directly to Production
         createProductionOrderFromSOObj(savedOrder);
         setAlerts(prev => [{
           id: `alt-${Date.now()}`,
           type: 'critical',
           title: `Production Required: ${soData.productName}`,
-          description: `Order ${orderNum} for ${soData.quantityMT} MT exceeds free stock (${availableStock.toFixed(1)} MT). Production order planned.`,
+          description: `Order ${orderNum} for ${soData.quantityMT} MT exceeds physical stock (${physicalStock.toFixed(1)} MT). Production order planned.`,
           timestamp: 'Just now',
           module: 'Production',
           read: false
         }, ...prev]);
+        setActiveModule('Production');
       }
       return savedOrder;
     } catch (err) {

@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Check, AlertTriangle } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { LeadFormFields, LeadFormState, validateLeadForm } from '../crm/LeadFormFields';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 export const QuickAddModal: React.FC = () => {
+  const navigate = useNavigate();
   const { 
     isQuickAddOpen, 
     setIsQuickAddOpen, 
@@ -21,7 +23,8 @@ export const QuickAddModal: React.FC = () => {
     addSalesOrder,
     addPurchaseOrder,
     addGRN,
-    addExpense
+    addExpense,
+    setActiveModule
   } = useERP();
 
   const { contentRef, handleMouseDown, handleClick } = useModalDismiss(
@@ -149,7 +152,7 @@ export const QuickAddModal: React.FC = () => {
           return;
         }
 
-        await addSalesOrder({
+        const savedOrder = await addSalesOrder({
           customerId: cust.id,
           customerName: cust.customerName,
           orderDate: new Date().toISOString().split('T')[0],
@@ -167,6 +170,18 @@ export const QuickAddModal: React.FC = () => {
           status: 'Confirmed',
           notes: 'Entered via Quick Add'
         });
+
+        resetFormState();
+        setIsQuickAddOpen(false);
+
+        if (savedOrder.stockAvailable) {
+          setActiveModule('Dispatch & Logistics');
+          navigate('/dispatch');
+        } else {
+          setActiveModule('Production');
+          navigate('/production');
+        }
+        return;
       } else if (currentType === 'Purchase Order') {
         const supp = suppliers.find(s => s.id === poSupplier) || suppliers[0];
         const mat = rawMaterials.find(m => m.id === poMaterial) || rawMaterials[0];
