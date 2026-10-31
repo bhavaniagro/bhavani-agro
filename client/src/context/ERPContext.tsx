@@ -420,6 +420,8 @@ interface ERPContextType {
   resetAllData: () => void;
   runDemoStepAction: (step: number) => void;
   getCustomerCredit: (customer: Customer | null | undefined) => CustomerCreditSummary;
+  refreshAllData: () => Promise<void>;
+  isSyncing: boolean;
 }
 
 const ERPContext = createContext<ERPContextType | undefined>(undefined);
@@ -581,11 +583,13 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     typeof window !== 'undefined' ? localStorage.getItem(`${CACHE_PREFIX}last_sync_timestamp`) : null
   );
   const isSyncingRef = useRef(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Real-time synchronization: supports both full initial fetch and lightweight delta updates
   const syncRealtimeData = async (isDelta = false) => {
     if (isSyncingRef.current) return;
     isSyncingRef.current = true;
+    setIsSyncing(true);
     try {
       const since = isDelta && lastSyncTimestampRef.current ? lastSyncTimestampRef.current : undefined;
       const syncStartTime = new Date().toISOString();
@@ -694,29 +698,23 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error("Realtime sync error:", err);
     } finally {
       isSyncingRef.current = false;
+      setIsSyncing(false);
     }
   };
 
-  // Real-time synchronization listeners (smart initial, window focus, interval, broadcast)
+  // Real-time synchronization listeners (always perform fresh full sync on load/refresh and tab switch)
   useEffect(() => {
-    const hasSynced = typeof window !== 'undefined' && localStorage.getItem(`${CACHE_PREFIX}has_synced`) === 'true';
+    // 1. Full sync on initial page load / refresh
+    syncRealtimeData(false);
 
-    if (!hasSynced) {
-      // First time visitor: full sync once
-      syncRealtimeData(false);
-    } else {
-      // Returning visitor or page refresh: delta sync only!
-      syncRealtimeData(true);
-    }
-
-    // Cross-tab real-time sync channel: instant delta sync when another tab updates data
+    // 2. Cross-tab real-time sync channel
     let channel: BroadcastChannel | null = null;
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
         channel = new BroadcastChannel('bhavani_erp_realtime_sync');
         channel.onmessage = (event) => {
           if (event.data?.type === 'DATA_CHANGED') {
-            syncRealtimeData(true);
+            syncRealtimeData(false);
           }
         };
       } catch (e) {
@@ -724,12 +722,12 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // Gentle tab focus sync (only if > 45s since last sync, and only delta!)
+    // 3. Auto-sync when switching back to tab (if > 5 seconds)
     let lastFocusSync = Date.now();
     const handleFocus = () => {
-      if (Date.now() - lastFocusSync > 45000) {
+      if (Date.now() - lastFocusSync > 5000) {
         lastFocusSync = Date.now();
-        syncRealtimeData(true);
+        syncRealtimeData(false);
       }
     };
     window.addEventListener('focus', handleFocus);
@@ -744,10 +742,10 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     window.addEventListener('storage', handleStorage);
 
-    // Smart background interval sync (every 60 seconds instead of 8s, and only delta!)
+    // 4. Background polling sync every 15 seconds
     const interval = setInterval(() => {
-      syncRealtimeData(true);
-    }, 60000);
+      syncRealtimeData(false);
+    }, 15000);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
@@ -2566,7 +2564,8 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         markAllAlertsRead,
         resetAllData,
         runDemoStepAction,
-        refreshAllData: syncRealtimeData,
+        refreshAllData: () => syncRealtimeData(false),
+        isSyncing,
         isSidebarCollapsed,
         setIsSidebarCollapsed,
         toggleSidebar,
