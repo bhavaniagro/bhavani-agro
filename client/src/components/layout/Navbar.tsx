@@ -109,29 +109,16 @@ export const Navbar: React.FC = () => {
       {/* Zone 3: Primary Actions, Role Switcher, Quick Add, Alerts */}
       <div className="flex items-center gap-2 sm:gap-3">
 
-
-        {/* Global Quick Add Button */}
-        <button
-          onClick={() => {
-            setQuickAddType(null);
-            setIsQuickAddOpen(true);
-          }}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-900 bg-white hover:bg-neutral-100 rounded-md transition-colors cursor-pointer whitespace-nowrap shadow-xs"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Add</span>
-        </button>
-
         {/* Notification Bell */}
         <div ref={alertMenuRef} className="relative">
           <button
             onClick={() => setShowAlertMenu(!showAlertMenu)}
-            className="relative p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors cursor-pointer"
+            className="relative w-8 h-8 flex items-center justify-center bg-white text-neutral-900 hover:bg-neutral-100 rounded-full transition-colors cursor-pointer shadow-xs"
             title="Notifications & Alerts"
           >
-            <Bell className="w-4 h-4" />
+            <Bell className="w-4 h-4 text-neutral-900" />
             {unreadAlerts.length > 0 && (
-              <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
+              <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
             )}
           </button>
 
@@ -256,10 +243,10 @@ export const Navbar: React.FC = () => {
         <div ref={roleMenuRef} className="relative">
           <button
             onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-neutral-200 bg-neutral-800 hover:bg-neutral-700 rounded border border-neutral-700 cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-neutral-400" />
-            <span className="max-w-[110px] truncate">{activeRole}</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-white" />
+            <span className="max-w-[120px] truncate text-white font-medium">{activeRole}</span>
           </button>
 
           {showRoleMenu && (
