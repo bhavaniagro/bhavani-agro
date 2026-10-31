@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Truck, 
-  Plus, 
-  Printer, 
-  Search, 
-  CheckCircle2, 
-  MapPin, 
-  FileText, 
+import {
+  Truck,
+  Plus,
+  Printer,
+  Search,
+  CheckCircle2,
+  MapPin,
+  FileText,
   Clock,
   ArrowRight,
   ShieldCheck,
@@ -21,18 +21,18 @@ import { ModuleHeader } from '../common/ModuleHeader';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const DispatchLogisticsModule: React.FC = () => {
-  const { 
-    dispatches, 
-    vehicles, 
+  const {
+    dispatches,
+    vehicles,
     updateDispatchStatus,
     updateDispatch,
     deleteDispatch,
     addVehicle,
     updateVehicle,
     deleteVehicle,
-    generateInvoiceFromDispatch, 
+    generateInvoiceFromDispatch,
     setPrintableDoc,
-    setActiveModule 
+    setActiveModule
   } = useERP();
 
   const [activeTab, setActiveTab] = useState<'challans' | 'vehicles'>('challans');
@@ -60,7 +60,7 @@ export const DispatchLogisticsModule: React.FC = () => {
   const [vehPhone, setVehPhone] = useState('');
   const [vehCapacity, setVehCapacity] = useState(30);
 
-  const filteredDispatches = sortByLatest(dispatches.filter(d => 
+  const filteredDispatches = sortByLatest(dispatches.filter(d =>
     d.dispatchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     d.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     d.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -191,17 +191,15 @@ export const DispatchLogisticsModule: React.FC = () => {
             <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
               <button
                 onClick={() => setActiveTab('challans')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                  activeTab === 'challans' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${activeTab === 'challans' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Delivery Challans ({dispatches.length})
               </button>
               <button
                 onClick={() => setActiveTab('vehicles')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                  activeTab === 'vehicles' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${activeTab === 'vehicles' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Vehicle &amp; Transporter Fleet ({vehicles.length})
               </button>
@@ -252,7 +250,7 @@ export const DispatchLogisticsModule: React.FC = () => {
             <table className="w-full text-xs text-left min-w-[1050px]">
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
-                  <th className="p-3 whitespace-nowrap min-w-[140px]">Challan # &amp; Date</th>
+                  <th className="p-3 whitespace-nowrap min-w-[140px]">Challan &amp; Date</th>
                   <th className="p-3 min-w-[180px]">Customer &amp; Destination</th>
                   <th className="p-3 min-w-[160px]">Product &amp; Batch</th>
                   <th className="p-3 text-right min-w-[90px]">Quantity</th>
@@ -294,12 +292,11 @@ export const DispatchLogisticsModule: React.FC = () => {
                       <select
                         value={d.status}
                         onChange={(e) => updateDispatchStatus(d.id, e.target.value as DispatchStatus)}
-                        className={`text-[10px] font-semibold px-2 py-1 rounded uppercase tracking-wider border cursor-pointer ${
-                          d.status === 'Delivered' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
-                          d.status === 'In Transit' ? 'bg-blue-50 text-blue-800 border-blue-300' :
-                          d.status === 'Dispatched' ? 'bg-amber-50 text-amber-800 border-amber-300' :
-                          'bg-neutral-50 text-neutral-700 border-neutral-300'
-                        }`}
+                        className={`text-[10px] font-semibold px-2 py-1 rounded uppercase tracking-wider border cursor-pointer ${d.status === 'Delivered' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
+                            d.status === 'In Transit' ? 'bg-blue-50 text-blue-800 border-blue-300' :
+                              d.status === 'Dispatched' ? 'bg-amber-50 text-amber-800 border-amber-300' :
+                                'bg-neutral-50 text-neutral-700 border-neutral-300'
+                          }`}
                       >
                         {statuses.map(s => (
                           <option key={s} value={s}>{s}</option>
@@ -383,11 +380,10 @@ export const DispatchLogisticsModule: React.FC = () => {
                     <div className="text-[11px] text-neutral-500">{v.vehicleType}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
-                      v.status === 'Available' ? 'bg-emerald-100 text-emerald-800' :
-                      v.status === 'On Trip' ? 'bg-blue-100 text-blue-800' :
-                      'bg-amber-100 text-amber-800'
-                    }`}>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${v.status === 'Available' ? 'bg-emerald-100 text-emerald-800' :
+                        v.status === 'On Trip' ? 'bg-blue-100 text-blue-800' :
+                          'bg-amber-100 text-amber-800'
+                      }`}>
                       {v.status}
                     </span>
                     <button

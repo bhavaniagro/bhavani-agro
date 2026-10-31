@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  BarChart3, 
-  Download, 
-  FileSpreadsheet, 
-  Filter, 
+import {
+  BarChart3,
+  Download,
+  FileSpreadsheet,
+  Filter,
   Calendar,
   Layers,
   TrendingUp,
@@ -16,14 +16,14 @@ import { ModuleHeader } from '../common/ModuleHeader';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const ReportsAnalyticsModule: React.FC = () => {
-  const { 
-    salesOrders, 
-    invoices, 
-    productionBatches, 
-    rawMaterials, 
-    products, 
-    dispatches, 
-    expenses 
+  const {
+    salesOrders,
+    invoices,
+    productionBatches,
+    rawMaterials,
+    products,
+    dispatches,
+    expenses
   } = useERP();
 
   const [activeReport, setActiveReport] = useState<'sales' | 'production' | 'inventory' | 'finance' | 'dispatch'>('sales');
@@ -33,7 +33,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
     const headers = Object.keys(data[0]);
     const csvContent = [
       headers.join(','),
-      ...data.map(row => 
+      ...data.map(row =>
         headers.map(header => {
           let cell = row[header] ?? '';
           if (typeof cell === 'string' && cell.includes(',')) cell = `"${cell}"`;
@@ -126,41 +126,36 @@ export const ReportsAnalyticsModule: React.FC = () => {
             <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg overflow-x-auto">
               <button
                 onClick={() => setActiveReport('sales')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-                  activeReport === 'sales' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${activeReport === 'sales' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Sales Register
               </button>
               <button
                 onClick={() => setActiveReport('production')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-                  activeReport === 'production' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${activeReport === 'production' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Production &amp; Yield Report
               </button>
               <button
                 onClick={() => setActiveReport('inventory')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-                  activeReport === 'inventory' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${activeReport === 'inventory' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Stock Valuation Report
               </button>
               <button
                 onClick={() => setActiveReport('finance')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-                  activeReport === 'finance' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${activeReport === 'finance' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Expense Audit Report
               </button>
               <button
                 onClick={() => setActiveReport('dispatch')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-                  activeReport === 'dispatch' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${activeReport === 'dispatch' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Dispatch &amp; Freight Report
               </button>
@@ -200,7 +195,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
             <table className="w-full text-xs text-left">
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
-                  <th className="p-3">Invoice #</th>
+                  <th className="p-3">Invoice</th>
                   <th className="p-3">Customer</th>
                   <th className="p-3">Date</th>
                   <th className="p-3">Product</th>
@@ -221,9 +216,8 @@ export const ReportsAnalyticsModule: React.FC = () => {
                     <td className="p-3 text-right font-mono tabular-nums">₹{i.taxableValue.toLocaleString('en-IN')}</td>
                     <td className="p-3 text-right font-mono tabular-nums font-bold text-neutral-900">₹{i.totalInvoiceAmount.toLocaleString('en-IN')}</td>
                     <td className="p-3">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
-                        i.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                      }`}>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${i.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        }`}>
                         {i.paymentStatus}
                       </span>
                     </td>
@@ -237,7 +231,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
             <table className="w-full text-xs text-left">
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
-                  <th className="p-3">Batch #</th>
+                  <th className="p-3">Batch</th>
                   <th className="p-3">Product</th>
                   <th className="p-3">Mfg Date</th>
                   <th className="p-3 text-right">Qty (MT)</th>
@@ -299,7 +293,7 @@ export const ReportsAnalyticsModule: React.FC = () => {
             <table className="w-full text-xs text-left">
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
-                  <th className="p-3">Voucher #</th>
+                  <th className="p-3">Voucher</th>
                   <th className="p-3">Category</th>
                   <th className="p-3">Date</th>
                   <th className="p-3">Vendor / Payee</th>
@@ -328,11 +322,11 @@ export const ReportsAnalyticsModule: React.FC = () => {
             <table className="w-full text-xs text-left">
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
-                  <th className="p-3">Challan #</th>
+                  <th className="p-3">Challan</th>
                   <th className="p-3">Customer</th>
                   <th className="p-3">Product &amp; Batch</th>
                   <th className="p-3 text-right">Quantity (MT)</th>
-                  <th className="p-3">Vehicle #</th>
+                  <th className="p-3">Vehicle</th>
                   <th className="p-3">E-Way Bill</th>
                   <th className="p-3">Status</th>
                 </tr>
