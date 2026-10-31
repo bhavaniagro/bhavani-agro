@@ -207,18 +207,18 @@ export const FinishedGoodsModule: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
+          <table className="w-full text-xs text-left min-w-[1050px]">
             <thead>
               <tr className="bg-neutral-50/50 border-b border-neutral-200 font-semibold text-neutral-600">
-                <th className="p-3">Product Name &amp; SKU</th>
-                <th className="p-3">Category</th>
-                <th className="p-3">Storage Bay</th>
-                <th className="p-3 text-right">Physical Stock</th>
-                <th className="p-3 text-right">Reserved</th>
-                <th className="p-3 text-right font-bold text-emerald-800">Available to Sell</th>
-                <th className="p-3 text-right">Selling Price</th>
-                <th className="p-3">Status</th>
-                <th className="p-3 text-right">Actions</th>
+                <th className="p-3 whitespace-nowrap min-w-[240px]">Product Name &amp; SKU</th>
+                <th className="p-3 whitespace-nowrap min-w-[110px]">Category</th>
+                <th className="p-3 whitespace-nowrap min-w-[130px]">Storage Bay</th>
+                <th className="p-3 text-right whitespace-nowrap min-w-[110px]">Physical Stock</th>
+                <th className="p-3 text-right whitespace-nowrap min-w-[90px]">Reserved</th>
+                <th className="p-3 text-right font-bold text-emerald-800 whitespace-nowrap min-w-[120px]">Available to Sell</th>
+                <th className="p-3 text-right whitespace-nowrap min-w-[110px]">Selling Price</th>
+                <th className="p-3 whitespace-nowrap min-w-[110px]">Status</th>
+                <th className="p-3 text-right whitespace-nowrap min-w-[80px]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -230,37 +230,37 @@ export const FinishedGoodsModule: React.FC = () => {
 
                 return (
                   <tr key={p.id} className="hover:bg-neutral-50/70 transition-colors">
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       <div className="font-bold text-neutral-900">{p.productName}</div>
                       <div className="text-[10px] text-neutral-400 font-mono">{p.sku} · HSN: {p.hsnCode}</div>
                     </td>
-                    <td className="p-3 text-neutral-700">{p.category}</td>
-                    <td className="p-3 text-neutral-700 font-medium">{p.storageLocation}</td>
-                    <td className="p-3 text-right font-mono tabular-nums font-bold text-neutral-900">
+                    <td className="p-3 text-neutral-700 whitespace-nowrap">{p.category}</td>
+                    <td className="p-3 text-neutral-700 font-medium whitespace-nowrap">{p.storageLocation}</td>
+                    <td className="p-3 text-right font-mono tabular-nums font-bold text-neutral-900 whitespace-nowrap">
                       {currentStock.toFixed(1)} MT
                     </td>
-                    <td className="p-3 text-right font-mono tabular-nums text-neutral-500">
+                    <td className="p-3 text-right font-mono tabular-nums text-neutral-500 whitespace-nowrap">
                       {reservedStock.toFixed(1)} MT
                     </td>
-                    <td className="p-3 text-right font-mono tabular-nums font-bold text-sm text-emerald-700">
+                    <td className="p-3 text-right font-mono tabular-nums font-bold text-sm text-emerald-700 whitespace-nowrap">
                       {freeStock.toFixed(1)} MT
                     </td>
-                    <td className="p-3 text-right font-mono tabular-nums">
+                    <td className="p-3 text-right font-mono tabular-nums whitespace-nowrap">
                       ₹{p.sellingPricePerMT.toLocaleString('en-IN')}/MT
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       {isLow ? (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-100 text-rose-800">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-100 text-rose-800 whitespace-nowrap inline-block">
                           Low Stock
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 whitespace-nowrap inline-block">
                           Buffer Ready
                         </span>
                       )}
                     </td>
-                    <td className="p-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="p-3 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1"> 
                         <button
                           onClick={() => setEditingProduct({
                             ...p,
