@@ -461,7 +461,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const defaultCompanyProfile: CompanyProfile = {
     id: 'profile',
-    name: 'Amar Mine Chems',
+    name: 'Amar Mine Chem Industries',
     formation: 'Private Limited',
     established: '1985',
     gstin: '24AAAAA0000A1Z5',

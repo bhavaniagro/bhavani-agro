@@ -1481,8 +1481,8 @@ export const initialEmployees: Employee[] = [
 ];
 
 export const initialDocuments: ErpDocument[] = [
-  { id: 'doc-1', title: 'GST Registration Certificate Form REG-06', documentType: 'GST & Statutory', relatedEntity: 'Amar Mine Chems', fileName: 'GST_24AABCB4821F1ZX.pdf', fileSize: '480 KB', uploadDate: '2023-01-10', uploadedBy: 'Hasmukh Joshi' },
-  { id: 'doc-2', title: 'ISO 9001:2015 Quality Management Certificate', documentType: 'GST & Statutory', relatedEntity: 'Amar Mine Chems', fileName: 'ISO9001_Amar_2026.pdf', fileSize: '1.2 MB', uploadDate: '2024-03-15', uploadedBy: 'Ramesh Patel' },
+  { id: 'doc-1', title: 'GST Registration Certificate Form REG-06', documentType: 'GST & Statutory', relatedEntity: 'Amar Mine Chem Industries', fileName: 'GST_24AABCB4821F1ZX.pdf', fileSize: '480 KB', uploadDate: '2023-01-10', uploadedBy: 'Hasmukh Joshi' },
+  { id: 'doc-2', title: 'ISO 9001:2015 Quality Management Certificate', documentType: 'GST & Statutory', relatedEntity: 'Amar Mine Chem Industries', fileName: 'ISO9001_Amar_2026.pdf', fileSize: '1.2 MB', uploadDate: '2024-03-15', uploadedBy: 'Ramesh Patel' },
   { id: 'doc-3', title: 'Lab Test Certificate - BNT Granules Batch 088', documentType: 'Technical & Lab Report', relatedEntity: 'Batch #BNT-2609-088', fileName: 'Cert_BNT_088.pdf', fileSize: '650 KB', uploadDate: '2026-09-24', uploadedBy: 'Manish Trivedi' },
   { id: 'doc-4', title: 'E-Way Bill 241088910482 - Kisan Bio-Tech', documentType: 'E-Way Bill', relatedEntity: 'Dispatch #DC-2609-061', fileName: 'EWAY_241088910482.pdf', fileSize: '320 KB', uploadDate: '2026-09-24', uploadedBy: 'Jayesh Vaghela' },
   { id: 'doc-5', title: 'NPOP Organic Scope Certificate APEDA', documentType: 'GST & Statutory', relatedEntity: 'Organic Fertilizer', fileName: 'APEDA_NPOP_Cert_2026.pdf', fileSize: '980 KB', uploadDate: '2024-01-20', uploadedBy: 'Ramesh Patel' }

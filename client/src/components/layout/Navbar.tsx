@@ -95,8 +95,8 @@ export const Navbar: React.FC = () => {
           href="#dashboard"
           className="flex items-center gap-2 whitespace-nowrap"
         >
-          <img src={logo} alt="Bhavani Agro Logo" className="h-9 w-auto object-contain" />
-          <span className="text-base sm:text-lg font-bold tracking-tight text-white">Amar Mine Chems ERP</span>
+          <img src={logo} alt="Amar Mine Chem Industries Logo" className="h-9 w-auto object-contain" />
+          <span className="text-base sm:text-lg font-bold tracking-tight text-white">Amar Mine Chem Industries</span>
         </a>
         <span className="hidden md:inline-block text-neutral-600">/</span>
         <span className="hidden md:inline-block text-xs font-medium text-neutral-400 whitespace-nowrap">

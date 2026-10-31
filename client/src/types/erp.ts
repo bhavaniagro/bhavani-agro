@@ -1,4 +1,4 @@
-// Types for Amar Mine Chems ERP
+// Types for Amar Mine Chem Industries ERP
 
 export type UserRole = 
   | 'Owner / Admin'

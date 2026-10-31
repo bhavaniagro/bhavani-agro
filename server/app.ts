@@ -43,7 +43,7 @@ app.use("/uploads", express.static(uploadsDir));
 app.get("/api/health", (_req, res) => {
     res.status(200).json({
         success: true,
-        message: "Amar Mine Chems API is running",
+        message: "Amar Mine Chem Industries API is running",
     });
 });
 
