@@ -79,13 +79,13 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 sm:px-6 bg-white border-b border-neutral-200 shrink-0">
+    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 sm:px-6 bg-neutral-900 border-b border-neutral-800 shrink-0">
       {/* Zone 1: Single text element wordmark */}
       <div className="flex items-center gap-1.5 sm:gap-2.5">
         <button
           type="button"
           onClick={toggleSidebar}
-          className="p-1.5 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors cursor-pointer"
+          className="p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors cursor-pointer"
           title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-label="Toggle sidebar"
         >
@@ -96,10 +96,10 @@ export const Navbar: React.FC = () => {
           className="flex items-center gap-2 whitespace-nowrap"
         >
           <img src={logo} alt="Bhavani Agro Logo" className="h-9 w-auto object-contain" />
-          <span className="text-base sm:text-lg font-bold tracking-tight text-neutral-900">Amar Mine Chems ERP</span>
+          <span className="text-base sm:text-lg font-bold tracking-tight text-white">Amar Mine Chems ERP</span>
         </a>
-        <span className="hidden md:inline-block text-neutral-300">/</span>
-        <span className="hidden md:inline-block text-xs font-medium text-neutral-500 whitespace-nowrap">
+        <span className="hidden md:inline-block text-neutral-600">/</span>
+        <span className="hidden md:inline-block text-xs font-medium text-neutral-400 whitespace-nowrap">
           {activeModule}
         </span>
       </div>
@@ -116,7 +116,7 @@ export const Navbar: React.FC = () => {
             setQuickAddType(null);
             setIsQuickAddOpen(true);
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-neutral-900 hover:bg-neutral-800 rounded-md transition-colors cursor-pointer whitespace-nowrap shadow-xs"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-900 bg-white hover:bg-neutral-100 rounded-md transition-colors cursor-pointer whitespace-nowrap shadow-xs"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Add</span>
@@ -126,7 +126,7 @@ export const Navbar: React.FC = () => {
         <div ref={alertMenuRef} className="relative">
           <button
             onClick={() => setShowAlertMenu(!showAlertMenu)}
-            className="relative p-1.5 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors cursor-pointer"
+            className="relative p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors cursor-pointer"
             title="Notifications & Alerts"
           >
             <Bell className="w-4 h-4" />
@@ -256,9 +256,9 @@ export const Navbar: React.FC = () => {
         <div ref={roleMenuRef} className="relative">
           <button
             onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200/80 rounded border border-neutral-200 cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-neutral-200 bg-neutral-800 hover:bg-neutral-700 rounded border border-neutral-700 cursor-pointer"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-neutral-500" />
+            <ShieldCheck className="w-3.5 h-3.5 text-neutral-400" />
             <span className="max-w-[110px] truncate">{activeRole}</span>
           </button>
 
