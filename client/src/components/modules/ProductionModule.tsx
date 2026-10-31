@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Factory, 
   Layers, 
@@ -22,6 +23,7 @@ import { ModuleHeader } from '../common/ModuleHeader';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const ProductionModule: React.FC = () => {
+  const navigate = useNavigate();
   const { 
     productionOrders, 
     productionBatches, 
@@ -97,7 +99,8 @@ export const ProductionModule: React.FC = () => {
     if (!selectedOrder) return;
     completeProductionOrder(selectedOrder.id, Number(entryOutputMT), `Run finished with ${entryLossMT} MT process loss.`);
     setShowLogEntryModal(false);
-    setActiveTab('batches');
+    setActiveModule('Dispatch & Logistics');
+    navigate('/dispatch');
   };
 
   // Production Order handlers
@@ -732,7 +735,7 @@ export const ProductionModule: React.FC = () => {
                   type="submit"
                   className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded cursor-pointer"
                 >
-                  Generate Batch &amp; Complete
+                  Generate Batch &amp; Dispatch to Logistics
                 </button>
               </div>
             </form>

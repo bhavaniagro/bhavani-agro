@@ -1233,13 +1233,60 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateProductFromApi(targetProd.id, { currentStockMT: newQty }).catch(console.error);
       persistFinishedProduct({ ...targetProd, currentStockMT: newQty }).catch(console.error);
 
-      // Check sales orders waiting for this product
-      setSalesOrders(prev => prev.map(so => {
+      // Find associated sales order (either explicitly linked or waiting for this product)
+      const associatedSO = po.salesOrderId
+        ? salesOrders.find(s => s.id === po.salesOrderId)
+        : salesOrders.find(s => (s.productId === po.productId || (s.productName && po.productName && s.productName.toLowerCase().trim() === po.productName.toLowerCase().trim())) && (s.status === 'Production Required' || s.status === 'Pending' || s.status === 'Ready'));
+
+      const targetCustomer = associatedSO
+        ? (customers.find(c => c.id === associatedSO.customerId || (c.customerName && associatedSO.customerName && c.customerName.toLowerCase().trim() === associatedSO.customerName.toLowerCase().trim())) || customers[0])
+        : customers[0];
+
+      // Automatically create Delivery Challan in Dispatch & Logistics
+      const dispNum = `DC-2609-0${dispatches.length + 65}`;
+      const newDispatch: DispatchChallan = {
+        id: `disp-${Date.now()}`,
+        dispatchNumber: dispNum,
+        salesOrderId: associatedSO ? associatedSO.id : (po.salesOrderId || 'so-auto'),
+        orderNumber: associatedSO ? associatedSO.orderNumber : (po.productionOrderNumber || 'SO-AUTO'),
+        customerId: targetCustomer?.id || 'cust-1',
+        customerName: targetCustomer?.customerName || associatedSO?.customerName || 'SIDDHIVINAYAK GRANNULES',
+        productName: po.productName,
+        batchNumber: batchCode,
+        quantityMT: outputMT,
+        bagsCount: Math.round(outputMT * 20),
+        vehicleNumber: vehicles[0]?.vehicleNumber || 'GJ-12-BV-9908',
+        driverName: vehicles[0]?.driverName || 'Ramesh Rabari',
+        driverMobile: vehicles[0]?.driverPhone || '+91 98250 12345',
+        transporterName: vehicles[0]?.transporterName || 'Gujarat Freight Logistics',
+        dispatchDate: new Date().toISOString().split('T')[0],
+        destination: associatedSO?.shippingAddress || targetCustomer?.shippingAddress || 'MADHIYA GIDC, BHAVNAGAR',
+        eWayBillNumber: `2410${Math.floor(10000000 + Math.random() * 90000000)}`,
+        lrNumber: `LR-2609-${Math.floor(100 + Math.random() * 900)}`,
+        freightAmountRs: 12500,
+        freightPaidBy: 'Customer',
+        status: 'Dispatched',
+        remarks: `Auto-generated delivery challan from completed production batch ${batchCode} (${po.productionOrderNumber}).`
+      };
+
+      setDispatches(prev => sortByLatest([newDispatch, ...prev]));
+      createDispatchInApi(newDispatch).catch(console.error);
+      persistDispatch(newDispatch).catch((error) => {
+        console.error('Failed to save dispatch to Firebase:', error);
+      });
+
+      if (associatedSO) {
+        setSalesOrders(prev => prev.map(s => s.id === associatedSO.id ? { ...s, status: 'Dispatched', stockAvailable: true } : s));
+        updateSalesOrderFromApi(associatedSO.id, { status: 'Dispatched', stockAvailable: true }).catch(console.error);
+      }
+      else {
+        setSalesOrders(prev => prev.map(so => {
         if (so.productId === targetProd.id && so.status === 'Production Required') {
           return { ...so, status: 'Ready', stockAvailable: true };
         }
         return so;
       }));
+      }
     }
 
     setProductionOrders(prev => prev.map(p => p.id === poId ? {
@@ -1249,17 +1296,18 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       outputProducedMT: outputMT
     } : p));
     updateProductionOrderInApi(poId, { status: 'Completed', actualBatchNumber: batchCode, outputProducedMT: outputMT }).catch(console.error);
-    showToast(`Production Batch ${batchCode} completed & released to inventory`, 'success');
+    showToast(`Batch ${batchCode} completed & Delivery Challan ${dispNum} created in Dispatch & Logistics`, 'success');
 
     setAlerts(prev => sortByLatest([{
       id: `alt-${Date.now()}`,
       type: 'info',
-      title: `Batch Produced: ${po.productName}`,
-      description: `Batch ${batchCode} completed (${outputMT} MT). Added to Finished Goods stock.`,
+      title: `Dispatch Created: ${dispNum}`,
+      description: `Production Order ${po.productionOrderNumber} completed (${outputMT} MT ${po.productName}, Batch ${batchCode}) and routed to Dispatch & Logistics under challan ${dispNum}.`,
       timestamp: 'Just now',
-      module: 'Production',
+      module: 'Dispatch & Logistics',
       read: false
     }, ...prev]));
+    setActiveModule('Dispatch & Logistics');
     notifyChange();
   };
 
