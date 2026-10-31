@@ -123,17 +123,6 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({
     }
   };
 
-  const handleFieldChange = (field: keyof LeadFormState, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
-  };
-
   return (
     <div
       onClick={handleClick}
@@ -185,9 +174,11 @@ export const LeadFormModal: React.FC<LeadFormModalProps> = ({
 
           <LeadFormFields
             formData={formData}
+            setFormData={setFormData}
             errors={errors}
+            setErrors={setErrors}
             products={products}
-            onChange={handleFieldChange}
+            isEdit={mode === 'edit'}
           />
 
           {/* Action Buttons */}
