@@ -420,7 +420,6 @@ interface ERPContextType {
   resetAllData: () => void;
   runDemoStepAction: (step: number) => void;
   getCustomerCredit: (customer: Customer | null | undefined) => CustomerCreditSummary;
-  refreshAllData: () => Promise<void>;
   isSyncing: boolean;
 }
 
