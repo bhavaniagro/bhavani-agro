@@ -85,7 +85,7 @@ export const Navbar: React.FC = () => {
         <button
           type="button"
           onClick={toggleSidebar}
-          className="p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors cursor-pointer"
+          className="md:hidden p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors cursor-pointer"
           title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-label="Toggle sidebar"
         >
