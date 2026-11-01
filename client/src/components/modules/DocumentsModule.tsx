@@ -190,21 +190,21 @@ export const DocumentsModule: React.FC = () => {
               <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg">
                 <FileText className="w-5 h-5" />
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-mono text-neutral-400 mr-1">{doc.fileSize}</span>
                 <button
                   onClick={() => setEditingDoc(doc)}
-                  className="p-1 hover:bg-neutral-100 rounded text-neutral-600 cursor-pointer"
+                  className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
                   title="Edit Document"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  <Edit className="w-3.5 h-3.5 text-neutral-600" />
                 </button>
                 <button
                   onClick={() => setDeletingDocId(doc.id)}
-                  className="p-1 hover:bg-rose-50 rounded text-rose-600 cursor-pointer"
+                  className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
                   title="Delete Document"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                 </button>
               </div>
             </div>
