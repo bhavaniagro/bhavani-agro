@@ -224,8 +224,8 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           2. Product &amp; Commercials
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="sm:col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div className="sm:col-span-6">
             <label className="block text-[11px] font-semibold text-neutral-700 mb-1">
               Product Interested <span className="text-rose-600 font-bold">*</span>
             </label>
@@ -248,8 +248,8 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             )}
           </div>
 
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+          <div className="sm:col-span-3">
+            <label className="block text-[11px] font-medium text-neutral-600 mb-1 whitespace-nowrap">
               Expected Qty (MT)
             </label>
             <input
@@ -265,8 +265,8 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             />
           </div>
 
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+          <div className="sm:col-span-3">
+            <label className="block text-[11px] font-medium text-neutral-600 mb-1 whitespace-nowrap">
               Est. Value (₹)
             </label>
             <input

@@ -122,6 +122,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             ? `${hasCustomBg ? '' : 'bg-white'} border-neutral-900 ring-2 ring-neutral-900/10 shadow-2xs`
             : `${hasCustomBg ? '' : 'bg-neutral-50'} ${hasCustomBorder ? '' : 'border-neutral-200 hover:border-neutral-400'} text-neutral-800 focus:border-neutral-900`
         } ${buttonClassName}`}
+        title={displayLabel}
       >
         <span className={`truncate font-medium ${!selectedOption && placeholder ? 'text-neutral-400' : 'text-neutral-800'}`}>
           {displayLabel}
