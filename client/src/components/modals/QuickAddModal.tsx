@@ -37,36 +37,36 @@ export const QuickAddModal: React.FC = () => {
   const [creditError, setCreditError] = useState<string | null>(null);
 
   // Form states
-  const [soCustomer, setSoCustomer] = useState(customers[0]?.id || '');
-  const [soProduct, setSoProduct] = useState(products[0]?.id || '');
-  const [soQuantity, setSoQuantity] = useState(25);
-  const [soRate, setSoRate] = useState(6200);
+  const [soCustomer, setSoCustomer] = useState('');
+  const [soProduct, setSoProduct] = useState('');
+  const [soQuantity, setSoQuantity] = useState<number | ''>('');
+  const [soRate, setSoRate] = useState<number | ''>('');
 
-  const selectedSoCustomer = customers.find(c => c.id === soCustomer) || customers[0];
-  const selectedSoProduct = products.find(p => p.id === soProduct) || products[0];
-  const estOrderTotal = Number(soQuantity) * Number(soRate || selectedSoProduct?.sellingPricePerMT || 0) * 1.05;
+  const selectedSoCustomer = customers.find(c => c.id === soCustomer) || null;
+  const selectedSoProduct = products.find(p => p.id === soProduct) || null;
+  const estOrderTotal = Number(soQuantity || 0) * Number(soRate || selectedSoProduct?.sellingPricePerMT || 0) * 1.05;
 
   const currentCredit = useMemo(() => {
-    return getCustomerCredit(selectedSoCustomer);
+    return selectedSoCustomer ? getCustomerCredit(selectedSoCustomer) : { creditLimit: 0, usedCredit: 0, availableCredit: 0, orderCount: 0 };
   }, [selectedSoCustomer, salesOrders, getCustomerCredit]);
 
-  const isCreditExceeded = (Number(selectedSoCustomer?.creditLimit) || 0) > 0 && estOrderTotal > currentCredit.availableCredit;
+  const isCreditExceeded = selectedSoCustomer ? (Number(selectedSoCustomer?.creditLimit) || 0) > 0 && estOrderTotal > currentCredit.availableCredit : false;
 
   // Clear credit error on input change or modal toggle
   useEffect(() => {
     setCreditError(null);
   }, [soCustomer, soProduct, soQuantity, soRate, isQuickAddOpen]);
 
-  const [poSupplier, setPoSupplier] = useState(suppliers[0]?.id || '');
-  const [poMaterial, setPoMaterial] = useState(rawMaterials[0]?.id || '');
-  const [poQuantity, setPoQuantity] = useState(40);
-  const [poRate, setPoRate] = useState(2200);
+  const [poSupplier, setPoSupplier] = useState('');
+  const [poMaterial, setPoMaterial] = useState('');
+  const [poQuantity, setPoQuantity] = useState<number | ''>('');
+  const [poRate, setPoRate] = useState<number | ''>('');
 
-  const [expCategory, setExpCategory] = useState<any>('Electricity & Power');
+  const [expCategory, setExpCategory] = useState<any>('');
   const [expAmount, setExpAmount] = useState<number | ''>('');
   const [expVendor, setExpVendor] = useState('');
   const [expDesc, setExpDesc] = useState('');
-  const [expPaidFrom, setExpPaidFrom] = useState('SBI Current Account');
+  const [expPaidFrom, setExpPaidFrom] = useState('');
 
   const getInitialLeadState = (): LeadFormState => ({
     leadName: '',
@@ -76,13 +76,13 @@ export const QuickAddModal: React.FC = () => {
     email: '',
     address: '',
     location: '',
-    productInterested: products[0]?.productName || '',
-    expectedQuantityMT: 10,
-    estimatedValue: 62000,
-    followUpDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+    productInterested: '',
+    expectedQuantityMT: '',
+    estimatedValue: '',
+    followUpDate: '',
     followUpTime: '',
-    salesperson: 'Sales Executive',
-    leadSource: 'Direct Enquiry',
+    salesperson: '',
+    leadSource: '',
     status: 'New',
     notes: '',
     lostReason: ''
@@ -99,22 +99,26 @@ export const QuickAddModal: React.FC = () => {
   const [custGstin, setCustGstin] = useState('');
   const [custBillingAddress, setCustBillingAddress] = useState('');
   const [custShippingAddress, setCustShippingAddress] = useState('');
-  const [custState, setCustState] = useState('Gujarat');
+  const [custState, setCustState] = useState('');
   const [custType, setCustType] = useState<any>('Dealer');
-  const [custSalesperson, setCustSalesperson] = useState('Sales Executive');
-  const [custCreditLimit, setCustCreditLimit] = useState<number | ''>(1000000);
+  const [custSalesperson, setCustSalesperson] = useState('');
+  const [custCreditLimit, setCustCreditLimit] = useState<number | ''>('');
   const [custPaymentTerms, setCustPaymentTerms] = useState('Net 30 Days');
 
   const resetFormState = () => {
-    setSoQuantity(25);
-    setSoRate(6200);
-    setPoQuantity(40);
-    setPoRate(2200);
-    setExpCategory('Electricity & Power');
+    setSoCustomer('');
+    setSoProduct('');
+    setSoQuantity('');
+    setSoRate('');
+    setPoSupplier('');
+    setPoMaterial('');
+    setPoQuantity('');
+    setPoRate('');
+    setExpCategory('');
     setExpAmount('');
     setExpVendor('');
     setExpDesc('');
-    setExpPaidFrom('SBI Industrial Current A/c');
+    setExpPaidFrom('');
     setLeadFormData(getInitialLeadState());
     setLeadErrors({});
     setCustName('');
@@ -125,12 +129,26 @@ export const QuickAddModal: React.FC = () => {
     setCustGstin('');
     setCustBillingAddress('');
     setCustShippingAddress('');
-    setCustState('Gujarat');
+    setCustState('');
     setCustType('Dealer');
-    setCustSalesperson('Sales Executive');
-    setCustCreditLimit(1000000);
+    setCustSalesperson('');
+    setCustCreditLimit('');
     setCustPaymentTerms('Net 30 Days');
+    setCreditError(null);
   };
+
+  // Reset all forms when modal opens or quickAddType changes
+  useEffect(() => {
+    if (isQuickAddOpen) {
+      resetFormState();
+    }
+  }, [isQuickAddOpen]);
+
+  useEffect(() => {
+    if (quickAddType) {
+      setActiveType(quickAddType);
+    }
+  }, [quickAddType]);
 
   if (!isQuickAddOpen) return null;
 
@@ -144,7 +162,18 @@ export const QuickAddModal: React.FC = () => {
       if (currentType === 'Sales Order') {
         const cust = selectedSoCustomer;
         const prod = selectedSoProduct;
-        if (!cust || !prod) return;
+        if (!cust) {
+          setCreditError('Please select a customer for the sales order.');
+          return;
+        }
+        if (!prod) {
+          setCreditError('Please select a finished product for the sales order.');
+          return;
+        }
+        if (!soQuantity || Number(soQuantity) <= 0) {
+          setCreditError('Please enter a valid quantity in MT.');
+          return;
+        }
         const total = estOrderTotal;
 
         if (Number(cust.creditLimit) > 0 && total > currentCredit.availableCredit) {
@@ -184,10 +213,22 @@ export const QuickAddModal: React.FC = () => {
         }
         return;
       } else if (currentType === 'Purchase Order') {
-        const supp = suppliers.find(s => s.id === poSupplier) || suppliers[0];
-        const mat = rawMaterials.find(m => m.id === poMaterial) || rawMaterials[0];
-        if (!supp || !mat) return;
-        const total = poQuantity * (poRate || mat.averageCost) * 1.05;
+        const supp = suppliers.find(s => s.id === poSupplier);
+        const mat = rawMaterials.find(m => m.id === poMaterial);
+        if (!supp) {
+          alert('Please select a supplier for the purchase order.');
+          return;
+        }
+        if (!mat) {
+          alert('Please select a raw material.');
+          return;
+        }
+        if (!poQuantity || Number(poQuantity) <= 0) {
+          alert('Please enter a valid quantity.');
+          return;
+        }
+        const unitRate = Number(poRate || mat.averageCost || 0);
+        const total = Number(poQuantity) * unitRate * 1.05;
 
         await addPurchaseOrder({
           supplierId: supp.id,
@@ -198,7 +239,7 @@ export const QuickAddModal: React.FC = () => {
           materialName: mat.materialName,
           quantity: Number(poQuantity),
           unit: mat.unit,
-          rate: Number(poRate || mat.averageCost),
+          rate: unitRate,
           taxPercent: 5,
           freightCost: 5000,
           totalAmount: total + 5000,
@@ -206,6 +247,14 @@ export const QuickAddModal: React.FC = () => {
           notes: 'Entered via Quick Add'
         });
       } else if (currentType === 'Expense') {
+        if (!expCategory) {
+          alert('Please select an expense category.');
+          return;
+        }
+        if (!expAmount || Number(expAmount) <= 0) {
+          alert('Please enter an expense amount.');
+          return;
+        }
         await addExpense({
           category: expCategory,
           date: new Date().toISOString().split('T')[0],
@@ -242,6 +291,10 @@ export const QuickAddModal: React.FC = () => {
           lostReason: leadFormData.lostReason
         });
       } else if (currentType === 'Customer') {
+        if (!custName.trim()) {
+          alert('Please enter a customer name.');
+          return;
+        }
         const fullBilling = custBillingAddress || (custCity ? `${custCity}, ${custState}` : '');
         const fullShipping = custShippingAddress || fullBilling;
         await addCustomer({
@@ -309,7 +362,10 @@ export const QuickAddModal: React.FC = () => {
             {actionTypes.map(t => (
               <button
                 key={t}
-                onClick={() => setActiveType(t)}
+                onClick={() => {
+                  setActiveType(t);
+                  resetFormState();
+                }}
                 className={`px-3 py-1 text-xs rounded-md transition-colors whitespace-nowrap cursor-pointer ${
                   activeType === t 
                     ? 'bg-neutral-900 text-white font-medium' 
@@ -405,7 +461,7 @@ export const QuickAddModal: React.FC = () => {
                   <label className="block text-neutral-700 font-medium mb-1">HSN Code</label>
                   <input
                     type="text"
-                    value={selectedSoProduct?.hsnCode || '31059000'}
+                    value={selectedSoProduct?.hsnCode || ''}
                     readOnly
                     disabled
                     placeholder="Auto-fetched HSN"
@@ -418,7 +474,8 @@ export const QuickAddModal: React.FC = () => {
                     type="number"
                     min="1"
                     value={soQuantity}
-                    onChange={(e) => setSoQuantity(Number(e.target.value))}
+                    onChange={(e) => setSoQuantity(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="e.g. 25"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -429,14 +486,15 @@ export const QuickAddModal: React.FC = () => {
                   <input
                     type="number"
                     value={soRate}
-                    onChange={(e) => setSoRate(Number(e.target.value))}
+                    onChange={(e) => setSoRate(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="e.g. 6200"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
                 <div className="flex flex-col justify-end">
                   <div className="text-[11px] text-neutral-500">Est. Total with 5% GST:</div>
                   <div className="font-bold text-sm text-neutral-900 font-mono mt-0.5">
-                    ₹{((soQuantity * soRate) * 1.05).toLocaleString('en-IN')}
+                    ₹{((Number(soQuantity || 0) * Number(soRate || 0)) * 1.05).toLocaleString('en-IN')}
                   </div>
                 </div>
               </div>
@@ -474,7 +532,8 @@ export const QuickAddModal: React.FC = () => {
                     type="number"
                     min="1"
                     value={poQuantity}
-                    onChange={(e) => setPoQuantity(Number(e.target.value))}
+                    onChange={(e) => setPoQuantity(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="e.g. 40"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -485,14 +544,15 @@ export const QuickAddModal: React.FC = () => {
                   <input
                     type="number"
                     value={poRate}
-                    onChange={(e) => setPoRate(Number(e.target.value))}
+                    onChange={(e) => setPoRate(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="e.g. 2200"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
                 <div className="flex flex-col justify-end">
                   <div className="text-[11px] text-neutral-500">Est. Total:</div>
                   <div className="font-bold text-sm text-neutral-900 font-mono mt-0.5">
-                    ₹{((poQuantity * poRate) * 1.05 + 5000).toLocaleString('en-IN')}
+                    ₹{(poQuantity && poRate ? ((Number(poQuantity) * Number(poRate)) * 1.05 + 5000) : 0).toLocaleString('en-IN')}
                   </div>
                 </div>
               </div>
@@ -507,6 +567,7 @@ export const QuickAddModal: React.FC = () => {
                   <CustomSelect
                     value={expCategory}
                     onChange={setExpCategory}
+                    placeholder="Select Expense Category"
                     options={[
                       'Electricity & Power',
                       'Fuel & Diesel (DG/Boiler)',
@@ -525,7 +586,8 @@ export const QuickAddModal: React.FC = () => {
                   <input
                     type="number"
                     value={expAmount}
-                    onChange={(e) => setExpAmount(Number(e.target.value))}
+                    onChange={(e) => setExpAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="e.g. 5000"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -680,7 +742,8 @@ export const QuickAddModal: React.FC = () => {
                   <input
                     type="number"
                     value={custCreditLimit}
-                    onChange={(e) => setCustCreditLimit(Number(e.target.value))}
+                    onChange={(e) => setCustCreditLimit(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="e.g. 1000000"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>

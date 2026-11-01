@@ -74,11 +74,11 @@ export const ProductionModule: React.FC = () => {
   const [bomProductId, setBomProductId] = useState('');
   const [bomProductName, setBomProductName] = useState('');
   const [bomVersion, setBomVersion] = useState('v1.0');
-  const [bomCost, setBomCost] = useState(4350);
-  const [bomLabourCost, setBomLabourCost] = useState(350);
-  const [bomPowerCost, setBomPowerCost] = useState(250);
-  const [bomPackagingCost, setBomPackagingCost] = useState(270);
-  const [bomOverheadCost, setBomOverheadCost] = useState(150);
+  const [bomCost, setBomCost] = useState(0);
+  const [bomLabourCost, setBomLabourCost] = useState(0);
+  const [bomPowerCost, setBomPowerCost] = useState(0);
+  const [bomPackagingCost, setBomPackagingCost] = useState(0);
+  const [bomOverheadCost, setBomOverheadCost] = useState(0);
   const [bomNotes, setBomNotes] = useState('');
   const [bomItems, setBomItems] = useState<any[]>([]);
 
@@ -162,11 +162,11 @@ export const ProductionModule: React.FC = () => {
     setBomProductId('');
     setBomProductName('');
     setBomVersion('v1.0');
-    setBomCost(4350);
-    setBomLabourCost(350);
-    setBomPowerCost(250);
-    setBomPackagingCost(270);
-    setBomOverheadCost(150);
+    setBomCost(0);
+    setBomLabourCost(0);
+    setBomPowerCost(0);
+    setBomPackagingCost(0);
+    setBomOverheadCost(0);
     setBomNotes('');
     setBomItems([]);
   };

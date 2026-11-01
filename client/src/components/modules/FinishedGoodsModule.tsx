@@ -57,10 +57,10 @@ export const FinishedGoodsModule: React.FC = () => {
     productName: string;
     category: FinishedProduct['category'];
     unit: FinishedProduct['unit'];
-    sellingPricePerMT: number;
-    standardCostPerMT: number;
-    minimumStockMT: number;
-    maximumStockMT: number;
+    sellingPricePerMT: number | string;
+    standardCostPerMT: number | string;
+    minimumStockMT: number | string;
+    maximumStockMT: number | string;
     packagingType: FinishedProduct['packagingType'];
     storageLocation: string;
     taxRate: number;
@@ -73,15 +73,15 @@ export const FinishedGoodsModule: React.FC = () => {
     productName: '',
     category: 'Granules',
     unit: 'MT',
-    sellingPricePerMT: 6500,
-    standardCostPerMT: 4200,
-    minimumStockMT: 20,
-    maximumStockMT: 200,
+    sellingPricePerMT: '',
+    standardCostPerMT: '',
+    minimumStockMT: '',
+    maximumStockMT: '',
     packagingType: '50kg HDPE Woven Bag',
-    storageLocation: 'Warehouse Bay 1',
+    storageLocation: '',
     taxRate: 5,
-    hsnCode: '3105',
-    description: 'High-grade agro granule product',
+    hsnCode: '',
+    description: '',
     physicalStockMT: '',
     reservedStockMT: ''
   });
@@ -92,15 +92,15 @@ export const FinishedGoodsModule: React.FC = () => {
       productName: '',
       category: 'Granules',
       unit: 'MT',
-      sellingPricePerMT: 6500,
-      standardCostPerMT: 4200,
-      minimumStockMT: 20,
-      maximumStockMT: 200,
+      sellingPricePerMT: '',
+      standardCostPerMT: '',
+      minimumStockMT: '',
+      maximumStockMT: '',
       packagingType: '50kg HDPE Woven Bag',
-      storageLocation: 'Warehouse Bay 1',
+      storageLocation: '',
       taxRate: 5,
-      hsnCode: '3105',
-      description: 'High-grade agro granule product',
+      hsnCode: '',
+      description: '',
       physicalStockMT: '',
       reservedStockMT: ''
     });
@@ -373,7 +373,8 @@ export const FinishedGoodsModule: React.FC = () => {
                   <input
                     type="number"
                     value={newProd.sellingPricePerMT}
-                    onChange={(e) => setNewProd({ ...newProd, sellingPricePerMT: Number(e.target.value) })}
+                    onChange={(e) => setNewProd({ ...newProd, sellingPricePerMT: e.target.value === '' ? '' : Number(e.target.value) })}
+                    placeholder="e.g. 6500"
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   />
                 </div>

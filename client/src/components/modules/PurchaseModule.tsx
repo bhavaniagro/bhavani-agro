@@ -43,11 +43,11 @@ export const PurchaseModule: React.FC = () => {
   const [selectedPO, setSelectedPO] = useState<any | null>(null);
   const [manualSupplierId, setManualSupplierId] = useState('');
   const [manualMaterialId, setManualMaterialId] = useState('');
-  const [receivedQty, setReceivedQty] = useState<number | string>(50);
-  const [orderedQty, setOrderedQty] = useState<number | string>(50);
+  const [receivedQty, setReceivedQty] = useState<number | string>('');
+  const [orderedQty, setOrderedQty] = useState<number | string>('');
   const [isOrderCompleted, setIsOrderCompleted] = useState(true);
-  const [vehicleNo, setVehicleNo] = useState('GJ-12-BW-9901');
-  const [supplierBatch, setSupplierBatch] = useState('MINE-2609-08');
+  const [vehicleNo, setVehicleNo] = useState('');
+  const [supplierBatch, setSupplierBatch] = useState('');
 
   // PO Edit/Delete state
   const [editingPO, setEditingPO] = useState<PurchaseOrder | null>(null);
@@ -91,21 +91,21 @@ export const PurchaseModule: React.FC = () => {
     setReceivedQty(po.quantity);
     setOrderedQty(po.quantity);
     setIsOrderCompleted(true);
-    setVehicleNo('GJ-12-BW-9901');
-    setSupplierBatch(`MINE-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(10 + Math.random() * 90)}`);
+    setVehicleNo('');
+    setSupplierBatch('');
     setShowGRNModal(true);
   };
 
   const handleOpenAddGRN = () => {
     setIsManualGRN(true);
     setSelectedPO(null);
-    setManualSupplierId(suppliers[0]?.id || '');
-    setManualMaterialId(rawMaterials[0]?.id || '');
-    setReceivedQty(50);
-    setOrderedQty(50);
+    setManualSupplierId('');
+    setManualMaterialId('');
+    setReceivedQty('');
+    setOrderedQty('');
     setIsOrderCompleted(true);
-    setVehicleNo('GJ-12-BW-9901');
-    setSupplierBatch(`MINE-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(10 + Math.random() * 90)}`);
+    setVehicleNo('');
+    setSupplierBatch('');
     setShowGRNModal(true);
   };
 
