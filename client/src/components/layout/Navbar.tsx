@@ -80,13 +80,13 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 sm:px-6 bg-neutral-900 border-b border-neutral-800 shrink-0">
+    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-2.5 sm:px-6 bg-neutral-900 border-b border-neutral-800 shrink-0">
       {/* Zone 1: Single text element wordmark */}
-      <div className="flex items-center gap-1.5 sm:gap-2.5">
+      <div className="flex items-center gap-1 sm:gap-2.5 min-w-0">
         <button
           type="button"
           onClick={toggleSidebar}
-          className="md:hidden p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors cursor-pointer"
+          className="md:hidden p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors cursor-pointer shrink-0"
           title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-label="Toggle sidebar"
         >
@@ -94,10 +94,15 @@ export const Navbar: React.FC = () => {
         </button>
         <a
           href="#dashboard"
-          className="flex items-center gap-2 whitespace-nowrap"
+          className="flex items-center gap-1.5 sm:gap-2 min-w-0"
         >
-          <img src={logo} alt="Amar Mine Chem Industries Logo" className="h-9 w-auto object-contain" />
-          <span className="text-base sm:text-lg font-bold tracking-tight text-white">Amar Mine Chem Industries</span>
+          <img src={logo} alt="Amar Mine Chem Industries Logo" className="h-7 sm:h-9 w-auto object-contain shrink-0" />
+          <span className="hidden sm:inline text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">
+            Amar Mine Chem Industries
+          </span>
+          <span className="sm:hidden text-xs font-bold tracking-tight text-white truncate max-w-[130px]">
+            Amar Mine Chem
+          </span>
         </a>
         <span className="hidden md:inline-block text-neutral-600">/</span>
         <span className="hidden md:inline-block text-xs font-medium text-neutral-400 whitespace-nowrap">
@@ -108,7 +113,7 @@ export const Navbar: React.FC = () => {
 
 
       {/* Zone 3: Primary Actions, Role Switcher, Quick Add, Alerts */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
 
         {/* Notification Bell */}
         <div ref={alertMenuRef} className="relative">
@@ -124,7 +129,7 @@ export const Navbar: React.FC = () => {
           </button>
 
           {showAlertMenu && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-neutral-200 rounded-lg shadow-xl z-50 overflow-hidden text-xs">
+            <div className="fixed inset-x-2 top-14 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 bg-white border border-neutral-200 rounded-xl shadow-2xl z-50 overflow-hidden text-xs">
               <div className="flex items-center justify-between px-3 py-2.5 bg-neutral-50/80 border-b border-neutral-200">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-neutral-900">Manufacturing Alerts</span>
@@ -244,14 +249,14 @@ export const Navbar: React.FC = () => {
         <div ref={roleMenuRef} className="relative">
           <button
             onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer shadow-2xs ${
+            className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer shadow-2xs shrink-0 ${
               showRoleMenu
                 ? 'bg-neutral-800 text-white border-neutral-600 ring-2 ring-white/10'
                 : 'bg-neutral-800/80 text-neutral-200 border-neutral-700/70 hover:bg-neutral-800 hover:text-white hover:border-neutral-600'
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="max-w-[120px] truncate font-medium">{activeRole}</span>
+            <span className="hidden sm:inline max-w-[120px] truncate font-medium">{activeRole}</span>
             <ChevronDown className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 shrink-0 ${showRoleMenu ? 'rotate-180 text-white' : ''}`} />
           </button>
 
