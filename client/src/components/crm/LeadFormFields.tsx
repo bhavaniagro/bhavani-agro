@@ -1,5 +1,6 @@
 import React from 'react';
 import { FinishedProduct, LeadStage } from '../../types/erp';
+import { CustomSelect } from '../common/CustomSelect';
 
 export interface LeadFormState {
   leadName: string;
@@ -231,28 +232,18 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             <label className="block text-[11px] font-semibold text-neutral-700 mb-1">
               Product Interested <span className="text-rose-600 font-bold">*</span>
             </label>
-            <select
+            <CustomSelect
               value={formData.productInterested}
-              onChange={(e) => handleChange('productInterested', e.target.value)}
-              className={`w-full p-2 bg-neutral-50 border rounded text-xs outline-none transition-colors ${
-                errors.productInterested
-                  ? 'border-rose-400 focus:border-rose-600 bg-rose-50/30'
-                  : 'border-neutral-200 focus:border-neutral-900 focus:bg-white'
-              }`}
-            >
-              <option value="">-- Select Product --</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.productName}>
-                  {p.productName}
-                </option>
-              ))}
-              {formData.productInterested &&
-                !products.some((p) => p.productName === formData.productInterested) && (
-                  <option value={formData.productInterested}>
-                    {formData.productInterested}
-                  </option>
-                )}
-            </select>
+              onChange={(val) => handleChange('productInterested', val)}
+              placeholder="-- Select Product --"
+              error={!!errors.productInterested}
+              options={[
+                ...products.map((p) => ({ value: p.productName, label: p.productName })),
+                ...(formData.productInterested && !products.some((p) => p.productName === formData.productInterested)
+                  ? [{ value: formData.productInterested, label: formData.productInterested }]
+                  : [])
+              ]}
+            />
             {errors.productInterested && (
               <span className="text-[10px] text-rose-600 font-medium mt-0.5 block">
                 {errors.productInterested}
@@ -308,17 +299,11 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             <label className="block text-[11px] font-semibold text-neutral-700 mb-1">
               Lead Stage
             </label>
-            <select
+            <CustomSelect
               value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value as LeadStage)}
-              className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 focus:bg-white font-medium"
-            >
-              {STAGES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => handleChange('status', val as LeadStage)}
+              options={STAGES}
+            />
           </div>
 
           <div>

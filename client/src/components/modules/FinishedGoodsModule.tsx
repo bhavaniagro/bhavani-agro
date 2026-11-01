@@ -17,6 +17,7 @@ import { useERP } from '../../context/ERPContext';
 import { FinishedProduct } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const FinishedGoodsModule: React.FC = () => {
@@ -361,17 +362,11 @@ export const FinishedGoodsModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">Category</label>
-                  <select
+                  <CustomSelect
                     value={newProd.category}
-                    onChange={(e) => setNewProd({ ...newProd, category: e.target.value as any })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  >
-                    <option value="Granules">Granules</option>
-                    <option value="Bio-Fertilizer">Bio-Fertilizer</option>
-                    <option value="Organic">Organic</option>
-                    <option value="Powder">Powder</option>
-                    <option value="Mineral">Mineral</option>
-                  </select>
+                    onChange={(val) => setNewProd({ ...newProd, category: val as any })}
+                    options={['Granules', 'Bio-Fertilizer', 'Organic', 'Powder', 'Mineral']}
+                  />
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">Selling Price / MT (₹)</label>

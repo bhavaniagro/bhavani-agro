@@ -18,6 +18,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { DispatchChallan, VehicleMaster, DispatchStatus } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const DispatchLogisticsModule: React.FC = () => {
@@ -289,19 +290,22 @@ export const DispatchLogisticsModule: React.FC = () => {
                       <div className="text-neutral-500">LR: {d.lrNumber}</div>
                     </td>
                     <td className="p-3">
-                      <select
+                      <CustomSelect
                         value={d.status}
-                        onChange={(e) => updateDispatchStatus(d.id, e.target.value as DispatchStatus)}
-                        className={`text-[10px] font-semibold px-2 py-1 rounded uppercase tracking-wider border cursor-pointer ${d.status === 'Delivered' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
-                            d.status === 'In Transit' ? 'bg-blue-50 text-blue-800 border-blue-300' :
-                              d.status === 'Dispatched' ? 'bg-amber-50 text-amber-800 border-amber-300' :
-                                'bg-neutral-50 text-neutral-700 border-neutral-300'
-                          }`}
-                      >
-                        {statuses.map(s => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
+                        onChange={(val) => updateDispatchStatus(d.id, val as DispatchStatus)}
+                        className="w-32"
+                        buttonClassName={`text-[10px] font-semibold px-2 py-1 rounded uppercase tracking-wider ${
+                          d.status === 'Delivered'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                            : d.status === 'In Transit'
+                            ? 'bg-blue-50 text-blue-800 border-blue-300'
+                            : d.status === 'Dispatched'
+                            ? 'bg-amber-50 text-amber-800 border-amber-300'
+                            : 'bg-neutral-50 text-neutral-700 border-neutral-300'
+                        }`}
+                        menuClassName="w-36"
+                        options={statuses}
+                      />
                     </td>
                     <td className="p-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">

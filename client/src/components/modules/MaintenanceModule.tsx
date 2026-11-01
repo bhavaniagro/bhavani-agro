@@ -4,6 +4,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Machinery } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 type ActiveTab = 'machines' | 'history';
@@ -486,16 +487,11 @@ export const MaintenanceModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Status</label>
-                  <select
+                  <CustomSelect
                     value={editingMachine.currentStatus}
-                    onChange={(e) => setEditingMachine({ ...editingMachine, currentStatus: e.target.value as any })}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    <option value="Operational">Operational</option>
-                    <option value="Under Maintenance">Under Maintenance</option>
-                    <option value="Breakdown">Breakdown</option>
-                    <option value="Standby">Standby</option>
-                  </select>
+                    onChange={(val) => setEditingMachine({ ...editingMachine, currentStatus: val as any })}
+                    options={['Operational', 'Under Maintenance', 'Breakdown', 'Standby']}
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Capacity Rating</label>

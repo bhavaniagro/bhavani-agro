@@ -20,6 +20,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ProductionOrder, ProductionBatch, BOM } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const ProductionModule: React.FC = () => {
@@ -788,28 +789,19 @@ export const ProductionModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Priority</label>
-                  <select
+                  <CustomSelect
                     value={editOrderPriority}
-                    onChange={(e) => setEditOrderPriority(e.target.value as any)}
-                    className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
-                  >
-                    <option value="Normal">Normal</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
-                  </select>
+                    onChange={(val) => setEditOrderPriority(val as any)}
+                    options={['Normal', 'High', 'Urgent']}
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Status</label>
-                  <select
+                  <CustomSelect
                     value={editOrderStatus}
-                    onChange={(e) => setEditOrderStatus(e.target.value as any)}
-                    className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
-                  >
-                    <option value="Planned">Planned</option>
-                    <option value="Material Ready">Material Ready</option>
-                    <option value="In Production">In Production</option>
-                    <option value="Completed">Completed</option>
-                  </select>
+                    onChange={(val) => setEditOrderStatus(val as any)}
+                    options={['Planned', 'Material Ready', 'In Production', 'Completed']}
+                  />
                 </div>
               </div>
 
@@ -932,21 +924,16 @@ export const ProductionModule: React.FC = () => {
               <div>
                 <label className="block text-neutral-700 font-medium mb-1">Output Product</label>
                 {products.length > 0 ? (
-                  <select
+                  <CustomSelect
                     value={bomProductId}
-                    onChange={(e) => {
-                      setBomProductId(e.target.value);
-                      const prod = products.find(p => p.id === e.target.value);
+                    onChange={(val) => {
+                      setBomProductId(val);
+                      const prod = products.find(p => p.id === val);
                       if (prod) setBomProductName(prod.productName);
                     }}
-                    required
-                    className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
-                  >
-                    <option value="">Select Product Output</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.productName} ({p.category})</option>
-                    ))}
-                  </select>
+                    placeholder="Select Product Output"
+                    options={products.map(p => ({ value: p.id, label: `${p.productName} (${p.category})` }))}
+                  />
                 ) : (
                   <input
                     type="text"
@@ -1066,28 +1053,22 @@ export const ProductionModule: React.FC = () => {
                           <label className="block sm:hidden text-[10px] font-medium text-neutral-500 mb-1">
                             Raw Material
                           </label>
-                          <select
+                          <CustomSelect
                             value={item.rawMaterialId}
-                            onChange={(e) => {
-                              const rm = rawMaterials.find(r => r.id === e.target.value);
+                            onChange={(val) => {
+                              const rm = rawMaterials.find(r => r.id === val);
                               const updated = [...bomItems];
                               updated[idx] = {
                                 ...updated[idx],
-                                rawMaterialId: e.target.value,
+                                rawMaterialId: val,
                                 rawMaterialName: rm?.materialName || updated[idx].rawMaterialName,
                                 unit: rm?.unit || updated[idx].unit,
                                 costPerUnit: rm?.averageCost || updated[idx].costPerUnit
                               };
                               setBomItems(updated);
                             }}
-                            className="w-full border border-neutral-300 rounded p-1.5 text-xs bg-white outline-none focus:border-neutral-900 transition-colors"
-                          >
-                            {rawMaterials.map(r => (
-                              <option key={r.id} value={r.id}>
-                                {r.materialName} ({r.sku})
-                              </option>
-                            ))}
-                          </select>
+                            options={rawMaterials.map(r => ({ value: r.id, label: `${r.materialName} (${r.sku})` }))}
+                          />
                         </div>
 
                         {/* Quantity Input with Integrated Unit Addon */}

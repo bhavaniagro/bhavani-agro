@@ -15,6 +15,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { PurchaseOrder, GRN } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const PurchaseModule: React.FC = () => {
@@ -587,31 +588,23 @@ export const PurchaseModule: React.FC = () => {
                     <label className="block text-neutral-700 font-semibold mb-1">
                       Supplier
                     </label>
-                    <select
+                    <CustomSelect
                       value={manualSupplierId}
-                      onChange={(e) => setManualSupplierId(e.target.value)}
-                      required
-                      className="w-full border border-neutral-300 rounded-lg p-2 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    >
-                      {suppliers.map(s => (
-                        <option key={s.id} value={s.id}>{s.supplierName}</option>
-                      ))}
-                    </select>
+                      onChange={setManualSupplierId}
+                      placeholder="Select Supplier"
+                      options={suppliers.map(s => ({ value: s.id, label: s.supplierName }))}
+                    />
                   </div>
                   <div>
                     <label className="block text-neutral-700 font-semibold mb-1">
                       Raw Material
                     </label>
-                    <select
+                    <CustomSelect
                       value={manualMaterialId}
-                      onChange={(e) => setManualMaterialId(e.target.value)}
-                      required
-                      className="w-full border border-neutral-300 rounded-lg p-2 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    >
-                      {rawMaterials.map(rm => (
-                        <option key={rm.id} value={rm.id}>{rm.materialName} ({rm.unit})</option>
-                      ))}
-                    </select>
+                      onChange={setManualMaterialId}
+                      placeholder="Select Raw Material"
+                      options={rawMaterials.map(rm => ({ value: rm.id, label: `${rm.materialName} (${rm.unit})` }))}
+                    />
                   </div>
                 </div>
               ) : (
@@ -910,18 +903,18 @@ export const PurchaseModule: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Status</label>
-                  <select
+                  <CustomSelect
                     value={editPOStatus}
-                    onChange={(e) => setEditPOStatus(e.target.value as PurchaseOrder['status'])}
-                    className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
-                  >
-                    <option value="Draft">Draft</option>
-                    <option value="Issued">Issued</option>
-                    <option value="Partial GRN">Partial GRN (Pending)</option>
-                    <option value="GRN Completed">GRN Completed</option>
-                    <option value="Billed">Billed</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
+                    onChange={(val) => setEditPOStatus(val as PurchaseOrder['status'])}
+                    options={[
+                      { value: 'Draft', label: 'Draft' },
+                      { value: 'Issued', label: 'Issued' },
+                      { value: 'Partial GRN', label: 'Partial GRN (Pending)' },
+                      { value: 'GRN Completed', label: 'GRN Completed' },
+                      { value: 'Billed', label: 'Billed' },
+                      { value: 'Cancelled', label: 'Cancelled' }
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -1036,15 +1029,15 @@ export const PurchaseModule: React.FC = () => {
 
               <div>
                 <label className="block text-neutral-700 font-medium mb-1">Receipt Status</label>
-                <select
+                <CustomSelect
                   value={editGRNQCStatus}
-                  onChange={(e) => setEditGRNQCStatus(e.target.value as any)}
-                  className="w-full border border-neutral-300 rounded p-2 text-xs bg-white"
-                >
-                  <option value="Approved">Verified</option>
-                  <option value="Pending QC">Pending Verification</option>
-                  <option value="Rejected">Rejected</option>
-                </select>
+                  onChange={(val) => setEditGRNQCStatus(val as any)}
+                  options={[
+                    { value: 'Approved', label: 'Verified' },
+                    { value: 'Pending QC', label: 'Pending Verification' },
+                    { value: 'Rejected', label: 'Rejected' }
+                  ]}
+                />
               </div>
 
               <div>

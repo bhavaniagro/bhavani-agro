@@ -18,6 +18,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Customer } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const CustomersModule: React.FC = () => {
@@ -494,20 +495,20 @@ export const CustomersModule: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">Customer Type</label>
-                  <select
+                  <CustomSelect
                     value={editingCustomer.customerType}
-                    onChange={(e) => setEditingCustomer({ ...editingCustomer, customerType: e.target.value as any })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  >
-                    <option value="Dealer">Dealer</option>
-                    <option value="Supplier">Supplier</option>
-                    <option value="Vendor">Vendor</option>
-                    <option value="End User">End User</option>
-                    <option value="Fertilizer">Fertilizer</option>
-                    {editingCustomer.customerType && !['Dealer', 'Supplier', 'Vendor', 'End User', 'Fertilizer'].includes(editingCustomer.customerType) && (
-                      <option value={editingCustomer.customerType}>{editingCustomer.customerType}</option>
-                    )}
-                  </select>
+                    onChange={(val) => setEditingCustomer({ ...editingCustomer, customerType: val as any })}
+                    options={[
+                      'Dealer',
+                      'Supplier',
+                      'Vendor',
+                      'End User',
+                      'Fertilizer',
+                      ...(editingCustomer.customerType && !['Dealer', 'Supplier', 'Vendor', 'End User', 'Fertilizer'].includes(editingCustomer.customerType)
+                        ? [editingCustomer.customerType]
+                        : [])
+                    ]}
+                  />
                 </div>
               </div>
 

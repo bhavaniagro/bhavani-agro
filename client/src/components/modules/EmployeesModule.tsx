@@ -4,6 +4,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { Employee } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const EmployeesModule: React.FC = () => {
@@ -243,15 +244,11 @@ export const EmployeesModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Department</label>
-                  <select
+                  <CustomSelect
                     value={empDept}
-                    onChange={(e) => setEmpDept(e.target.value)}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    {departments.filter(d => d !== 'All').map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
+                    onChange={setEmpDept}
+                    options={departments.filter(d => d !== 'All')}
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Role / Designation</label>
@@ -333,15 +330,11 @@ export const EmployeesModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Department</label>
-                  <select
+                  <CustomSelect
                     value={editingEmployee.department}
-                    onChange={(e) => setEditingEmployee({ ...editingEmployee, department: e.target.value as any })}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    {departments.filter(d => d !== 'All').map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => setEditingEmployee({ ...editingEmployee, department: val as any })}
+                    options={departments.filter(d => d !== 'All')}
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Role / Designation</label>
