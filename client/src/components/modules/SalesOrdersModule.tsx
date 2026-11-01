@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Sparkles,
   Download,
+  Edit,
   Pencil,
   Trash2,
   X
@@ -322,17 +323,17 @@ export const SalesOrdersModule: React.FC = () => {
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => openEditModal(so)}
-                          className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                          className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
                           title="Edit Order"
                         >
-                          <Pencil className="w-3.5 h-3.5" />
+                          <Edit className="w-3.5 h-3.5 text-neutral-600" />
                         </button>
                         <button
                           onClick={() => setDeletingOrder(so)}
-                          className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                          className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
                           title="Delete Order"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                         </button>
                       </div>
                     </td>

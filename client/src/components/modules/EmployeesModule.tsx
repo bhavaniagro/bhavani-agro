@@ -184,21 +184,23 @@ export const EmployeesModule: React.FC = () => {
                     {emp.status}
                   </span>
                 </td>
-                <td className="p-3 text-right space-x-1 whitespace-nowrap">
-                  <button
-                    onClick={() => setEditingEmployee(emp)}
-                    className="p-1 hover:bg-neutral-100 rounded text-neutral-600 cursor-pointer inline-flex items-center"
-                    title="Edit Employee"
-                  >
-                    <Edit className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => setDeletingEmployeeId(emp.id)}
-                    className="p-1 hover:bg-rose-50 rounded text-rose-600 cursor-pointer inline-flex items-center"
-                    title="Delete Employee"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                <td className="p-3 text-right whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button
+                      onClick={() => setEditingEmployee(emp)}
+                      className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
+                      title="Edit Employee"
+                    >
+                      <Edit className="w-3.5 h-3.5 text-neutral-600" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingEmployeeId(emp.id)}
+                      className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
+                      title="Delete Employee"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

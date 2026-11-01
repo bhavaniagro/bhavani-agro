@@ -450,20 +450,20 @@ export const CRMSalesModule: React.FC = () => {
                         <div className="font-bold text-neutral-900 truncate pr-2" title={lead.company}>
                           {lead.company}
                         </div>
-                        <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 shrink-0">
+                        <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 shrink-0">
                           <button
                             onClick={() => setEditingLead(lead)}
                             title="Edit Lead"
-                            className="p-1 hover:bg-neutral-100 rounded text-neutral-600 cursor-pointer"
+                            className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
                           >
-                            <Edit className="w-3 h-3" />
+                            <Edit className="w-3 h-3 text-neutral-600" />
                           </button>
                           <button
                             onClick={() => setDeletingLeadId(lead.id)}
                             title="Delete Lead"
-                            className="p-1 hover:bg-rose-50 rounded text-rose-600 cursor-pointer"
+                            className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-3 h-3 text-rose-600" />
                           </button>
                         </div>
                       </div>
@@ -649,11 +649,10 @@ export const CRMSalesModule: React.FC = () => {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setEditingLead(l)}
-                            className="px-2 py-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-[11px] font-medium text-neutral-700 flex items-center gap-1 cursor-pointer"
+                            className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
                             title="Edit Lead Details"
                           >
-                            <Edit className="w-3 h-3" />
-                            <span>Edit</span>
+                            <Edit className="w-3.5 h-3.5 text-neutral-600" />
                           </button>
                           {!isLeadAlreadyCustomer(l) && l.status !== 'Won' && (
                             <button
@@ -681,10 +680,10 @@ export const CRMSalesModule: React.FC = () => {
                           )}
                           <button
                             onClick={() => setDeletingLeadId(l.id)}
-                            className="px-2 py-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-[11px] font-medium text-rose-700 cursor-pointer"
+                            className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
                             title="Delete Lead"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                           </button>
                         </div>
                       </td>

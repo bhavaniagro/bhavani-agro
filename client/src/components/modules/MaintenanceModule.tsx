@@ -240,20 +240,22 @@ export const MaintenanceModule: React.FC = () => {
                       {cfg.icon}
                       {m.currentStatus}
                     </span>
-                    <button
-                      onClick={() => setEditingMachine(m)}
-                      className="p-1 hover:bg-neutral-100 rounded text-neutral-600 cursor-pointer"
-                      title="Edit Machine"
-                    >
-                      <Edit className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setDeletingMachineId(m.id)}
-                      className="p-1 hover:bg-rose-50 rounded text-rose-600 cursor-pointer"
-                      title="Delete Machine"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setEditingMachine(m)}
+                        className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
+                        title="Edit Machine"
+                      >
+                        <Edit className="w-3.5 h-3.5 text-neutral-600" />
+                      </button>
+                      <button
+                        onClick={() => setDeletingMachineId(m.id)}
+                        className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
+                        title="Delete Machine"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 

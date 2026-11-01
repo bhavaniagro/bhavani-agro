@@ -11,6 +11,7 @@ import {
   Sparkles, 
   Boxes,
   Plus,
+  Edit,
   Pencil,
   Trash2,
   Printer,
@@ -431,17 +432,17 @@ export const ProductionModule: React.FC = () => {
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => openEditOrderModal(po)}
-                            className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                            className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
                             title="Edit Order"
                           >
-                            <Pencil className="w-3.5 h-3.5" />
+                            <Edit className="w-3.5 h-3.5 text-neutral-600" />
                           </button>
                           <button
                             onClick={() => setDeletingOrder(po)}
-                            className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                            className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
                             title="Delete Order"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                           </button>
                         </div>
                       </td>
@@ -489,20 +490,20 @@ export const ProductionModule: React.FC = () => {
                         </div>
                         <div className="text-[10px] text-neutral-400">Total Standard Mfg Cost</div>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => openEditBOMModal(bom)}
-                          className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                          className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
                           title="Edit BOM"
                         >
-                          <Pencil className="w-3.5 h-3.5" />
+                          <Edit className="w-3.5 h-3.5 text-neutral-600" />
                         </button>
                         <button
                           onClick={() => setDeletingBOM(bom)}
-                          className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                          className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
                           title="Delete BOM"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                         </button>
                       </div>
                     </div>
@@ -608,17 +609,17 @@ export const ProductionModule: React.FC = () => {
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => openEditBatchModal(b)}
-                          className="p-1 hover:bg-neutral-100 rounded text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                          className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
                           title="Edit Batch"
                         >
-                          <Pencil className="w-3.5 h-3.5" />
+                          <Edit className="w-3.5 h-3.5 text-neutral-600" />
                         </button>
                         <button
                           onClick={() => setDeletingBatch(b)}
-                          className="p-1 hover:bg-rose-50 rounded text-neutral-400 hover:text-rose-600 cursor-pointer"
+                          className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
                           title="Delete Batch"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                         </button>
                       </div>
                     </td>
@@ -1105,9 +1106,9 @@ export const ProductionModule: React.FC = () => {
                             onClick={() => setBomItems(prev => prev.filter((_, i) => i !== idx))}
                             title="Remove component"
                             aria-label="Remove component"
-                            className="sm:hidden mt-4 p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded border border-neutral-200 hover:border-rose-200 transition-colors cursor-pointer"
+                            className="sm:hidden mt-4 p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 transition-colors cursor-pointer shadow-2xs"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                           </button>
                         </div>
 
@@ -1118,9 +1119,9 @@ export const ProductionModule: React.FC = () => {
                             onClick={() => setBomItems(prev => prev.filter((_, i) => i !== idx))}
                             title="Remove component"
                             aria-label="Remove component"
-                            className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded border border-transparent hover:border-rose-200 transition-colors cursor-pointer"
+                            className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 transition-colors cursor-pointer shadow-2xs"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                           </button>
                         </div>
                       </div>
