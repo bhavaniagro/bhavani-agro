@@ -9,7 +9,8 @@ import {
   Trash2,
   Layers,
   ExternalLink,
-  Menu
+  Menu,
+  ChevronDown
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { UserRole } from '../../types/erp';
@@ -243,16 +244,22 @@ export const Navbar: React.FC = () => {
         <div ref={roleMenuRef} className="relative">
           <button
             onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer"
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer shadow-2xs ${
+              showRoleMenu
+                ? 'bg-neutral-800 text-white border-neutral-600 ring-2 ring-white/10'
+                : 'bg-neutral-800/80 text-neutral-200 border-neutral-700/70 hover:bg-neutral-800 hover:text-white hover:border-neutral-600'
+            }`}
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-white" />
-            <span className="max-w-[120px] truncate text-white font-medium">{activeRole}</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="max-w-[120px] truncate font-medium">{activeRole}</span>
+            <ChevronDown className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 shrink-0 ${showRoleMenu ? 'rotate-180 text-white' : ''}`} />
           </button>
 
           {showRoleMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-neutral-200 rounded-lg shadow-lg z-50 p-1 text-xs">
-              <div className="px-2 py-1.5 text-[11px] font-semibold text-neutral-400 border-b border-neutral-100">
-                Switch Role View
+            <div className="absolute right-0 mt-2 w-52 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 p-1.5 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="px-2.5 py-2 text-[11px] font-semibold text-neutral-400 border-b border-neutral-100 flex items-center justify-between">
+                <span>Switch Role View</span>
+                <span className="text-[10px] bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded font-mono font-medium">Role</span>
               </div>
               {roles.map(r => (
                 <button
@@ -261,7 +268,7 @@ export const Navbar: React.FC = () => {
                     setActiveRole(r);
                     setShowRoleMenu(false);
                   }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-left hover:bg-neutral-100 transition-colors ${activeRole === r ? 'font-semibold text-emerald-700 bg-emerald-50' : 'text-neutral-700'}`}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${activeRole === r ? 'font-semibold text-emerald-800 bg-emerald-50/80 shadow-2xs' : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'}`}
                 >
                   <span>{r}</span>
                   {activeRole === r && <Check className="w-3.5 h-3.5 text-emerald-600" />}

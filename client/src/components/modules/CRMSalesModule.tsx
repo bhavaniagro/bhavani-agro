@@ -7,6 +7,7 @@ import {
   FileText,
   Search,
   Filter,
+  ChevronDown,
   ChevronRight,
   TrendingUp,
   Download,
@@ -253,6 +254,7 @@ export const CRMSalesModule: React.FC = () => {
                 >
                   <Filter className={`w-3.5 h-3.5 ${isFilterActive ? 'text-emerald-700' : 'text-neutral-500'}`} />
                   <span>Filter</span>
+                  <ChevronDown className={`w-3 h-3 text-neutral-400 transition-transform duration-200 ${isFilterOpen ? 'rotate-180 text-neutral-700' : ''}`} />
                   {isFilterActive && (
                     <span className="w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-emerald-200" title="Active filters applied" />
                   )}
