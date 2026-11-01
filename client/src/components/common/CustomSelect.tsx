@@ -39,6 +39,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [openUpward, setOpenUpward] = useState(false);
+  const [menuMaxHeight, setMenuMaxHeight] = useState<number>(224);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,15 +55,44 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
   const showSearch = searchable !== undefined ? searchable : normalizedOptions.length > 7;
 
-  useEffect(() => {
-    if (isOpen && dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      if (spaceBelow < 220 && rect.top > 220) {
-        setOpenUpward(true);
-      } else {
-        setOpenUpward(false);
+  const updateDropdownPosition = () => {
+    if (!dropdownRef.current) return;
+    const rect = dropdownRef.current.getBoundingClientRect();
+
+    let clipBottom = window.innerHeight;
+    let clipTop = 0;
+
+    let parent = dropdownRef.current.parentElement;
+    while (parent && parent !== document.body) {
+      const style = window.getComputedStyle(parent);
+      const overflowY = style.overflowY;
+      if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') {
+        const parentRect = parent.getBoundingClientRect();
+        if (parentRect.height < window.innerHeight) {
+          clipBottom = Math.min(clipBottom, parentRect.bottom);
+          clipTop = Math.max(clipTop, parentRect.top);
+          break;
+        }
       }
+      parent = parent.parentElement;
+    }
+
+    const spaceBelow = Math.max(0, clipBottom - rect.bottom);
+    const spaceAbove = Math.max(0, rect.top - clipTop);
+
+    // If space below is less than 240px and there is more space above, open upward
+    const shouldOpenUpward = spaceBelow < 240 && spaceAbove > spaceBelow;
+    setOpenUpward(shouldOpenUpward);
+
+    const availableSpace = shouldOpenUpward ? spaceAbove : spaceBelow;
+    const chromeHeight = showSearch ? 55 : 20;
+    const maxOptionsHeight = Math.max(90, Math.min(224, availableSpace - chromeHeight - 12));
+    setMenuMaxHeight(maxOptionsHeight);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updateDropdownPosition();
       if (showSearch) {
         setTimeout(() => searchInputRef.current?.focus(), 50);
       }
@@ -105,13 +135,16 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const hasCustomBorder = buttonClassName.includes('border-');
 
   return (
-    <div ref={dropdownRef} className={`relative ${className}`}>
+    <div ref={dropdownRef} className={`relative ${isOpen ? 'z-30' : 'z-10'} ${className}`}>
       <button
         type="button"
         id={id}
         disabled={disabled}
         onClick={() => {
-          if (!disabled) setIsOpen(!isOpen);
+          if (!disabled) {
+            if (!isOpen) updateDropdownPosition();
+            setIsOpen(!isOpen);
+          }
         }}
         className={`w-full flex items-center justify-between gap-2 p-2 rounded text-xs transition-all text-left cursor-pointer outline-none border ${
           disabled
@@ -138,7 +171,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         <div
           className={`absolute ${
             openUpward ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
-          } left-0 right-0 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 p-1.5 text-xs animate-in fade-in duration-150 ${menuClassName}`}
+          } left-0 right-0 bg-white border border-neutral-200 rounded-xl shadow-2xl z-50 p-1.5 text-xs animate-in fade-in duration-150 ${menuClassName}`}
           style={{ minWidth: '100%' }}
         >
           {showSearch && (
@@ -157,7 +190,10 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             </div>
           )}
 
-          <div className="max-h-56 overflow-y-auto space-y-0.5 overscroll-contain">
+          <div
+            className="overflow-y-auto space-y-0.5 overscroll-contain"
+            style={{ maxHeight: `${menuMaxHeight}px` }}
+          >
             {filteredOptions.length === 0 ? (
               <div className="py-3 px-2 text-center text-neutral-400 text-xs">
                 No matches found
@@ -182,7 +218,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   >
                     <div className="flex items-center gap-2 min-w-0 pr-2">
                       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSelected ? 'bg-emerald-600' : 'bg-transparent'}`} />
-                      <span className="truncate">{opt.label}</span>
+                      <span className="break-words text-left leading-snug">{opt.label}</span>
                       {opt.badge && (
                         <span className="text-[10px] bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded font-mono shrink-0">
                           {opt.badge}
