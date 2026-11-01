@@ -127,11 +127,10 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               value={formData.leadName}
               onChange={(e) => handleChange('leadName', e.target.value)}
               placeholder="e.g. Anand Sharma"
-              className={`w-full p-2 bg-neutral-50 border rounded text-xs outline-none transition-colors ${
-                errors.leadName
+              className={`w-full p-2 bg-neutral-50 border rounded text-xs outline-none transition-colors ${errors.leadName
                   ? 'border-rose-400 focus:border-rose-600 bg-rose-50/30'
                   : 'border-neutral-200 focus:border-neutral-900 focus:bg-white'
-              }`}
+                }`}
             />
             {errors.leadName && (
               <span className="text-[10px] text-rose-600 font-medium mt-0.5 block">{errors.leadName}</span>
@@ -147,11 +146,10 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               value={formData.company}
               onChange={(e) => handleChange('company', e.target.value)}
               placeholder="e.g. Gujarat Crop Sciences Pvt Ltd"
-              className={`w-full p-2 bg-neutral-50 border rounded text-xs outline-none transition-colors ${
-                errors.company
+              className={`w-full p-2 bg-neutral-50 border rounded text-xs outline-none transition-colors ${errors.company
                   ? 'border-rose-400 focus:border-rose-600 bg-rose-50/30'
                   : 'border-neutral-200 focus:border-neutral-900 focus:bg-white'
-              }`}
+                }`}
             />
             {errors.company && (
               <span className="text-[10px] text-rose-600 font-medium mt-0.5 block">{errors.company}</span>
@@ -169,11 +167,10 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               value={formData.mobile}
               onChange={(e) => handleChange('mobile', e.target.value)}
               placeholder="+91 98250 12345"
-              className={`w-full p-2 bg-neutral-50 border rounded text-xs outline-none transition-colors ${
-                errors.mobile
+              className={`w-full p-2 bg-neutral-50 border rounded text-xs outline-none transition-colors ${errors.mobile
                   ? 'border-rose-400 focus:border-rose-600 bg-rose-50/30'
                   : 'border-neutral-200 focus:border-neutral-900 focus:bg-white'
-              }`}
+                }`}
             />
             {errors.mobile && (
               <span className="text-[10px] text-rose-600 font-medium mt-0.5 block">{errors.mobile}</span>
@@ -182,7 +179,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 
           <div>
             <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-              Email <span className="text-neutral-400 text-[10px] font-normal">(Optional)</span>
+              Email
             </label>
             <input
               type="email"
@@ -195,7 +192,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 
           <div>
             <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-              Contact Person <span className="text-neutral-400 text-[10px] font-normal">(Optional)</span>
+              Contact Person
             </label>
             <input
               type="text"
@@ -209,7 +206,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 
         <div>
           <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-            Address / Location <span className="text-neutral-400 text-[10px] font-normal">(Optional)</span>
+            Address / Location
           </label>
           <input
             type="text"
@@ -253,7 +250,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 
           <div>
             <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-              Expected Qty (MT) <span className="text-neutral-400 text-[10px] font-normal">(Optional)</span>
+              Expected Qty (MT)
             </label>
             <input
               type="number"
@@ -270,7 +267,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 
           <div>
             <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-              Est. Value (₹) <span className="text-neutral-400 text-[10px] font-normal">(Optional)</span>
+              Est. Value (₹)
             </label>
             <input
               type="number"
@@ -308,7 +305,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 
           <div>
             <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-              Follow-up Date <span className="text-neutral-400 text-[10px] font-normal">(Optional)</span>
+              Follow-up Date
             </label>
             <input
               type="date"
@@ -320,7 +317,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 
           <div>
             <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-              Follow-up Time <span className="text-neutral-400 text-[10px] font-normal">(Optional)</span>
+              Follow-up Time
             </label>
             <input
               type="time"
@@ -345,11 +342,10 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               value={formData.lostReason}
               onChange={(e) => handleChange('lostReason', e.target.value)}
               placeholder="e.g. Price too high compared to local vendor, client delayed purchase indefinitely..."
-              className={`w-full p-2 bg-white border rounded text-xs outline-none transition-colors ${
-                errors.lostReason
+              className={`w-full p-2 bg-white border rounded text-xs outline-none transition-colors ${errors.lostReason
                   ? 'border-rose-400 focus:border-rose-600'
                   : 'border-rose-300 focus:border-rose-700'
-              }`}
+                }`}
             />
             {errors.lostReason && (
               <span className="text-[10px] text-rose-600 font-medium block">
@@ -364,7 +360,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 
         <div>
           <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-            Notes / Requirements <span className="text-neutral-400 text-[10px] font-normal">(Optional)</span>
+            Notes / Requirements
           </label>
           <textarea
             rows={2}
