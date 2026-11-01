@@ -4,6 +4,7 @@ import { X, Check, AlertTriangle } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { LeadFormFields, LeadFormState, validateLeadForm } from '../crm/LeadFormFields';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
+import { CustomSelect } from '../common/CustomSelect';
 
 export const QuickAddModal: React.FC = () => {
   const navigate = useNavigate();
@@ -346,15 +347,12 @@ export const QuickAddModal: React.FC = () => {
             <>
               <div>
                 <label className="block text-neutral-700 font-medium mb-1">Select Customer</label>
-                <select
+                <CustomSelect
                   value={soCustomer}
-                  onChange={(e) => setSoCustomer(e.target.value)}
-                  className="w-full border border-neutral-300 rounded p-2 bg-white"
-                >
-                  {customers.map(c => (
-                    <option key={c.id} value={c.id}>{c.customerName} ({c.state})</option>
-                  ))}
-                </select>
+                  onChange={setSoCustomer}
+                  placeholder="Select Customer"
+                  options={customers.map(c => ({ value: c.id, label: `${c.customerName} (${c.state})` }))}
+                />
               </div>
 
               {/* Customer Credit Limit Live Badge / Warning */}
@@ -390,19 +388,16 @@ export const QuickAddModal: React.FC = () => {
               )}
               <div>
                 <label className="block text-neutral-700 font-medium mb-1">Finished Product</label>
-                <select
+                <CustomSelect
                   value={soProduct}
-                  onChange={(e) => {
-                    setSoProduct(e.target.value);
-                    const prod = products.find(p => p.id === e.target.value);
+                  onChange={(val) => {
+                    setSoProduct(val);
+                    const prod = products.find(p => p.id === val);
                     if (prod) setSoRate(prod.sellingPricePerMT);
                   }}
-                  className="w-full border border-neutral-300 rounded p-2 bg-white"
-                >
-                  {products.map(p => (
-                    <option key={p.id} value={p.id}>{p.productName}</option>
-                  ))}
-                </select>
+                  placeholder="Select Finished Product"
+                  options={products.map(p => ({ value: p.id, label: p.productName }))}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -452,32 +447,26 @@ export const QuickAddModal: React.FC = () => {
             <>
               <div>
                 <label className="block text-neutral-700 font-medium mb-1">Select Supplier</label>
-                <select
+                <CustomSelect
                   value={poSupplier}
-                  onChange={(e) => setPoSupplier(e.target.value)}
-                  className="w-full border border-neutral-300 rounded p-2 bg-white"
-                >
-                  {suppliers.map(s => (
-                    <option key={s.id} value={s.id}>{s.supplierName} ({s.address.split(',')[1] || 'Mine'})</option>
-                  ))}
-                </select>
+                  onChange={setPoSupplier}
+                  placeholder="Select Supplier"
+                  options={suppliers.map(s => ({ value: s.id, label: `${s.supplierName} (${s.address.split(',')[1] || 'Mine'})` }))}
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Raw Material</label>
-                  <select
+                  <CustomSelect
                     value={poMaterial}
-                    onChange={(e) => {
-                      setPoMaterial(e.target.value);
-                      const m = rawMaterials.find(rm => rm.id === e.target.value);
+                    onChange={(val) => {
+                      setPoMaterial(val);
+                      const m = rawMaterials.find(rm => rm.id === val);
                       if (m) setPoRate(m.averageCost);
                     }}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    {rawMaterials.map(m => (
-                      <option key={m.id} value={m.id}>{m.materialName} ({m.unit})</option>
-                    ))}
-                  </select>
+                    placeholder="Select Raw Material"
+                    options={rawMaterials.map(m => ({ value: m.id, label: `${m.materialName} (${m.unit})` }))}
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Quantity</label>
@@ -515,21 +504,21 @@ export const QuickAddModal: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Expense Category</label>
-                  <select
+                  <CustomSelect
                     value={expCategory}
-                    onChange={(e) => setExpCategory(e.target.value)}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    <option value="Electricity & Power">Electricity &amp; Power</option>
-                    <option value="Fuel & Diesel (DG/Boiler)">Fuel &amp; Diesel (DG/Boiler)</option>
-                    <option value="Labour & Wages">Labour &amp; Wages</option>
-                    <option value="Freight & Transport">Freight &amp; Transport</option>
-                    <option value="Machinery Repairs & Spares">Machinery Repairs &amp; Spares</option>
-                    <option value="Packaging Materials">Packaging Materials</option>
-                    <option value="Factory Rent">Factory Rent</option>
-                    <option value="Staff Salaries">Staff Salaries</option>
-                    <option value="Office & Admin">Office &amp; Admin</option>
-                  </select>
+                    onChange={setExpCategory}
+                    options={[
+                      'Electricity & Power',
+                      'Fuel & Diesel (DG/Boiler)',
+                      'Labour & Wages',
+                      'Freight & Transport',
+                      'Machinery Repairs & Spares',
+                      'Packaging Materials',
+                      'Factory Rent',
+                      'Staff Salaries',
+                      'Office & Admin'
+                    ]}
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Amount (₹)</label>
@@ -667,17 +656,11 @@ export const QuickAddModal: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Customer Type</label>
-                  <select
+                  <CustomSelect
                     value={custType}
-                    onChange={(e) => setCustType(e.target.value)}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    <option value="Dealer">Dealer</option>
-                    <option value="Supplier">Supplier</option>
-                    <option value="Vendor">Vendor</option>
-                    <option value="End User">End User</option>
-                    <option value="Fertilizer">Fertilizer</option>
-                  </select>
+                    onChange={setCustType}
+                    options={['Dealer', 'Supplier', 'Vendor', 'End User', 'Fertilizer']}
+                  />
                 </div>
               </div>
 

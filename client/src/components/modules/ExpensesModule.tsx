@@ -18,6 +18,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ExpenseRecord } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const ExpensesModule: React.FC = () => {
@@ -217,15 +218,11 @@ export const ExpensesModule: React.FC = () => {
             <form onSubmit={handleUpdateExpense} className="space-y-3">
               <div>
                 <label className="block text-neutral-700 font-medium mb-1">Expense Category</label>
-                <select
+                <CustomSelect
                   value={editingExpense.category}
-                  onChange={(e) => setEditingExpense({ ...editingExpense, category: e.target.value as any })}
-                  className="w-full border border-neutral-300 rounded p-2 bg-white"
-                >
-                  {categories.filter(c => c !== 'All').map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                  onChange={(val) => setEditingExpense({ ...editingExpense, category: val as any })}
+                  options={categories.filter(c => c !== 'All')}
+                />
               </div>
 
               <div>

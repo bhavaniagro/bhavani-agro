@@ -18,6 +18,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { SalesInvoice, PaymentTransaction } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const FinanceAccountsModule: React.FC = () => {
@@ -465,16 +466,16 @@ export const FinanceAccountsModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Payment Mode</label>
-                  <select
+                  <CustomSelect
                     value={paymentMode}
-                    onChange={(e) => setPaymentMode(e.target.value)}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    <option value="NEFT/RTGS">NEFT / RTGS</option>
-                    <option value="Cheque">Cheque Deposit</option>
-                    <option value="Cash">Cash Deposit</option>
-                    <option value="UPI">UPI Transfer</option>
-                  </select>
+                    onChange={setPaymentMode}
+                    options={[
+                      { value: 'NEFT/RTGS', label: 'NEFT / RTGS' },
+                      { value: 'Cheque', label: 'Cheque Deposit' },
+                      { value: 'Cash', label: 'Cash Deposit' },
+                      { value: 'UPI', label: 'UPI Transfer' }
+                    ]}
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Bank Reference / UTR</label>
@@ -528,16 +529,11 @@ export const FinanceAccountsModule: React.FC = () => {
             <form onSubmit={handleUpdateInvoice} className="space-y-3">
               <div>
                 <label className="block text-neutral-700 font-medium mb-1">Payment Status</label>
-                <select
+                <CustomSelect
                   value={editingInvoice.paymentStatus}
-                  onChange={(e) => setEditingInvoice({ ...editingInvoice, paymentStatus: e.target.value as any })}
-                  className="w-full border border-neutral-300 rounded p-2 bg-white"
-                >
-                  <option value="Pending">Pending</option>
-                  <option value="Partially Paid">Partially Paid</option>
-                  <option value="Paid">Paid</option>
-                  <option value="Overdue">Overdue</option>
-                </select>
+                  onChange={(val) => setEditingInvoice({ ...editingInvoice, paymentStatus: val as any })}
+                  options={['Pending', 'Partially Paid', 'Paid', 'Overdue']}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -628,16 +624,11 @@ export const FinanceAccountsModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Payment Mode</label>
-                  <select
+                  <CustomSelect
                     value={editingPayment.paymentMode}
-                    onChange={(e) => setEditingPayment({ ...editingPayment, paymentMode: e.target.value as any })}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    <option value="NEFT/RTGS">NEFT/RTGS</option>
-                    <option value="Cheque">Cheque</option>
-                    <option value="Cash">Cash</option>
-                    <option value="UPI">UPI</option>
-                  </select>
+                    onChange={(val) => setEditingPayment({ ...editingPayment, paymentMode: val as any })}
+                    options={['NEFT/RTGS', 'Cheque', 'Cash', 'UPI']}
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Bank Reference / UTR</label>

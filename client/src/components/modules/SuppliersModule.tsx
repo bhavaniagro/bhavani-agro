@@ -17,6 +17,7 @@ import { useERP } from '../../context/ERPContext';
 import { Supplier } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const SuppliersModule: React.FC = () => {
@@ -395,18 +396,15 @@ export const SuppliersModule: React.FC = () => {
               <div>
                 <label className="block text-[11px] font-medium text-neutral-600 mb-1">Material Supplied</label>
                 {rawMaterials.length > 0 ? (
-                  <select
+                  <CustomSelect
                     value={newSupp.materialSupplied}
-                    onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  >
-                    <option value="">Select Raw Material</option>
-                    {rawMaterials.map((rm) => (
-                      <option key={rm.id} value={rm.materialName}>
-                        {rm.materialName} ({rm.category})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setNewSupp({ ...newSupp, materialSupplied: val })}
+                    placeholder="Select Raw Material"
+                    options={rawMaterials.map((rm) => ({
+                      value: rm.materialName,
+                      label: `${rm.materialName} (${rm.category})`
+                    }))}
+                  />
                 ) : (
                   <input
                     type="text"

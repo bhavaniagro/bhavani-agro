@@ -4,6 +4,7 @@ import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ErpDocument } from '../../types/erp';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { uploadDocumentFileInApi } from '../../services/api/documentApi.service';
 import { resolveDocumentUrl } from '../../config/apiConfig';
 import { sortByLatest } from '../../utils/sortUtils';
@@ -301,15 +302,11 @@ export const DocumentsModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Type</label>
-                  <select
+                  <CustomSelect
                     value={docType}
-                    onChange={(e) => setDocType(e.target.value)}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    {docTypes.filter(t => t !== 'All').map(t => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
+                    onChange={setDocType}
+                    options={docTypes.filter(t => t !== 'All')}
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Related Entity</label>
@@ -377,15 +374,11 @@ export const DocumentsModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Type</label>
-                  <select
+                  <CustomSelect
                     value={editingDoc.documentType}
-                    onChange={(e) => setEditingDoc({ ...editingDoc, documentType: e.target.value as any })}
-                    className="w-full border border-neutral-300 rounded p-2 bg-white"
-                  >
-                    {docTypes.filter(t => t !== 'All').map(t => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => setEditingDoc({ ...editingDoc, documentType: val as any })}
+                    options={docTypes.filter(t => t !== 'All')}
+                  />
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">Related Entity</label>

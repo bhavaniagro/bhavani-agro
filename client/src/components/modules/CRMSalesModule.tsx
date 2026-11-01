@@ -23,6 +23,7 @@ import { ConfirmModal } from '../modals/ConfirmModal';
 import { LostReasonModal } from '../modals/LostReasonModal';
 import { LeadFormModal } from '../crm/LeadFormModal';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const CRMSalesModule: React.FC = () => {
@@ -287,19 +288,15 @@ export const CRMSalesModule: React.FC = () => {
                       <label htmlFor="lead-product-filter" className="block text-[11px] font-medium text-neutral-700">
                         Product Interested
                       </label>
-                      <select
+                      <CustomSelect
                         id="lead-product-filter"
                         value={selectedProduct}
-                        onChange={(e) => setSelectedProduct(e.target.value)}
-                        className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-md text-xs text-neutral-800 outline-none focus:border-neutral-900 transition-colors"
-                      >
-                        <option value="All">All Products (Show All Leads)</option>
-                        {products.map(p => (
-                          <option key={p.id} value={p.id}>
-                            {p.productName}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={setSelectedProduct}
+                        options={[
+                          { value: 'All', label: 'All Products (Show All Leads)' },
+                          ...products.map(p => ({ value: p.id, label: p.productName }))
+                        ]}
+                      />
                     </div>
 
                     {/* Lead Stage Filter */}
@@ -307,19 +304,15 @@ export const CRMSalesModule: React.FC = () => {
                       <label htmlFor="lead-stage-filter" className="block text-[11px] font-medium text-neutral-700">
                         Lead Stage
                       </label>
-                      <select
+                      <CustomSelect
                         id="lead-stage-filter"
                         value={stageFilter}
-                        onChange={(e) => setStageFilter(e.target.value)}
-                        className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-md text-xs text-neutral-800 outline-none focus:border-neutral-900 transition-colors"
-                      >
-                        <option value="All">All Stages</option>
-                        {stages.map(st => (
-                          <option key={st} value={st}>
-                            {st}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={setStageFilter}
+                        options={[
+                          { value: 'All', label: 'All Stages' },
+                          ...stages.map(st => ({ value: st, label: st }))
+                        ]}
+                      />
                     </div>
 
                     {/* Popover footer */}
@@ -616,10 +609,11 @@ export const CRMSalesModule: React.FC = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex flex-col gap-1 items-start">
-                          <select
+                          <CustomSelect
                             value={l.status}
-                            onChange={(e) => handleStageChangeRequest(l, e.target.value as LeadStage)}
-                            className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider border cursor-pointer outline-none transition-colors ${
+                            onChange={(val) => handleStageChangeRequest(l, val as LeadStage)}
+                            className="w-32"
+                            buttonClassName={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
                               l.status === 'Won'
                                 ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                                 : l.status === 'Negotiation'
@@ -628,13 +622,9 @@ export const CRMSalesModule: React.FC = () => {
                                 ? 'bg-rose-100 text-rose-800 border-rose-300'
                                 : 'bg-amber-100 text-amber-800 border-amber-300'
                             }`}
-                          >
-                            {stages.map((st) => (
-                              <option key={st} value={st}>
-                                {st}
-                              </option>
-                            ))}
-                          </select>
+                            menuClassName="w-36"
+                            options={stages}
+                          />
                           {l.status === 'Lost' && (
                             <div className="flex items-center gap-1 mt-0.5">
                               <span

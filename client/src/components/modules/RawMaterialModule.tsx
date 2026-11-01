@@ -17,6 +17,7 @@ import { useERP } from '../../context/ERPContext';
 import { RawMaterial } from '../../types/erp';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ModuleHeader } from '../common/ModuleHeader';
+import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const RawMaterialModule: React.FC = () => {
@@ -338,32 +339,19 @@ export const RawMaterialModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">Category</label>
-                  <select
+                  <CustomSelect
                     value={newRM.category}
-                    onChange={(e) => setNewRM({ ...newRM, category: e.target.value as any })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  >
-                    <option value="Mineral Ore">Mineral Ore</option>
-                    <option value="Organic Input">Organic Input</option>
-                    <option value="Microbial">Microbial</option>
-                    <option value="Chemical & Additive">Chemical & Additive</option>
-                    <option value="Packaging">Packaging</option>
-                    <option value="Consumable">Consumable</option>
-                  </select>
+                    onChange={(val) => setNewRM({ ...newRM, category: val as any })}
+                    options={['Mineral Ore', 'Organic Input', 'Microbial', 'Chemical & Additive', 'Packaging', 'Consumable']}
+                  />
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">Unit</label>
-                  <select
+                  <CustomSelect
                     value={newRM.unit}
-                    onChange={(e) => setNewRM({ ...newRM, unit: e.target.value as any })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  >
-                    <option value="MT">MT</option>
-                    <option value="KG">KG</option>
-                    <option value="Bags">Bags</option>
-                    <option value="Liters">Liters</option>
-                    <option value="Units">Units</option>
-                  </select>
+                    onChange={(val) => setNewRM({ ...newRM, unit: val as any })}
+                    options={['MT', 'KG', 'Bags', 'Liters', 'Units']}
+                  />
                 </div>
               </div>
 
