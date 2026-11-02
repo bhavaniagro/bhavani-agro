@@ -726,27 +726,15 @@ export const QuickAddModal: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Assigned Salesperson</label>
-                  <input
-                    type="text"
-                    value={custSalesperson}
-                    onChange={(e) => setCustSalesperson(e.target.value)}
-                    placeholder="e.g. Sales Executive"
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Credit Limit (₹)</label>
-                  <input
-                    type="number"
-                    value={custCreditLimit}
-                    onChange={(e) => setCustCreditLimit(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="e.g. 1000000"
-                    className="w-full border border-neutral-300 rounded p-2"
-                  />
-                </div>
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Credit Limit (₹)</label>
+                <input
+                  type="number"
+                  value={custCreditLimit}
+                  onChange={(e) => setCustCreditLimit(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="e.g. 1000000"
+                  className="w-full border border-neutral-300 rounded p-2"
+                />
               </div>
 
               <div>
