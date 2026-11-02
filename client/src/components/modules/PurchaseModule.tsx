@@ -768,7 +768,7 @@ export const PurchaseModule: React.FC = () => {
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
                             isOrderCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
                           }`}>
-                            {isOrderCompleted ? 'Completed ✓' : 'Pending ⏳'}
+                            {isOrderCompleted ? 'Completed' : 'Pending'}
                           </span>
                         </div>
                         <p className="text-[11px] text-neutral-500">
