@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Plus,
   UserPlus,
@@ -17,7 +17,10 @@ import {
   X,
   RefreshCw,
   AlertCircle,
-  Truck
+  Truck,
+  Factory,
+  Cog,
+  Loader2
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { LeadStage, Lead } from '../../types/erp';
@@ -47,10 +50,12 @@ export const CRMSalesModule: React.FC = () => {
     isSyncing,
     showToast,
     createDispatchChallan,
+    createProductionOrderFromSO,
     vehicles,
     productionBatches
   } = useERP();
 
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState<'pipeline' | 'leads' | 'analytics'>(() => {
@@ -142,6 +147,21 @@ export const CRMSalesModule: React.FC = () => {
       setDispatchError('Failed to create dispatch challan. Please try again.');
     } finally {
       setIsSubmittingDispatch(false);
+    }
+  };
+
+  const [sendingProductionOrderId, setSendingProductionOrderId] = useState<string | null>(null);
+
+  const handleSendForProduction = async (so: any) => {
+    setSendingProductionOrderId(so.id);
+    try {
+      createProductionOrderFromSO(so.id);
+      showToast(`Sales Order ${so.orderNumber} sent for production. Production Order created!`, 'success');
+    } catch (err) {
+      console.error('Failed to send order for production:', err);
+      showToast('Unable to send order for production', 'error');
+    } finally {
+      setSendingProductionOrderId(null);
     }
   };
   const [stageFilter, setStageFilter] = useState<string>('All');
@@ -924,7 +944,10 @@ export const CRMSalesModule: React.FC = () => {
                         const remainingVal = Math.max(0, so.totalAmount - dispatchedVal);
 
                         const isStockAvailable = physicalStock > 0;
-                        const canReadyToDispatch = remainingQty > 0 && isStockAvailable && so.status !== 'Completed' && so.status !== 'Cancelled';
+                        const isInProduction = so.status === 'In Production';
+                        const isProductionRequired = (so.status === 'Production Required' || (!isStockAvailable && so.status !== 'Ready' && so.status !== 'Confirmed' && so.status !== 'Partially Dispatched' && so.status !== 'Dispatched' && so.status !== 'Completed')) && !isInProduction;
+
+                        const canReadyToDispatch = remainingQty > 0 && isStockAvailable && !isInProduction && !isProductionRequired && so.status !== 'Completed' && so.status !== 'Cancelled';
 
                         return (
                           <tr key={so.id} className="hover:bg-neutral-50/50">
@@ -964,13 +987,15 @@ export const CRMSalesModule: React.FC = () => {
                               )}
                             </td>
                             <td className="p-2.5 sm:p-3">
-                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${so.status === 'Completed' || remainingQty === 0 ? 'bg-emerald-100 text-emerald-800' :
-                                  so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
-                                    so.status === 'Partially Dispatched' ? 'bg-cyan-100 text-cyan-800 border border-cyan-200' :
-                                      so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                                        so.status === 'Production Required' || physicalStock <= 0 ? 'bg-amber-100 text-amber-900' :
-                                          'bg-neutral-100 text-neutral-700'
-                                }`}>
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
+                                so.status === 'Completed' || remainingQty === 0 ? 'bg-emerald-100 text-emerald-800' :
+                                so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
+                                so.status === 'Partially Dispatched' ? 'bg-cyan-100 text-cyan-800 border border-cyan-200' :
+                                so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold' :
+                                so.status === 'In Production' ? 'bg-amber-100 text-amber-900 border border-amber-300 font-semibold' :
+                                so.status === 'Production Required' || physicalStock <= 0 ? 'bg-amber-100 text-amber-900 border border-amber-200' :
+                                'bg-neutral-100 text-neutral-700'
+                              }`}>
                                 {remainingQty === 0 ? 'Fulfilled' : so.status}
                               </span>
                             </td>
@@ -984,6 +1009,34 @@ export const CRMSalesModule: React.FC = () => {
                                 >
                                   <Truck className="w-3.5 h-3.5" />
                                   <span>Ready to Dispatch</span>
+                                </button>
+                              ) : isInProduction ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveModule('Production');
+                                    navigate('/production');
+                                  }}
+                                  className="px-2.5 py-1 bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 rounded text-[11px] font-semibold transition-colors inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-2xs"
+                                  title="Order is currently in production. Click to view in Production module."
+                                >
+                                  <Cog className="w-3.5 h-3.5 animate-spin" />
+                                  <span>In Production</span>
+                                </button>
+                              ) : isProductionRequired ? (
+                                <button
+                                  type="button"
+                                  disabled={sendingProductionOrderId === so.id}
+                                  onClick={() => handleSendForProduction(so)}
+                                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded text-[11px] font-semibold transition-colors inline-flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap"
+                                  title="Send this sales order for production"
+                                >
+                                  {sendingProductionOrderId === so.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <Factory className="w-3.5 h-3.5" />
+                                  )}
+                                  <span>Send for Production</span>
                                 </button>
                               ) : remainingQty === 0 ? (
                                 <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-1">

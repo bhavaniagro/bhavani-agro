@@ -198,6 +198,7 @@ export type SalesOrderStatus =
   | 'Confirmed'
   | 'Partially Dispatched'
   | 'Production Required'
+  | 'In Production'
   | 'Ready'
   | 'Dispatched'
   | 'Completed'

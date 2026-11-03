@@ -101,8 +101,8 @@ export const ProductionModule: React.FC = () => {
     if (!selectedOrder) return;
     completeProductionOrder(selectedOrder.id, Number(entryOutputMT), `Run finished with ${entryLossMT} MT process loss.`);
     setShowLogEntryModal(false);
-    setActiveModule('Dispatch & Logistics');
-    navigate('/dispatch');
+    setActiveModule('CRM & Sales');
+    navigate('/sales?tab=analytics');
   };
 
   // Production Order handlers
