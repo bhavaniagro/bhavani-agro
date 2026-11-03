@@ -357,12 +357,6 @@ export const CRMSalesModule: React.FC = () => {
             <Plus className="w-3.5 h-3.5" />
             <span>New Lead</span>
           </button>
-          <button
-            onClick={() => setActiveModule('Customers')}
-            className="px-3 py-1.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-md text-xs font-medium cursor-pointer"
-          >
-            Customer Master
-          </button>
         </div>
       </ModuleHeader>
 
@@ -557,7 +551,22 @@ export const CRMSalesModule: React.FC = () => {
 
       {/* LEADS TABLE VIEW */}
       {activeTab === 'leads' && (
-        <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
+              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Active Pipeline Value</div>
+              <div className="text-xl font-bold font-mono text-emerald-800 mt-1">₹{totalPipelineValue.toLocaleString('en-IN')}</div>
+              <div className="text-[10px] text-neutral-400 mt-1">{leads.filter(l => l.status !== 'Lost').length} Active Leads in Pipeline</div>
+            </div>
+
+            <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
+              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Lead Win Conversion Rate</div>
+              <div className="text-xl font-bold font-mono text-emerald-700 mt-1">{leadConversionRate}%</div>
+              <div className="text-[10px] text-neutral-400 mt-1">{wonLeadsCount} Won / {leads.length} Total Leads</div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
           {filteredLeads.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left min-w-[800px]">
@@ -724,138 +733,116 @@ export const CRMSalesModule: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
       )}
 
       {/* SALES ANALYTICS VIEW */}
       {activeTab === 'analytics' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
-              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Active Pipeline Value</div>
-              <div className="text-xl font-bold font-mono text-emerald-800 mt-1">₹{totalPipelineValue.toLocaleString('en-IN')}</div>
-              <div className="text-[10px] text-neutral-400 mt-1">{leads.filter(l => l.status !== 'Lost').length} Active Leads in Pipeline</div>
-            </div>
-
-            <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
-              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Booked Sales Orders</div>
-              <div className="text-xl font-bold font-mono text-neutral-900 mt-1">₹{totalSalesOrdersVal.toLocaleString('en-IN')}</div>
-              <div className="text-[10px] text-neutral-400 mt-1">{salesOrders.length} Confirmed Sales Orders</div>
-            </div>
-
-            <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
-              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Invoiced Sales Revenue</div>
+              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Total Billed Revenue</div>
               <div className="text-xl font-bold font-mono text-blue-800 mt-1">₹{totalInvoicedVal.toLocaleString('en-IN')}</div>
               <div className="text-[10px] text-neutral-400 mt-1">{invoices.length} Sales Invoices Generated</div>
             </div>
 
             <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
-              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Lead Win Conversion Rate</div>
-              <div className="text-xl font-bold font-mono text-emerald-700 mt-1">{leadConversionRate}%</div>
-              <div className="text-[10px] text-neutral-400 mt-1">{wonLeadsCount} Won / {leads.length} Total Leads</div>
+              <div className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Collected Payments</div>
+              <div className="text-xl font-bold font-mono text-emerald-700 mt-1">₹{totalPaymentsVal.toLocaleString('en-IN')}</div>
+              <div className="text-[10px] text-neutral-400 mt-1">Payment Received</div>
+            </div>
+
+            <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
+              <div className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">Outstanding Receivables Balance</div>
+              <div className="text-xl font-bold font-mono text-amber-700 mt-1">₹{totalOutstandingVal.toLocaleString('en-IN')}</div>
+              <div className="text-[10px] text-neutral-400 mt-1">Pending Receivables Balance</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white border border-neutral-200 rounded-xl p-4 space-y-4">
-              <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+          <div className="bg-white border border-neutral-200 rounded-xl p-4 space-y-4 w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-100 pb-2 gap-2">
+              <div className="flex items-center gap-3">
                 <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-900">
                   Sales Orders Summary
                 </h3>
-                <span className="text-[11px] font-mono text-neutral-500">
-                  {salesOrders.length} Total Orders
+                <span className="text-[11px] font-mono font-semibold text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
+                  Booked Value: ₹{totalSalesOrdersVal.toLocaleString('en-IN')}
                 </span>
               </div>
+              <span className="text-[11px] font-mono text-neutral-500">
+                {salesOrders.length} Total Orders
+              </span>
+            </div>
 
-              {/* Order status metrics grid */}
-              <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <div className="p-2 bg-neutral-50 rounded border border-neutral-200">
-                  <div className="text-[10px] text-neutral-500 font-medium">Recent (30 Days)</div>
-                  <div className="font-bold font-mono text-neutral-900 mt-0.5">
-                    {salesOrders.filter(so => {
-                      if (!so.orderDate) return true;
-                      const orderTime = new Date(so.orderDate).getTime();
-                      const thirtyDaysAgo = Date.now() - 30 * 86400000;
-                      return orderTime >= thirtyDaysAgo;
-                    }).length}
-                  </div>
-                </div>
-                <div className="p-2 bg-amber-50 rounded border border-amber-200 text-amber-900">
-                  <div className="text-[10px] text-amber-700 font-medium">Pending / Unfulfilled</div>
-                  <div className="font-bold font-mono text-amber-900 mt-0.5">
-                    {salesOrders.filter(so => ['Pending', 'Confirmed', 'Production Required', 'Ready'].includes(so.status)).length}
-                  </div>
-                </div>
-                <div className="p-2 bg-emerald-50 rounded border border-emerald-200 text-emerald-900">
-                  <div className="text-[10px] text-emerald-700 font-medium">Completed</div>
-                  <div className="font-bold font-mono text-emerald-900 mt-0.5">
-                    {salesOrders.filter(so => ['Dispatched', 'Completed'].includes(so.status)).length}
-                  </div>
+            {/* Order status metrics grid */}
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="p-2 bg-neutral-50 rounded border border-neutral-200">
+                <div className="text-[10px] text-neutral-500 font-medium">Recent (30 Days)</div>
+                <div className="font-bold font-mono text-neutral-900 mt-0.5">
+                  {salesOrders.filter(so => {
+                    if (!so.orderDate) return true;
+                    const orderTime = new Date(so.orderDate).getTime();
+                    const thirtyDaysAgo = Date.now() - 30 * 86400000;
+                    return orderTime >= thirtyDaysAgo;
+                  }).length}
                 </div>
               </div>
-
-              {/* Sales orders list table */}
-              <div className="border border-neutral-200 rounded-lg overflow-hidden">
-                {salesOrders.length > 0 ? (
-                  <div className="max-h-60 overflow-y-auto">
-                    <table className="w-full text-xs text-left min-w-[800px]">
-                      <thead>
-                        <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
-                          <th className="p-2">Order #</th>
-                          <th className="p-2">Customer</th>
-                          <th className="p-2">Date</th>
-                          <th className="p-2 text-right">Total (₹)</th>
-                          <th className="p-2">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
-                        {salesOrders.slice(0, 10).map(so => (
-                          <tr key={so.id} className="hover:bg-neutral-50/50">
-                            <td className="p-2 font-mono font-bold text-neutral-900">{so.orderNumber}</td>
-                            <td className="p-2 text-neutral-800 truncate max-w-[120px]">{so.customerName}</td>
-                            <td className="p-2 text-neutral-500 font-mono text-[11px]">{so.orderDate}</td>
-                            <td className="p-2 text-right font-mono font-semibold">₹{(so.totalAmount || 0).toLocaleString('en-IN')}</td>
-                            <td className="p-2">
-                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase ${
-                                so.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
-                                so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                                so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
-                                so.status === 'Production Required' ? 'bg-amber-100 text-amber-900' :
-                                'bg-neutral-100 text-neutral-700'
-                              }`}>
-                                {so.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="p-6 text-center text-neutral-400 italic text-xs">
-                    No sales orders available. Persisted orders will appear here.
-                  </div>
-                )}
+              <div className="p-2 bg-amber-50 rounded border border-amber-200 text-amber-900">
+                <div className="text-[10px] text-amber-700 font-medium">Pending / Unfulfilled</div>
+                <div className="font-bold font-mono text-amber-900 mt-0.5">
+                  {salesOrders.filter(so => ['Pending', 'Confirmed', 'Production Required', 'Ready'].includes(so.status)).length}
+                </div>
+              </div>
+              <div className="p-2 bg-emerald-50 rounded border border-emerald-200 text-emerald-900">
+                <div className="text-[10px] text-emerald-700 font-medium">Completed</div>
+                <div className="font-bold font-mono text-emerald-900 mt-0.5">
+                  {salesOrders.filter(so => ['Dispatched', 'Completed'].includes(so.status)).length}
+                </div>
               </div>
             </div>
 
-            <div className="bg-white border border-neutral-200 rounded-xl p-4 space-y-3">
-              <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-900 border-b border-neutral-100 pb-2">
-                Financial Summary &amp; Receivables Status
-              </h3>
-              <div className="space-y-3 text-xs">
-                <div className="flex justify-between p-2.5 bg-neutral-50 rounded border border-neutral-200">
-                  <span className="text-neutral-600">Total Billed Revenue</span>
-                  <span className="font-bold font-mono text-neutral-900">₹{totalInvoicedVal.toLocaleString('en-IN')}</span>
+            {/* Sales orders list table */}
+            <div className="border border-neutral-200 rounded-lg overflow-hidden">
+              {salesOrders.length > 0 ? (
+                <div className="max-h-80 overflow-y-auto">
+                  <table className="w-full text-xs text-left min-w-[700px]">
+                    <thead>
+                      <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
+                        <th className="p-2.5 sm:p-3">Order #</th>
+                        <th className="p-2.5 sm:p-3">Customer</th>
+                        <th className="p-2.5 sm:p-3">Date</th>
+                        <th className="p-2.5 sm:p-3 text-right">Total (₹)</th>
+                        <th className="p-2.5 sm:p-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
+                      {salesOrders.slice(0, 15).map(so => (
+                        <tr key={so.id} className="hover:bg-neutral-50/50">
+                          <td className="p-2.5 sm:p-3 font-mono font-bold text-neutral-900">{so.orderNumber}</td>
+                          <td className="p-2.5 sm:p-3 text-neutral-800">{so.customerName}</td>
+                          <td className="p-2.5 sm:p-3 text-neutral-500 font-mono text-[11px]">{so.orderDate}</td>
+                          <td className="p-2.5 sm:p-3 text-right font-mono font-semibold">₹{(so.totalAmount || 0).toLocaleString('en-IN')}</td>
+                          <td className="p-2.5 sm:p-3">
+                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase ${
+                              so.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
+                              so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                              so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
+                              so.status === 'Production Required' ? 'bg-amber-100 text-amber-900' :
+                              'bg-neutral-100 text-neutral-700'
+                            }`}>
+                              {so.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="flex justify-between p-2.5 bg-emerald-50 rounded border border-emerald-200 text-emerald-900">
-                  <span>Collected Payments</span>
-                  <span className="font-bold font-mono">₹{totalPaymentsVal.toLocaleString('en-IN')}</span>
+              ) : (
+                <div className="p-6 text-center text-neutral-400 italic text-xs">
+                  No sales orders available. Persisted orders will appear here.
                 </div>
-                <div className="flex justify-between p-2.5 bg-amber-50 rounded border border-amber-200 text-amber-900">
-                  <span>Outstanding Receivables Balance</span>
-                  <span className="font-bold font-mono">₹{totalOutstandingVal.toLocaleString('en-IN')}</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
