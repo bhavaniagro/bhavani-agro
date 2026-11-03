@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Building, 
-  Receipt, 
-  Truck, 
+import {
+  Users,
+  Plus,
+  Search,
+  Building,
+  Receipt,
+  Truck,
   ArrowRight,
   ExternalLink,
   ChevronRight,
@@ -22,12 +22,12 @@ import { CustomSelect } from '../common/CustomSelect';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const CustomersModule: React.FC = () => {
-  const { 
-    customers, 
-    salesOrders, 
-    invoices, 
-    dispatches, 
-    setIsQuickAddOpen, 
+  const {
+    customers,
+    salesOrders,
+    invoices,
+    dispatches,
+    setIsQuickAddOpen,
     setQuickAddType,
     setActiveModule,
     setPrintableDoc,
@@ -54,7 +54,7 @@ export const CustomersModule: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [editingCustomer, deletingCustomerId]);
 
-  const filteredCustomers = sortByLatest(customers.filter(c => 
+  const filteredCustomers = sortByLatest(customers.filter(c =>
     c.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -145,11 +145,10 @@ export const CustomersModule: React.FC = () => {
                 <div
                   key={c.id}
                   onClick={() => setSelectedCustomer(c)}
-                  className={`p-3.5 cursor-pointer transition-colors text-xs space-y-1 ${
-                    activeCustomer?.id === c.id 
-                      ? 'bg-emerald-50/60 border-l-4 border-l-emerald-600' 
+                  className={`p-3.5 cursor-pointer transition-colors text-xs space-y-1 ${activeCustomer?.id === c.id
+                      ? 'bg-emerald-50/60 border-l-4 border-l-emerald-600'
                       : 'hover:bg-neutral-50/70'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between font-bold text-neutral-900">
                     <span>{c.customerName}</span>
@@ -288,7 +287,7 @@ export const CustomersModule: React.FC = () => {
                   <table className="w-full text-xs text-left min-w-[500px]">
                     <thead>
                       <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
-                        <th className="p-2">Order #</th>
+                        <th className="p-2">Order</th>
                         <th className="p-2">Product</th>
                         <th className="p-2 text-right">Quantity</th>
                         <th className="p-2 text-right">Amount (₹)</th>
@@ -352,11 +351,10 @@ export const CustomersModule: React.FC = () => {
                             ₹{inv.balanceAmount.toLocaleString('en-IN')}
                           </td>
                           <td className="p-2">
-                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
-                              inv.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' :
-                              inv.paymentStatus === 'Overdue' ? 'bg-rose-100 text-rose-800' :
-                              'bg-amber-100 text-amber-800'
-                            }`}>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${inv.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' :
+                                inv.paymentStatus === 'Overdue' ? 'bg-rose-100 text-rose-800' :
+                                  'bg-amber-100 text-amber-800'
+                              }`}>
                               {inv.paymentStatus}
                             </span>
                           </td>
@@ -385,11 +383,11 @@ export const CustomersModule: React.FC = () => {
 
       {/* Edit Customer Modal */}
       {editingCustomer && (
-        <div 
+        <div
           onClick={(e) => { if (e.target === e.currentTarget) setEditingCustomer(null); }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-y-auto"
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
             className="bg-white border border-neutral-200 rounded-xl shadow-xl max-w-lg w-full overflow-hidden text-xs my-auto"
           >

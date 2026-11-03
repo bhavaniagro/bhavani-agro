@@ -1018,152 +1018,182 @@ export const CRMSalesModule: React.FC = () => {
       )}
 
       {/* Ready to Dispatch Modal */}
-      {dispatchingOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl border border-neutral-200 w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-neutral-200 flex items-center justify-between bg-neutral-50/50">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
-                  <Truck className="w-5 h-5" />
+      {dispatchingOrder && (() => {
+        const total = Number(dispatchingOrder.quantityMT) || 0;
+        const alreadyDispatched = Number(dispatchingOrder.dispatchedQuantityMT) || 0;
+        const remainingOrder = dispatchingOrder.remainingQuantityMT !== undefined
+          ? Number(dispatchingOrder.remainingQuantityMT)
+          : Math.max(0, total - alreadyDispatched);
+
+        const targetProd = products.find(p => p.id === dispatchingOrder.productId || p.productName?.toLowerCase().trim() === (dispatchingOrder.productName || '').toLowerCase().trim());
+        const physicalStock = targetProd ? Number(targetProd.currentStockMT) : 0;
+        const maxDispatchable = Math.min(remainingOrder, physicalStock);
+
+        const enteredQty = parseFloat(dispatchQuantityInput);
+        const hasInput = dispatchQuantityInput.trim() !== '' && !isNaN(enteredQty);
+        const isExceedingRemaining = hasInput && enteredQty > remainingOrder;
+        const isExceedingStock = hasInput && !isExceedingRemaining && enteredQty > physicalStock;
+        const isInvalidOrZero = hasInput && enteredQty <= 0;
+        const isValidDispatch = hasInput && enteredQty > 0 && !isExceedingRemaining && !isExceedingStock;
+
+        const rate = dispatchingOrder.ratePerMT || (dispatchingOrder.totalAmount / (total || 1));
+        const estValue = isValidDispatch ? Math.round(enteredQty * rate * (1 + (dispatchingOrder.taxPercent || 5) / 100)) : 0;
+        const newRemaining = isValidDispatch ? Math.max(0, Number((remainingOrder - enteredQty).toFixed(2))) : remainingOrder;
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-xl border border-neutral-200 w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
+              {/* Modal Header */}
+              <div className="p-5 border-b border-neutral-200 flex items-center justify-between bg-neutral-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
+                    <Truck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-neutral-900">
+                      Ready to Dispatch: {dispatchingOrder.orderNumber}
+                    </h3>
+                    <p className="text-xs text-neutral-500">
+                      Allocate dispatch quantity (full or partial delivery)
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-base font-bold text-neutral-900">
-                    Ready to Dispatch: {dispatchingOrder.orderNumber}
-                  </h3>
-                  <p className="text-xs text-neutral-500">
-                    Allocate dispatch quantity (full or partial delivery)
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setDispatchingOrder(null)}
+                  className="text-neutral-400 hover:text-neutral-700 p-1 rounded-md transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setDispatchingOrder(null)}
-                className="text-neutral-400 hover:text-neutral-700 p-1 rounded-md transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Modal Body */}
-            <div className="p-5 space-y-4 overflow-y-auto">
-              {/* Non-editable Sales Order Details */}
-              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3.5 space-y-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
-                  Sales Order Details (Read-only)
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                  <div>
-                    <span className="text-neutral-500 block text-[11px]">Customer</span>
-                    <span className="font-semibold text-neutral-900 block truncate" title={dispatchingOrder.customerName}>
-                      {dispatchingOrder.customerName}
-                    </span>
+              {/* Modal Body */}
+              <div className="p-5 space-y-4 overflow-y-auto">
+                {/* Non-editable Sales Order Details */}
+                <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3.5 space-y-3">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                    Sales Order Details (Read-only)
                   </div>
-                  <div>
-                    <span className="text-neutral-500 block text-[11px]">Product</span>
-                    <span className="font-semibold text-neutral-900 block truncate" title={dispatchingOrder.productName}>
-                      {dispatchingOrder.productName}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-neutral-500 block text-[11px]">Order Date</span>
-                    <span className="font-mono text-neutral-800 block">
-                      {dispatchingOrder.orderDate}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-neutral-500 block text-[11px]">Total Order Qty</span>
-                    <span className="font-mono font-bold text-neutral-900 block">
-                      {dispatchingOrder.quantityMT} MT (₹{dispatchingOrder.totalAmount.toLocaleString('en-IN')})
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-neutral-500 block text-[11px]">Already Dispatched</span>
-                    <span className="font-mono font-bold text-blue-700 block">
-                      {dispatchingOrder.dispatchedQuantityMT || 0} MT
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-neutral-500 block text-[11px]">Remaining Order</span>
-                    <span className="font-mono font-bold text-amber-700 block">
-                      {dispatchingOrder.remainingQuantityMT !== undefined ? dispatchingOrder.remainingQuantityMT : (dispatchingOrder.quantityMT - (dispatchingOrder.dispatchedQuantityMT || 0))} MT
-                    </span>
-                  </div>
-                </div>
-
-                {/* Stock info banner */}
-                {(() => {
-                  const targetProd = products.find(p => p.id === dispatchingOrder.productId || p.productName?.toLowerCase().trim() === (dispatchingOrder.productName || '').toLowerCase().trim());
-                  const physicalStock = targetProd ? Number(targetProd.currentStockMT) : 0;
-                  return (
-                    <div className="pt-2 border-t border-neutral-200/80 flex items-center justify-between text-xs">
-                      <span className="text-neutral-600">Available Finished Goods Stock:</span>
-                      <span className={`font-mono font-bold ${physicalStock > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                        {physicalStock.toFixed(1)} MT in Warehouse
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Customer</span>
+                      <span className="font-semibold text-neutral-900 block truncate" title={dispatchingOrder.customerName}>
+                        {dispatchingOrder.customerName}
                       </span>
                     </div>
-                  );
-                })()}
-              </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Product</span>
+                      <span className="font-semibold text-neutral-900 block truncate" title={dispatchingOrder.productName}>
+                        {dispatchingOrder.productName}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Order Date</span>
+                      <span className="font-mono text-neutral-800 block">
+                        {dispatchingOrder.orderDate}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Total Order Qty</span>
+                      <span className="font-mono font-bold text-neutral-900 block">
+                        {total} MT (₹{dispatchingOrder.totalAmount.toLocaleString('en-IN')})
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Already Dispatched</span>
+                      <span className="font-mono font-bold text-blue-700 block">
+                        {alreadyDispatched} MT
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Remaining Order</span>
+                      <span className="font-mono font-bold text-amber-700 block">
+                        {remainingOrder} MT
+                      </span>
+                    </div>
+                  </div>
 
-              {/* Editable Dispatch Quantity Field */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="dispatch-qty-input" className="block text-xs font-bold text-neutral-800">
-                    Quantity to Dispatch Now (MT) <span className="text-rose-500">*</span>
-                  </label>
-                  {(() => {
-                    const total = Number(dispatchingOrder.quantityMT) || 0;
-                    const dispatched = Number(dispatchingOrder.dispatchedQuantityMT) || 0;
-                    const remaining = dispatchingOrder.remainingQuantityMT !== undefined ? Number(dispatchingOrder.remainingQuantityMT) : Math.max(0, total - dispatched);
-                    const targetProd = products.find(p => p.id === dispatchingOrder.productId || p.productName?.toLowerCase().trim() === (dispatchingOrder.productName || '').toLowerCase().trim());
-                    const physicalStock = targetProd ? Number(targetProd.currentStockMT) : 0;
-                    const maxDisp = Math.min(remaining, physicalStock);
-
-                    return (
-                      <button
-                        type="button"
-                        onClick={() => setDispatchQuantityInput(String(maxDisp))}
-                        className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 underline cursor-pointer"
-                      >
-                        Set Max ({maxDisp} MT)
-                      </button>
-                    );
-                  })()}
+                  {/* Stock info banner */}
+                  <div className="pt-2 border-t border-neutral-200/80 flex items-center justify-between text-xs">
+                    <span className="text-neutral-600">Available Finished Goods Stock:</span>
+                    <span className={`font-mono font-bold ${physicalStock > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                      {physicalStock.toFixed(1)} MT in Warehouse
+                    </span>
+                  </div>
                 </div>
 
-                <div className="relative">
-                  <input
-                    id="dispatch-qty-input"
-                    type="number"
-                    step="any"
-                    min="0.1"
-                    placeholder="Enter MT to dispatch (e.g. 20)"
-                    value={dispatchQuantityInput}
-                    onChange={(e) => {
-                      setDispatchQuantityInput(e.target.value);
-                      setDispatchError('');
-                    }}
-                    className="w-full px-3.5 py-2 text-sm bg-white border border-neutral-300 rounded-lg outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 font-mono font-bold text-neutral-900 transition-all"
-                  />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-neutral-400 font-bold">
-                    MT
-                  </span>
-                </div>
+                {/* Editable Dispatch Quantity Field */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="dispatch-qty-input" className="block text-xs font-bold text-neutral-800">
+                      Quantity to Dispatch Now (MT) <span className="text-rose-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDispatchQuantityInput(String(maxDispatchable));
+                        setDispatchError('');
+                      }}
+                      className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 underline cursor-pointer"
+                    >
+                      Set Max ({maxDispatchable} MT)
+                    </button>
+                  </div>
 
-                {/* Calculation breakdown */}
-                {(() => {
-                  const qty = Number(dispatchQuantityInput) || 0;
-                  const total = Number(dispatchingOrder.quantityMT) || 0;
-                  const dispatched = Number(dispatchingOrder.dispatchedQuantityMT) || 0;
-                  const remaining = dispatchingOrder.remainingQuantityMT !== undefined ? Number(dispatchingOrder.remainingQuantityMT) : Math.max(0, total - dispatched);
-                  const rate = dispatchingOrder.ratePerMT || (dispatchingOrder.totalAmount / (total || 1));
-                  const estValue = Math.round(qty * rate * (1 + (dispatchingOrder.taxPercent || 5) / 100));
-                  const newRemaining = Math.max(0, Number((remaining - qty).toFixed(2)));
+                  <div className="relative">
+                    <input
+                      id="dispatch-qty-input"
+                      type="number"
+                      step="any"
+                      min="0.1"
+                      max={remainingOrder}
+                      placeholder="Enter MT to dispatch (e.g. 20)"
+                      value={dispatchQuantityInput}
+                      onChange={(e) => {
+                        setDispatchQuantityInput(e.target.value);
+                        setDispatchError('');
+                      }}
+                      className={`w-full px-3.5 py-2 text-sm bg-white border rounded-lg outline-none font-mono font-bold transition-all ${
+                        isExceedingRemaining || isExceedingStock
+                          ? 'border-rose-500 text-rose-900 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20 bg-rose-50/20'
+                          : 'border-neutral-300 text-neutral-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20'
+                      }`}
+                    />
+                    <span className="absolute right-3.5 top-2.5 text-xs text-neutral-400 font-bold">
+                      MT
+                    </span>
+                  </div>
 
-                  if (qty <= 0) return null;
+                  {/* Real-time Validation Errors */}
+                  {isExceedingRemaining && (
+                    <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="block font-semibold">Not acceptable: Quantity exceeds Remaining Order!</strong>
+                        <span>You cannot dispatch more than the Remaining Order quantity ({remainingOrder} MT). You entered {enteredQty} MT.</span>
+                      </div>
+                    </div>
+                  )}
 
-                  return (
+                  {isExceedingStock && !isExceedingRemaining && (
+                    <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="block font-semibold">Insufficient warehouse stock!</strong>
+                        <span>Available finished goods stock is {physicalStock.toFixed(1)} MT. You cannot dispatch {enteredQty} MT.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {isInvalidOrZero && (
+                    <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 flex items-center gap-1.5 font-medium">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>Please enter a quantity greater than 0 MT.</span>
+                    </div>
+                  )}
+
+                  {/* Calculation breakdown (only if valid input) */}
+                  {isValidDispatch && (
                     <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-lg text-xs space-y-1">
                       <div className="flex justify-between text-emerald-950 font-medium">
                         <span>This Dispatch Value (inc. 5% GST):</span>
@@ -1174,40 +1204,44 @@ export const CRMSalesModule: React.FC = () => {
                         <span className="font-mono font-semibold">{newRemaining} MT</span>
                       </div>
                     </div>
-                  );
-                })()}
+                  )}
 
-                {dispatchError && (
-                  <p className="text-xs text-rose-600 flex items-center gap-1 font-medium mt-1">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{dispatchError}</span>
-                  </p>
-                )}
+                  {dispatchError && !isExceedingRemaining && !isExceedingStock && (
+                    <p className="text-xs text-rose-600 flex items-center gap-1 font-medium mt-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{dispatchError}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-neutral-200 bg-neutral-50/50 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setDispatchingOrder(null)}
+                  className="px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-200/70 rounded-lg border border-neutral-300 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDispatch}
+                  disabled={!isValidDispatch || isSubmittingDispatch}
+                  className={`px-5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 ${
+                    !isValidDispatch || isSubmittingDispatch
+                      ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed border border-neutral-300 shadow-none'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs'
+                  }`}
+                >
+                  <Truck className="w-4 h-4" />
+                  <span>Confirm &amp; Dispatch</span>
+                </button>
               </div>
             </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-neutral-200 bg-neutral-50/50 flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => setDispatchingOrder(null)}
-                className="px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-200/70 rounded-lg border border-neutral-300 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDispatch}
-                disabled={isSubmittingDispatch}
-                className="px-5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
-              >
-                <Truck className="w-4 h-4" />
-                <span>Confirm &amp; Dispatch</span>
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Create Lead Modal */}
       <LeadFormModal
