@@ -10,6 +10,7 @@ import {
   BOM,
   Lead,
   SalesOrder,
+  SalesOrderStatus,
   PurchaseOrder,
   GRN,
   QCInspection,
@@ -987,17 +988,19 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('Failed to save production order to Firebase:', error);
     });
 
-    setSalesOrders(prev => prev.map(o => o.id === so.id ? { ...o, productionOrderId: newPO.id } : o));
+    setSalesOrders(prev => prev.map(o => o.id === so.id ? { ...o, status: 'In Production', productionOrderId: newPO.id } : o));
+    updateSalesOrderFromApi(so.id, { status: 'In Production', productionOrderId: newPO.id }).catch(console.error);
 
     setAlerts(prev => sortByLatest([{
       id: `alt-${Date.now()}`,
       type: 'info',
       title: `Production Order ${poNum} Created`,
-      description: `BOM verified for ${so.quantityMT} MT of ${so.productName}.`,
+      description: `Production Order ${poNum} created for ${so.quantityMT} MT of ${so.productName} (SO: ${so.orderNumber}).`,
       timestamp: 'Just now',
       module: 'Production',
       read: false
     }, ...prev]));
+    showToast(`Production Order ${poNum} created for ${so.orderNumber}`, 'success');
     notifyChange();
   };
 
@@ -1045,7 +1048,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `so-${Date.now()}`,
       orderNumber: orderNum,
       stockAvailable: isStockAvailable,
-      status: isStockAvailable ? 'Dispatched' : 'Production Required'
+      status: isStockAvailable ? 'Confirmed' : 'Production Required'
     };
 
     try {
@@ -1059,77 +1062,29 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCustomers(prev => prev.map(c => c.id === soData.customerId ? { ...c, totalSales: c.totalSales + soData.totalAmount } : c));
 
       if (isStockAvailable) {
-        // Physical stock available: Route directly to Dispatch & Logistics
-        const dispNum = `DC-2609-0${dispatches.length + 65}`;
-        const newDispatch: DispatchChallan = {
-          id: `disp-${Date.now()}`,
-          dispatchNumber: dispNum,
-          salesOrderId: savedOrder.id,
-          orderNumber: savedOrder.orderNumber,
-          customerId: savedOrder.customerId,
-          customerName: savedOrder.customerName,
-          productName: savedOrder.productName,
-          batchNumber: productionBatches.find(b => b.productName === savedOrder.productName)?.batchNumber || `BNT-2609-${Math.floor(100 + Math.random() * 900)}`,
-          quantityMT: savedOrder.quantityMT,
-          bagsCount: Math.round(savedOrder.quantityMT * 20),
-          vehicleNumber: vehicles[0]?.vehicleNumber || 'GJ-12-BV-9908',
-          driverName: vehicles[0]?.driverName || 'Ramesh Rabari',
-          driverMobile: vehicles[0]?.driverPhone || '+91 98250 12345',
-          transporterName: vehicles[0]?.transporterName || 'Gujarat Freight Logistics',
-          dispatchDate: new Date().toISOString().split('T')[0],
-          destination: savedOrder.shippingAddress || targetCustomer?.shippingAddress || 'Plant Destination',
-          eWayBillNumber: `2410${Math.floor(10000000 + Math.random() * 90000000)}`,
-          lrNumber: `LR-2609-${Math.floor(100 + Math.random() * 900)}`,
-          freightAmountRs: 12500,
-          freightPaidBy: 'Customer',
-          status: 'Dispatched',
-          remarks: `Auto-generated delivery challan from Sales Order ${savedOrder.orderNumber} (Physical Stock Available).`
-        };
-
-        setDispatches(prev => sortByLatest([newDispatch, ...prev]));
-        createDispatchInApi(newDispatch).catch(console.error);
-        persistDispatch(newDispatch).catch((error) => {
-          console.error('Failed to save dispatch to Firebase:', error);
-        });
-
-        // Deduct finished goods stock accurately
-        if (targetProduct) {
-          const newStock = Math.max(0, Number((targetProduct.currentStockMT - savedOrder.quantityMT).toFixed(2)));
-          setProducts(prev => prev.map(p => p.id === targetProduct.id ? { ...p, currentStockMT: newStock } : p));
-          updateProductFromApi(targetProduct.id, { currentStockMT: newStock }).catch(console.error);
-          persistFinishedProduct({ ...targetProduct, currentStockMT: newStock }).catch((error) => {
-            console.error('Failed to save finished product stock deduction to Firebase:', error);
-          });
-        }
-
-        setSalesOrders(prev => prev.map(s => s.id === savedOrder.id ? { ...s, status: 'Dispatched' } : s));
-        updateSalesOrderFromApi(savedOrder.id, { status: 'Dispatched' }).catch(console.error);
-
         setAlerts(prev => [{
           id: `alt-${Date.now()}`,
           type: 'info',
-          title: `Dispatch Created: ${dispNum}`,
-          description: `Physical stock available (${physicalStock.toFixed(1)} MT). Order ${orderNum} routed to Dispatch & Logistics.`,
+          title: `Sales Order Confirmed: ${orderNum}`,
+          description: `Physical stock available (${physicalStock.toFixed(1)} MT). Order ready for dispatch in Sales Analytics.`,
           timestamp: 'Just now',
-          module: 'Dispatch & Logistics',
+          module: 'CRM & Sales',
           read: false
         }, ...prev]);
-
-        setActiveModule('Dispatch & Logistics');
       } else {
-        // Physical stock not available: Route directly to Production
-        createProductionOrderFromSOObj(savedOrder);
+        // Physical stock not available: Set status to 'Production Required' and wait for user to click 'Send for Production' in Sales Analytics
         setAlerts(prev => [{
           id: `alt-${Date.now()}`,
-          type: 'critical',
+          type: 'warning',
           title: `Production Required: ${soData.productName}`,
-          description: `Order ${orderNum} for ${soData.quantityMT} MT exceeds physical stock (${physicalStock.toFixed(1)} MT). Production order planned.`,
+          description: `Order ${orderNum} for ${soData.quantityMT} MT requires production (Current Stock: ${physicalStock.toFixed(1)} MT). Send for production from Sales Analytics.`,
           timestamp: 'Just now',
-          module: 'Production',
+          module: 'CRM & Sales',
           read: false
         }, ...prev]);
-        setActiveModule('Production');
       }
+
+      setActiveModule('CRM & Sales');
       return savedOrder;
     } catch (err) {
       console.error("Failed to save sales order to API:", err);
@@ -1236,56 +1191,18 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Find associated sales order (either explicitly linked or waiting for this product)
       const associatedSO = po.salesOrderId
         ? salesOrders.find(s => s.id === po.salesOrderId)
-        : salesOrders.find(s => (s.productId === po.productId || (s.productName && po.productName && s.productName.toLowerCase().trim() === po.productName.toLowerCase().trim())) && (s.status === 'Production Required' || s.status === 'Pending' || s.status === 'Ready'));
-
-      const targetCustomer = associatedSO
-        ? (customers.find(c => c.id === associatedSO.customerId || (c.customerName && associatedSO.customerName && c.customerName.toLowerCase().trim() === associatedSO.customerName.toLowerCase().trim())) || customers[0])
-        : customers[0];
-
-      // Automatically create Delivery Challan in Dispatch & Logistics
-      const dispNum = `DC-2609-0${dispatches.length + 65}`;
-      const newDispatch: DispatchChallan = {
-        id: `disp-${Date.now()}`,
-        dispatchNumber: dispNum,
-        salesOrderId: associatedSO ? associatedSO.id : (po.salesOrderId || 'so-auto'),
-        orderNumber: associatedSO ? associatedSO.orderNumber : (po.productionOrderNumber || 'SO-AUTO'),
-        customerId: targetCustomer?.id || 'cust-1',
-        customerName: targetCustomer?.customerName || associatedSO?.customerName || 'SIDDHIVINAYAK GRANNULES',
-        productName: po.productName,
-        batchNumber: batchCode,
-        quantityMT: outputMT,
-        bagsCount: Math.round(outputMT * 20),
-        vehicleNumber: vehicles[0]?.vehicleNumber || 'GJ-12-BV-9908',
-        driverName: vehicles[0]?.driverName || 'Ramesh Rabari',
-        driverMobile: vehicles[0]?.driverPhone || '+91 98250 12345',
-        transporterName: vehicles[0]?.transporterName || 'Gujarat Freight Logistics',
-        dispatchDate: new Date().toISOString().split('T')[0],
-        destination: associatedSO?.shippingAddress || targetCustomer?.shippingAddress || 'MADHIYA GIDC, BHAVNAGAR',
-        eWayBillNumber: `2410${Math.floor(10000000 + Math.random() * 90000000)}`,
-        lrNumber: `LR-2609-${Math.floor(100 + Math.random() * 900)}`,
-        freightAmountRs: 12500,
-        freightPaidBy: 'Customer',
-        status: 'Dispatched',
-        remarks: `Auto-generated delivery challan from completed production batch ${batchCode} (${po.productionOrderNumber}).`
-      };
-
-      setDispatches(prev => sortByLatest([newDispatch, ...prev]));
-      createDispatchInApi(newDispatch).catch(console.error);
-      persistDispatch(newDispatch).catch((error) => {
-        console.error('Failed to save dispatch to Firebase:', error);
-      });
+        : salesOrders.find(s => (s.productId === po.productId || (s.productName && po.productName && s.productName.toLowerCase().trim() === po.productName.toLowerCase().trim())) && (s.status === 'In Production' || s.status === 'Production Required' || s.status === 'Pending'));
 
       if (associatedSO) {
-        setSalesOrders(prev => prev.map(s => s.id === associatedSO.id ? { ...s, status: 'Dispatched', stockAvailable: true } : s));
-        updateSalesOrderFromApi(associatedSO.id, { status: 'Dispatched', stockAvailable: true }).catch(console.error);
-      }
-      else {
+        setSalesOrders(prev => prev.map(s => s.id === associatedSO.id ? { ...s, status: 'Ready', stockAvailable: true } : s));
+        updateSalesOrderFromApi(associatedSO.id, { status: 'Ready', stockAvailable: true }).catch(console.error);
+      } else {
         setSalesOrders(prev => prev.map(so => {
-        if (so.productId === targetProd.id && so.status === 'Production Required') {
-          return { ...so, status: 'Ready', stockAvailable: true };
-        }
-        return so;
-      }));
+          if (so.productId === targetProd.id && (so.status === 'In Production' || so.status === 'Production Required')) {
+            return { ...so, status: 'Ready', stockAvailable: true };
+          }
+          return so;
+        }));
       }
     }
 
@@ -1296,18 +1213,23 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       outputProducedMT: outputMT
     } : p));
     updateProductionOrderInApi(poId, { status: 'Completed', actualBatchNumber: batchCode, outputProducedMT: outputMT }).catch(console.error);
-    showToast(`Batch ${batchCode} completed & Delivery Challan ${dispNum} created in Dispatch & Logistics`, 'success');
+
+    const associatedSONum = po.salesOrderId
+      ? salesOrders.find(s => s.id === po.salesOrderId)?.orderNumber
+      : undefined;
+
+    showToast(`Batch ${batchCode} completed! ${associatedSONum ? `Sales Order ${associatedSONum} is now Ready to Dispatch in Sales Analytics.` : `Finished Goods stock updated (+${outputMT} MT).`}`, 'success');
 
     setAlerts(prev => sortByLatest([{
       id: `alt-${Date.now()}`,
       type: 'info',
-      title: `Dispatch Created: ${dispNum}`,
-      description: `Production Order ${po.productionOrderNumber} completed (${outputMT} MT ${po.productName}, Batch ${batchCode}) and routed to Dispatch & Logistics under challan ${dispNum}.`,
+      title: `Production Completed: ${po.productionOrderNumber}`,
+      description: `Production Order ${po.productionOrderNumber} completed (${outputMT} MT ${po.productName}, Batch ${batchCode}). ${associatedSONum ? `Sales Order ${associatedSONum} is now Ready to Dispatch in Sales Analytics.` : 'Finished goods stock updated.'}`,
       timestamp: 'Just now',
-      module: 'Dispatch & Logistics',
+      module: 'CRM & Sales',
       read: false
     }, ...prev]));
-    setActiveModule('Dispatch & Logistics');
+    setActiveModule('CRM & Sales');
     notifyChange();
   };
 
@@ -1496,12 +1418,25 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     if (so) {
+      const prevDispatched = Number(so.dispatchedQuantityMT) || 0;
+      const newDispatched = Number((prevDispatched + dispatchData.quantityMT).toFixed(2));
+      const remainingQty = Math.max(0, Number((so.quantityMT - newDispatched).toFixed(2)));
+      const isFullyDispatched = remainingQty <= 0.001;
+      const nextStatus: SalesOrderStatus = isFullyDispatched ? 'Dispatched' : 'Partially Dispatched';
+
       setSalesOrders(prev => prev.map(s => s.id === so.id ? {
         ...s,
-        status: 'Dispatched',
+        status: nextStatus,
+        dispatchedQuantityMT: newDispatched,
+        remainingQuantityMT: remainingQty,
         dispatchId: newDispatch.id
       } : s));
-      updateSalesOrderFromApi(so.id, { status: 'Dispatched', dispatchId: newDispatch.id }).catch(console.error);
+      updateSalesOrderFromApi(so.id, {
+        status: nextStatus,
+        dispatchedQuantityMT: newDispatched,
+        remainingQuantityMT: remainingQty,
+        dispatchId: newDispatch.id
+      }).catch(console.error);
     }
   };
 

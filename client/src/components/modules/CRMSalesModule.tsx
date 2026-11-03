@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Plus,
   UserPlus,
@@ -15,7 +16,11 @@ import {
   Trash2,
   X,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Truck,
+  Factory,
+  Cog,
+  Loader2
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { LeadStage, Lead } from '../../types/erp';
@@ -33,6 +38,7 @@ export const CRMSalesModule: React.FC = () => {
     setIsQuickAddOpen,
     setQuickAddType,
     salesOrders,
+    updateSalesOrder,
     invoices,
     customers,
     setActiveModule,
@@ -41,10 +47,123 @@ export const CRMSalesModule: React.FC = () => {
     updateLead,
     deleteLead,
     refreshAllData,
-    isSyncing
+    isSyncing,
+    showToast,
+    createDispatchChallan,
+    createProductionOrderFromSO,
+    vehicles,
+    productionBatches
   } = useERP();
 
-  const [activeTab, setActiveTab] = useState<'pipeline' | 'leads' | 'analytics'>('pipeline');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<'pipeline' | 'leads' | 'analytics'>(() => {
+    if (tabFromUrl === 'analytics') return 'analytics';
+    if (tabFromUrl === 'leads') return 'leads';
+    return 'pipeline';
+  });
+
+  useEffect(() => {
+    if (tabFromUrl === 'analytics' || tabFromUrl === 'leads' || tabFromUrl === 'pipeline') {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+
+  // Dispatch modal state
+  const [dispatchingOrder, setDispatchingOrder] = useState<(typeof salesOrders)[0] | null>(null);
+  const [dispatchQuantityInput, setDispatchQuantityInput] = useState<string>('');
+  const [dispatchError, setDispatchError] = useState<string>('');
+  const [isSubmittingDispatch, setIsSubmittingDispatch] = useState<boolean>(false);
+
+  const handleOpenDispatchModal = (so: (typeof salesOrders)[0]) => {
+    setDispatchingOrder(so);
+    const total = Number(so.quantityMT) || 0;
+    const dispatched = Number(so.dispatchedQuantityMT) || 0;
+    const remaining = so.remainingQuantityMT !== undefined ? Number(so.remainingQuantityMT) : Math.max(0, total - dispatched);
+    const targetProd = products.find(p => p.id === so.productId || p.productName?.toLowerCase().trim() === (so.productName || '').toLowerCase().trim());
+    const physicalStock = targetProd ? Number(targetProd.currentStockMT) : 0;
+    const defaultQty = Math.min(remaining, physicalStock);
+    setDispatchQuantityInput(String(defaultQty > 0 ? defaultQty : ''));
+    setDispatchError('');
+  };
+
+  const handleConfirmDispatch = () => {
+    if (!dispatchingOrder) return;
+    const qty = Number(dispatchQuantityInput);
+    if (!qty || qty <= 0) {
+      setDispatchError('Please enter a valid dispatch quantity in MT.');
+      return;
+    }
+
+    const total = Number(dispatchingOrder.quantityMT) || 0;
+    const alreadyDispatched = Number(dispatchingOrder.dispatchedQuantityMT) || 0;
+    const remaining = dispatchingOrder.remainingQuantityMT !== undefined ? Number(dispatchingOrder.remainingQuantityMT) : Math.max(0, total - alreadyDispatched);
+
+    const targetProd = products.find(p => p.id === dispatchingOrder.productId || p.productName?.toLowerCase().trim() === (dispatchingOrder.productName || '').toLowerCase().trim());
+    const physicalStock = targetProd ? Number(targetProd.currentStockMT) : 0;
+
+    if (qty > remaining) {
+      setDispatchError(`Quantity cannot exceed remaining order quantity (${remaining} MT).`);
+      return;
+    }
+
+    if (qty > physicalStock) {
+      setDispatchError(`Quantity exceeds available warehouse stock (${physicalStock.toFixed(1)} MT).`);
+      return;
+    }
+
+    setIsSubmittingDispatch(true);
+    try {
+      const selectedVeh = vehicles[0];
+      const batch = productionBatches.find(b => b.productName === dispatchingOrder.productName);
+
+      createDispatchChallan({
+        salesOrderId: dispatchingOrder.id,
+        orderNumber: dispatchingOrder.orderNumber,
+        customerId: dispatchingOrder.customerId,
+        customerName: dispatchingOrder.customerName,
+        productName: dispatchingOrder.productName,
+        batchNumber: batch?.batchNumber || `BNT-2609-${Math.floor(100 + Math.random() * 900)}`,
+        quantityMT: qty,
+        bagsCount: Math.round(qty * 20),
+        vehicleNumber: selectedVeh?.vehicleNumber || 'GJ-12-BV-9908',
+        driverName: selectedVeh?.driverName || 'Ramesh Rabari',
+        driverMobile: selectedVeh?.driverPhone || '+91 98250 12345',
+        transporterName: selectedVeh?.transporterName || 'Gujarat Freight Logistics',
+        dispatchDate: new Date().toISOString().split('T')[0],
+        destination: dispatchingOrder.shippingAddress || 'Plant Destination',
+        eWayBillNumber: `2410${Math.floor(10000000 + Math.random() * 90000000)}`,
+        lrNumber: `LR-2609-${Math.floor(100 + Math.random() * 900)}`,
+        freightAmountRs: 12500,
+        freightPaidBy: 'Customer',
+        remarks: `Dispatch of ${qty} MT against Sales Order ${dispatchingOrder.orderNumber}`
+      });
+
+      showToast(`Dispatch challan created for ${qty} MT (Order ${dispatchingOrder.orderNumber})`, 'success');
+      setDispatchingOrder(null);
+    } catch (err) {
+      console.error('Failed to create dispatch:', err);
+      setDispatchError('Failed to create dispatch challan. Please try again.');
+    } finally {
+      setIsSubmittingDispatch(false);
+    }
+  };
+
+  const [sendingProductionOrderId, setSendingProductionOrderId] = useState<string | null>(null);
+
+  const handleSendForProduction = async (so: any) => {
+    setSendingProductionOrderId(so.id);
+    try {
+      createProductionOrderFromSO(so.id);
+      showToast(`Sales Order ${so.orderNumber} sent for production. Production Order created!`, 'success');
+    } catch (err) {
+      console.error('Failed to send order for production:', err);
+      showToast('Unable to send order for production', 'error');
+    } finally {
+      setSendingProductionOrderId(null);
+    }
+  };
   const [stageFilter, setStageFilter] = useState<string>('All');
   const [selectedProduct, setSelectedProduct] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
@@ -177,7 +296,7 @@ export const CRMSalesModule: React.FC = () => {
   const leadConversionRate = leads.length > 0 ? ((wonLeadsCount / leads.length) * 100).toFixed(1) : '0';
 
   const isLeadAlreadyCustomer = (lead: Lead) => {
-    return customers.some(c => 
+    return customers.some(c =>
       (c.companyName && lead.company && c.companyName.trim().toLowerCase() === lead.company.trim().toLowerCase()) ||
       (c.customerName && lead.leadName && c.customerName.trim().toLowerCase() === lead.leadName.trim().toLowerCase()) ||
       (c.mobile && lead.mobile && c.mobile.replace(/\D/g, '').length >= 10 && lead.mobile.replace(/\D/g, '').length >= 10 && c.mobile.replace(/\D/g, '').slice(-10) === lead.mobile.replace(/\D/g, '').slice(-10))
@@ -193,25 +312,22 @@ export const CRMSalesModule: React.FC = () => {
             <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg overflow-x-auto">
               <button
                 onClick={() => setActiveTab('pipeline')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-                  activeTab === 'pipeline' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${activeTab === 'pipeline' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Pipeline Stages ({filteredLeads.length})
               </button>
               <button
                 onClick={() => setActiveTab('leads')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-                  activeTab === 'leads' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${activeTab === 'leads' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Lead Directory ({filteredLeads.length})
               </button>
               <button
                 onClick={() => setActiveTab('analytics')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-                  activeTab === 'analytics' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${activeTab === 'analytics' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Sales Analytics
               </button>
@@ -246,11 +362,10 @@ export const CRMSalesModule: React.FC = () => {
                   type="button"
                   id="product-lead-filter-btn"
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md flex items-center gap-1.5 border transition-all cursor-pointer ${
-                    isFilterActive
+                  className={`px-3 py-1 text-xs font-medium rounded-md flex items-center gap-1.5 border transition-all cursor-pointer ${isFilterActive
                       ? 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs font-semibold'
                       : 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300'
-                  }`}
+                    }`}
                   title="Filter leads by product"
                 >
                   <Filter className={`w-3.5 h-3.5 ${isFilterActive ? 'text-emerald-700' : 'text-neutral-500'}`} />
@@ -416,11 +531,10 @@ export const CRMSalesModule: React.FC = () => {
                 onDragOver={(e) => handleDragOver(e, st)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, st)}
-                className={`border rounded-xl p-3 flex flex-col w-64 min-w-[250px] shrink-0 transition-all ${
-                  dragOverStage === st
+                className={`border rounded-xl p-3 flex flex-col w-64 min-w-[250px] shrink-0 transition-all ${dragOverStage === st
                     ? 'bg-neutral-200/90 border-neutral-400 ring-2 ring-neutral-400/40 shadow-xs'
                     : 'bg-neutral-100/70 border-neutral-200'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
                   <div className="font-semibold text-xs text-neutral-900">{st}</div>
@@ -567,173 +681,172 @@ export const CRMSalesModule: React.FC = () => {
           </div>
 
           <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
-          {filteredLeads.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left min-w-[800px]">
-                <thead>
-                  <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
-                    <th className="p-3">Company &amp; Contact</th>
-                    <th className="p-3">Address / Location</th>
-                    <th className="p-3">Product Required</th>
-                    <th className="p-3 text-right">Qty (MT)</th>
-                    <th className="p-3 text-right">Est. Value (₹)</th>
-                    <th className="p-3">Follow-up</th>
-                    <th className="p-3">Stage</th>
-                    <th className="p-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
-                  {filteredLeads.map((l) => (
-                    <tr key={l.id} className="hover:bg-neutral-50/70 transition-colors">
-                      <td className="p-3">
-                        <div className="font-bold text-neutral-900">{l.company}</div>
-                        <div className="text-[11px] text-neutral-500">
-                          {l.contactPerson || l.leadName} · {l.mobile}
-                        </div>
-                        {l.email && (
-                          <div className="text-[10px] text-neutral-400 font-mono">
-                            {l.email}
+            {filteredLeads.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left min-w-[800px]">
+                  <thead>
+                    <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
+                      <th className="p-3">Company &amp; Contact</th>
+                      <th className="p-3">Address / Location</th>
+                      <th className="p-3">Product Required</th>
+                      <th className="p-3 text-right">Qty (MT)</th>
+                      <th className="p-3 text-right">Est. Value (₹)</th>
+                      <th className="p-3">Follow-up</th>
+                      <th className="p-3">Stage</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
+                    {filteredLeads.map((l) => (
+                      <tr key={l.id} className="hover:bg-neutral-50/70 transition-colors">
+                        <td className="p-3">
+                          <div className="font-bold text-neutral-900">{l.company}</div>
+                          <div className="text-[11px] text-neutral-500">
+                            {l.contactPerson || l.leadName} · {l.mobile}
                           </div>
-                        )}
-                      </td>
-                      <td className="p-3 text-neutral-700 max-w-[160px] truncate" title={l.address || l.location}>
-                        {l.address || l.location || '-'}
-                      </td>
-                      <td className="p-3 font-medium text-neutral-900">{l.productInterested}</td>
-                      <td className="p-3 text-right font-mono tabular-nums">{l.expectedQuantityMT} MT</td>
-                      <td className="p-3 text-right font-mono tabular-nums font-bold text-neutral-900">
-                        ₹{l.estimatedValue.toLocaleString('en-IN')}
-                      </td>
-                      <td className="p-3 text-neutral-600 text-[11px]">
-                        {l.followUpDate ? (
-                          <div className="font-mono">
-                            <div>{l.followUpDate}</div>
-                            {l.followUpTime && (
-                              <div className="text-[10px] text-neutral-400">@ {l.followUpTime}</div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-neutral-400">-</span>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <div className="flex flex-col gap-1 items-start">
-                          <CustomSelect
-                            value={l.status}
-                            onChange={(val) => handleStageChangeRequest(l, val as LeadStage)}
-                            className="w-32"
-                            buttonClassName={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
-                              l.status === 'Won'
-                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                                : l.status === 'Negotiation'
-                                ? 'bg-blue-100 text-blue-800 border-blue-300'
-                                : l.status === 'Lost'
-                                ? 'bg-rose-100 text-rose-800 border-rose-300'
-                                : 'bg-amber-100 text-amber-800 border-amber-300'
-                            }`}
-                            menuClassName="w-36"
-                            options={stages}
-                          />
-                          {l.status === 'Lost' && (
-                            <div className="flex items-center gap-1 mt-0.5">
-                              <span
-                                className="text-[10px] text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200 max-w-[140px] truncate"
-                                title={l.lostReason || 'No reason recorded'}
-                              >
-                                {l.lostReason || 'Reason not recorded'}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => setLeadForLostReason(l)}
-                                className="text-[9px] text-rose-600 hover:text-rose-800 underline cursor-pointer"
-                                title="Edit lost reason"
-                              >
-                                Edit
-                              </button>
+                          {l.email && (
+                            <div className="text-[10px] text-neutral-400 font-mono">
+                              {l.email}
                             </div>
                           )}
-                        </div>
-                      </td>
-                      <td className="p-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setEditingLead(l)}
-                            className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
-                            title="Edit Lead Details"
-                          >
-                            <Edit className="w-3.5 h-3.5 text-neutral-600" />
-                          </button>
-                          {!isLeadAlreadyCustomer(l) && l.status !== 'Won' && (
+                        </td>
+                        <td className="p-3 text-neutral-700 max-w-[160px] truncate" title={l.address || l.location}>
+                          {l.address || l.location || '-'}
+                        </td>
+                        <td className="p-3 font-medium text-neutral-900">{l.productInterested}</td>
+                        <td className="p-3 text-right font-mono tabular-nums">{l.expectedQuantityMT} MT</td>
+                        <td className="p-3 text-right font-mono tabular-nums font-bold text-neutral-900">
+                          ₹{l.estimatedValue.toLocaleString('en-IN')}
+                        </td>
+                        <td className="p-3 text-neutral-600 text-[11px]">
+                          {l.followUpDate ? (
+                            <div className="font-mono">
+                              <div>{l.followUpDate}</div>
+                              {l.followUpTime && (
+                                <div className="text-[10px] text-neutral-400">@ {l.followUpTime}</div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-neutral-400">-</span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex flex-col gap-1 items-start">
+                            <CustomSelect
+                              value={l.status}
+                              onChange={(val) => handleStageChangeRequest(l, val as LeadStage)}
+                              className="w-32"
+                              buttonClassName={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${l.status === 'Won'
+                                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                  : l.status === 'Negotiation'
+                                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                                    : l.status === 'Lost'
+                                      ? 'bg-rose-100 text-rose-800 border-rose-300'
+                                      : 'bg-amber-100 text-amber-800 border-amber-300'
+                                }`}
+                              menuClassName="w-36"
+                              options={stages}
+                            />
+                            {l.status === 'Lost' && (
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <span
+                                  className="text-[10px] text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200 max-w-[140px] truncate"
+                                  title={l.lostReason || 'No reason recorded'}
+                                >
+                                  {l.lostReason || 'Reason not recorded'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setLeadForLostReason(l)}
+                                  className="text-[9px] text-rose-600 hover:text-rose-800 underline cursor-pointer"
+                                  title="Edit lost reason"
+                                >
+                                  Edit
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-3 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
-                              onClick={() => convertLeadToCustomer(l.id)}
-                              className="px-2 py-1 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 rounded text-[11px] font-medium text-emerald-800 cursor-pointer"
-                              title="Convert to Customer Master"
+                              onClick={() => setEditingLead(l)}
+                              className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
+                              title="Edit Lead Details"
                             >
-                              Convert
+                              <Edit className="w-3.5 h-3.5 text-neutral-600" />
                             </button>
-                          )}
-                          {isLeadAlreadyCustomer(l) && (
-                            <span className="px-2 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded text-[10px] font-semibold flex items-center gap-1">
-                              <Check className="w-3 h-3 text-emerald-600" />
-                              <span>Customer</span>
-                            </span>
-                          )}
-                          {l.status !== 'Lost' && (
+                            {!isLeadAlreadyCustomer(l) && l.status !== 'Won' && (
+                              <button
+                                onClick={() => convertLeadToCustomer(l.id)}
+                                className="px-2 py-1 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 rounded text-[11px] font-medium text-emerald-800 cursor-pointer"
+                                title="Convert to Customer Master"
+                              >
+                                Convert
+                              </button>
+                            )}
+                            {isLeadAlreadyCustomer(l) && (
+                              <span className="px-2 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded text-[10px] font-semibold flex items-center gap-1">
+                                <Check className="w-3 h-3 text-emerald-600" />
+                                <span>Customer</span>
+                              </span>
+                            )}
+                            {l.status !== 'Lost' && (
+                              <button
+                                onClick={() => setLeadForLostReason(l)}
+                                className="px-2 py-1 bg-neutral-50 border border-neutral-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 rounded text-[11px] font-medium text-neutral-600 cursor-pointer transition-colors"
+                                title="Move to Lost"
+                              >
+                                Mark Lost
+                              </button>
+                            )}
                             <button
-                              onClick={() => setLeadForLostReason(l)}
-                              className="px-2 py-1 bg-neutral-50 border border-neutral-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 rounded text-[11px] font-medium text-neutral-600 cursor-pointer transition-colors"
-                              title="Move to Lost"
+                              onClick={() => setDeletingLeadId(l.id)}
+                              className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
+                              title="Delete Lead"
                             >
-                              Mark Lost
+                              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                             </button>
-                          )}
-                          <button
-                            onClick={() => setDeletingLeadId(l.id)}
-                            className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
-                            title="Delete Lead"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="p-12 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-neutral-100 text-neutral-400 mx-auto flex items-center justify-center">
-                <Filter className="w-6 h-6" />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="space-y-1">
-                <h3 className="font-semibold text-neutral-900 text-sm">No leads found</h3>
-                <p className="text-neutral-500 text-xs max-w-sm mx-auto">
-                  {selectedProduct !== 'All'
-                    ? `There are no leads interested in "${selectedProductName}".`
-                    : searchTerm
-                    ? `No leads matched your search query "${searchTerm}".`
-                    : 'No leads found matching the selected filter criteria.'}
-                </p>
+            ) : (
+              <div className="p-12 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-neutral-100 text-neutral-400 mx-auto flex items-center justify-center">
+                  <Filter className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-neutral-900 text-sm">No leads found</h3>
+                  <p className="text-neutral-500 text-xs max-w-sm mx-auto">
+                    {selectedProduct !== 'All'
+                      ? `There are no leads interested in "${selectedProductName}".`
+                      : searchTerm
+                        ? `No leads matched your search query "${searchTerm}".`
+                        : 'No leads found matching the selected filter criteria.'}
+                  </p>
+                </div>
+                {(isFilterActive || searchTerm) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedProduct('All');
+                      setStageFilter('All');
+                      setSearchTerm('');
+                    }}
+                    className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-xs font-semibold cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Clear Filter / View All Leads</span>
+                  </button>
+                )}
               </div>
-              {(isFilterActive || searchTerm) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedProduct('All');
-                    setStageFilter('All');
-                    setSearchTerm('');
-                  }}
-                  className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-xs font-semibold cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-2xs"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  <span>Clear Filter / View All Leads</span>
-                </button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
       )}
 
       {/* SALES ANALYTICS VIEW */}
@@ -805,36 +918,138 @@ export const CRMSalesModule: React.FC = () => {
             <div className="border border-neutral-200 rounded-lg overflow-hidden">
               {salesOrders.length > 0 ? (
                 <div className="max-h-80 overflow-y-auto">
-                  <table className="w-full text-xs text-left min-w-[700px]">
+                  <table className="w-full text-xs text-left min-w-[850px]">
                     <thead>
                       <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
-                        <th className="p-2.5 sm:p-3">Order #</th>
+                        <th className="p-2.5 sm:p-3">Order</th>
                         <th className="p-2.5 sm:p-3">Customer</th>
                         <th className="p-2.5 sm:p-3">Date</th>
                         <th className="p-2.5 sm:p-3 text-right">Total (₹)</th>
+                        <th className="p-2.5 sm:p-3 text-right">Dispatched</th>
+                        <th className="p-2.5 sm:p-3 text-right">Remaining</th>
                         <th className="p-2.5 sm:p-3">Status</th>
+                        <th className="p-2.5 sm:p-3 text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
-                      {salesOrders.slice(0, 15).map(so => (
-                        <tr key={so.id} className="hover:bg-neutral-50/50">
-                          <td className="p-2.5 sm:p-3 font-mono font-bold text-neutral-900">{so.orderNumber}</td>
-                          <td className="p-2.5 sm:p-3 text-neutral-800">{so.customerName}</td>
-                          <td className="p-2.5 sm:p-3 text-neutral-500 font-mono text-[11px]">{so.orderDate}</td>
-                          <td className="p-2.5 sm:p-3 text-right font-mono font-semibold">₹{(so.totalAmount || 0).toLocaleString('en-IN')}</td>
-                          <td className="p-2.5 sm:p-3">
-                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase ${
-                              so.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
-                              so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                              so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
-                              so.status === 'Production Required' ? 'bg-amber-100 text-amber-900' :
-                              'bg-neutral-100 text-neutral-700'
-                            }`}>
-                              {so.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                      {salesOrders.slice(0, 15).map(so => {
+                        const targetProd = products.find(p => p.id === so.productId || p.productName?.toLowerCase().trim() === (so.productName || '').toLowerCase().trim());
+                        const physicalStock = targetProd ? Number(targetProd.currentStockMT) : 0;
+                        const totalQty = Number(so.quantityMT) || 0;
+                        const dispatchedQty = Number(so.dispatchedQuantityMT) || 0;
+                        const remainingQty = so.remainingQuantityMT !== undefined ? Number(so.remainingQuantityMT) : Math.max(0, totalQty - dispatchedQty);
+
+                        const ratePerMT = so.ratePerMT || (so.totalAmount / (totalQty || 1));
+                        const dispatchedVal = Math.round(dispatchedQty * ratePerMT * (1 + (so.taxPercent || 5) / 100));
+                        const remainingVal = Math.max(0, so.totalAmount - dispatchedVal);
+
+                        const isStockAvailable = physicalStock > 0;
+                        const isInProduction = so.status === 'In Production';
+                        const isProductionRequired = (so.status === 'Production Required' || (!isStockAvailable && so.status !== 'Ready' && so.status !== 'Confirmed' && so.status !== 'Partially Dispatched' && so.status !== 'Dispatched' && so.status !== 'Completed')) && !isInProduction;
+
+                        const canReadyToDispatch = remainingQty > 0 && isStockAvailable && !isInProduction && !isProductionRequired && so.status !== 'Completed' && so.status !== 'Cancelled';
+
+                        return (
+                          <tr key={so.id} className="hover:bg-neutral-50/50">
+                            <td className="p-2.5 sm:p-3 font-mono font-bold text-neutral-900">{so.orderNumber}</td>
+                            <td className="p-2.5 sm:p-3">
+                              <div className="text-neutral-900 font-medium">{so.customerName}</div>
+                              <div className="text-[11px] text-neutral-500 truncate max-w-[200px]" title={so.productName}>
+                                {so.productName}
+                              </div>
+                            </td>
+                            <td className="p-2.5 sm:p-3 text-neutral-500 font-mono text-[11px]">{so.orderDate}</td>
+                            <td className="p-2.5 sm:p-3 text-right">
+                              <div className="font-mono font-bold text-neutral-900">₹{(so.totalAmount || 0).toLocaleString('en-IN')}</div>
+                              <div className="text-[10px] text-neutral-400 font-mono">{totalQty} MT</div>
+                            </td>
+                            <td className="p-2.5 sm:p-3 text-right">
+                              {dispatchedQty > 0 ? (
+                                <div>
+                                  <div className="font-mono font-bold text-blue-800">{dispatchedQty} MT</div>
+                                  <div className="text-[10px] font-mono text-blue-600">₹{dispatchedVal.toLocaleString('en-IN')}</div>
+                                </div>
+                              ) : (
+                                <span className="text-neutral-400 font-mono text-xs">0 MT</span>
+                              )}
+                            </td>
+                            <td className="p-2.5 sm:p-3 text-right">
+                              {remainingQty > 0 ? (
+                                <div>
+                                  <div className="font-mono font-bold text-neutral-900">{remainingQty} MT</div>
+                                  <div className="text-[10px] font-mono text-amber-700 font-semibold">₹{remainingVal.toLocaleString('en-IN')}</div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <div className="font-mono font-bold text-emerald-700">0 MT</div>
+                                  <div className="text-[10px] font-semibold text-emerald-600">Fulfilled</div>
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-2.5 sm:p-3">
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
+                                so.status === 'Completed' || remainingQty === 0 ? 'bg-emerald-100 text-emerald-800' :
+                                so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
+                                so.status === 'Partially Dispatched' ? 'bg-cyan-100 text-cyan-800 border border-cyan-200' :
+                                so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold' :
+                                so.status === 'In Production' ? 'bg-amber-100 text-amber-900 border border-amber-300 font-semibold' :
+                                so.status === 'Production Required' || physicalStock <= 0 ? 'bg-amber-100 text-amber-900 border border-amber-200' :
+                                'bg-neutral-100 text-neutral-700'
+                              }`}>
+                                {remainingQty === 0 ? 'Fulfilled' : so.status}
+                              </span>
+                            </td>
+                            <td className="p-2.5 sm:p-3 text-center">
+                              {canReadyToDispatch ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenDispatchModal(so)}
+                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold transition-colors inline-flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap"
+                                  title="Allocate quantity to dispatch"
+                                >
+                                  <Truck className="w-3.5 h-3.5" />
+                                  <span>Ready to Dispatch</span>
+                                </button>
+                              ) : isInProduction ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveModule('Production');
+                                    navigate('/production');
+                                  }}
+                                  className="px-2.5 py-1 bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 rounded text-[11px] font-semibold transition-colors inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-2xs"
+                                  title="Order is currently in production. Click to view in Production module."
+                                >
+                                  <Cog className="w-3.5 h-3.5 animate-spin" />
+                                  <span>In Production</span>
+                                </button>
+                              ) : isProductionRequired ? (
+                                <button
+                                  type="button"
+                                  disabled={sendingProductionOrderId === so.id}
+                                  onClick={() => handleSendForProduction(so)}
+                                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded text-[11px] font-semibold transition-colors inline-flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap"
+                                  title="Send this sales order for production"
+                                >
+                                  {sendingProductionOrderId === so.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <Factory className="w-3.5 h-3.5" />
+                                  )}
+                                  <span>Send for Production</span>
+                                </button>
+                              ) : remainingQty === 0 ? (
+                                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-1">
+                                  <Check className="w-3 h-3" />
+                                  <span>Dispatched</span>
+                                </span>
+                              ) : (
+                                <span className="text-neutral-400 text-xs">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -847,6 +1062,230 @@ export const CRMSalesModule: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Ready to Dispatch Modal */}
+      {dispatchingOrder && (() => {
+        const total = Number(dispatchingOrder.quantityMT) || 0;
+        const alreadyDispatched = Number(dispatchingOrder.dispatchedQuantityMT) || 0;
+        const remainingOrder = dispatchingOrder.remainingQuantityMT !== undefined
+          ? Number(dispatchingOrder.remainingQuantityMT)
+          : Math.max(0, total - alreadyDispatched);
+
+        const targetProd = products.find(p => p.id === dispatchingOrder.productId || p.productName?.toLowerCase().trim() === (dispatchingOrder.productName || '').toLowerCase().trim());
+        const physicalStock = targetProd ? Number(targetProd.currentStockMT) : 0;
+        const maxDispatchable = Math.min(remainingOrder, physicalStock);
+
+        const enteredQty = parseFloat(dispatchQuantityInput);
+        const hasInput = dispatchQuantityInput.trim() !== '' && !isNaN(enteredQty);
+        const isExceedingRemaining = hasInput && enteredQty > remainingOrder;
+        const isExceedingStock = hasInput && !isExceedingRemaining && enteredQty > physicalStock;
+        const isInvalidOrZero = hasInput && enteredQty <= 0;
+        const isValidDispatch = hasInput && enteredQty > 0 && !isExceedingRemaining && !isExceedingStock;
+
+        const rate = dispatchingOrder.ratePerMT || (dispatchingOrder.totalAmount / (total || 1));
+        const estValue = isValidDispatch ? Math.round(enteredQty * rate * (1 + (dispatchingOrder.taxPercent || 5) / 100)) : 0;
+        const newRemaining = isValidDispatch ? Math.max(0, Number((remainingOrder - enteredQty).toFixed(2))) : remainingOrder;
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-xl border border-neutral-200 w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
+              {/* Modal Header */}
+              <div className="p-5 border-b border-neutral-200 flex items-center justify-between bg-neutral-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
+                    <Truck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-neutral-900">
+                      Ready to Dispatch: {dispatchingOrder.orderNumber}
+                    </h3>
+                    <p className="text-xs text-neutral-500">
+                      Allocate dispatch quantity (full or partial delivery)
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDispatchingOrder(null)}
+                  className="text-neutral-400 hover:text-neutral-700 p-1 rounded-md transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-5 space-y-4 overflow-y-auto">
+                {/* Non-editable Sales Order Details */}
+                <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3.5 space-y-3">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                    Sales Order Details (Read-only)
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Customer</span>
+                      <span className="font-semibold text-neutral-900 block truncate" title={dispatchingOrder.customerName}>
+                        {dispatchingOrder.customerName}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Product</span>
+                      <span className="font-semibold text-neutral-900 block truncate" title={dispatchingOrder.productName}>
+                        {dispatchingOrder.productName}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Order Date</span>
+                      <span className="font-mono text-neutral-800 block">
+                        {dispatchingOrder.orderDate}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Total Order Qty</span>
+                      <span className="font-mono font-bold text-neutral-900 block">
+                        {total} MT (₹{dispatchingOrder.totalAmount.toLocaleString('en-IN')})
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Already Dispatched</span>
+                      <span className="font-mono font-bold text-blue-700 block">
+                        {alreadyDispatched} MT
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500 block text-[11px]">Remaining Order</span>
+                      <span className="font-mono font-bold text-amber-700 block">
+                        {remainingOrder} MT
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Stock info banner */}
+                  <div className="pt-2 border-t border-neutral-200/80 flex items-center justify-between text-xs">
+                    <span className="text-neutral-600">Available Finished Goods Stock:</span>
+                    <span className={`font-mono font-bold ${physicalStock > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                      {physicalStock.toFixed(1)} MT in Warehouse
+                    </span>
+                  </div>
+                </div>
+
+                {/* Editable Dispatch Quantity Field */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="dispatch-qty-input" className="block text-xs font-bold text-neutral-800">
+                      Quantity to Dispatch Now (MT) <span className="text-rose-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDispatchQuantityInput(String(maxDispatchable));
+                        setDispatchError('');
+                      }}
+                      className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 underline cursor-pointer"
+                    >
+                      Set Max ({maxDispatchable} MT)
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      id="dispatch-qty-input"
+                      type="number"
+                      step="any"
+                      min="0.1"
+                      max={remainingOrder}
+                      placeholder="Enter MT to dispatch (e.g. 20)"
+                      value={dispatchQuantityInput}
+                      onChange={(e) => {
+                        setDispatchQuantityInput(e.target.value);
+                        setDispatchError('');
+                      }}
+                      className={`w-full px-3.5 py-2 text-sm bg-white border rounded-lg outline-none font-mono font-bold transition-all ${isExceedingRemaining || isExceedingStock
+                          ? 'border-rose-500 text-rose-900 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20 bg-rose-50/20'
+                          : 'border-neutral-300 text-neutral-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20'
+                        }`}
+                    />
+                    <span className="absolute right-3.5 top-2.5 text-xs text-neutral-400 font-bold">
+                      MT
+                    </span>
+                  </div>
+
+                  {/* Real-time Validation Errors */}
+                  {isExceedingRemaining && (
+                    <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="block font-semibold">Not acceptable: Quantity exceeds Remaining Order!</strong>
+                        <span>You cannot dispatch more than the Remaining Order quantity ({remainingOrder} MT). You entered {enteredQty} MT.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {isExceedingStock && !isExceedingRemaining && (
+                    <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="block font-semibold">Insufficient warehouse stock!</strong>
+                        <span>Available finished goods stock is {physicalStock.toFixed(1)} MT. You cannot dispatch {enteredQty} MT.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {isInvalidOrZero && (
+                    <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 flex items-center gap-1.5 font-medium">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>Please enter a quantity greater than 0 MT.</span>
+                    </div>
+                  )}
+
+                  {/* Calculation breakdown (only if valid input) */}
+                  {isValidDispatch && (
+                    <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-lg text-xs space-y-1">
+                      <div className="flex justify-between text-emerald-950 font-medium">
+                        <span>This Dispatch Value (inc. 5% GST):</span>
+                        <span className="font-mono font-bold">₹{estValue.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between text-neutral-600">
+                        <span>Remaining Order after Dispatch:</span>
+                        <span className="font-mono font-semibold">{newRemaining} MT</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {dispatchError && !isExceedingRemaining && !isExceedingStock && (
+                    <p className="text-xs text-rose-600 flex items-center gap-1 font-medium mt-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{dispatchError}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-neutral-200 bg-neutral-50/50 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setDispatchingOrder(null)}
+                  className="px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-200/70 rounded-lg border border-neutral-300 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDispatch}
+                  disabled={!isValidDispatch || isSubmittingDispatch}
+                  className={`px-5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 ${!isValidDispatch || isSubmittingDispatch
+                      ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed border border-neutral-300 shadow-none'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs'
+                    }`}
+                >
+                  <Truck className="w-4 h-4" />
+                  <span>Confirm &amp; Dispatch</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Create Lead Modal */}
       <LeadFormModal

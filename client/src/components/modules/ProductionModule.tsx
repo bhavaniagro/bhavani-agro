@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Factory, 
-  Layers, 
-  Play, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Search, 
-  ChevronRight, 
-  Sparkles, 
+import {
+  Factory,
+  Layers,
+  Play,
+  CheckCircle2,
+  AlertTriangle,
+  Search,
+  ChevronRight,
+  Sparkles,
   Boxes,
   Plus,
   Edit,
@@ -26,10 +26,10 @@ import { sortByLatest } from '../../utils/sortUtils';
 
 export const ProductionModule: React.FC = () => {
   const navigate = useNavigate();
-  const { 
-    productionOrders, 
-    productionBatches, 
-    boms, 
+  const {
+    productionOrders,
+    productionBatches,
+    boms,
     rawMaterials,
     products,
     updateProductionOrder,
@@ -83,7 +83,7 @@ export const ProductionModule: React.FC = () => {
   const [bomNotes, setBomNotes] = useState('');
   const [bomItems, setBomItems] = useState<any[]>([]);
 
-  const filteredOrders = sortByLatest(productionOrders.filter(po => 
+  const filteredOrders = sortByLatest(productionOrders.filter(po =>
     po.productionOrderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     po.productionLine.toLowerCase().includes(searchTerm.toLowerCase())
@@ -101,8 +101,8 @@ export const ProductionModule: React.FC = () => {
     if (!selectedOrder) return;
     completeProductionOrder(selectedOrder.id, Number(entryOutputMT), `Run finished with ${entryLossMT} MT process loss.`);
     setShowLogEntryModal(false);
-    setActiveModule('Dispatch & Logistics');
-    navigate('/dispatch');
+    setActiveModule('CRM & Sales');
+    navigate('/sales?tab=analytics');
   };
 
   // Production Order handlers
@@ -290,25 +290,22 @@ export const ProductionModule: React.FC = () => {
             <div className="flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
               <button
                 onClick={() => setActiveTab('orders')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                  activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${activeTab === 'orders' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Production Orders ({productionOrders.length})
               </button>
               <button
                 onClick={() => setActiveTab('boms')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                  activeTab === 'boms' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${activeTab === 'boms' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Bill of Materials (BOM Recipes) ({boms.length})
               </button>
               <button
                 onClick={() => setActiveTab('batches')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                  activeTab === 'batches' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${activeTab === 'batches' ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
               >
                 Produced Batches &amp; Yield ({productionBatches.length})
               </button>
@@ -350,7 +347,7 @@ export const ProductionModule: React.FC = () => {
               <table className="w-full text-xs text-left min-w-[850px]">
                 <thead>
                   <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
-                    <th className="p-3">Order # &amp; Line</th>
+                    <th className="p-3">Order &amp; Line</th>
                     <th className="p-3">Product Name</th>
                     <th className="p-3 text-right">Target Output</th>
                     <th className="p-3">Supervisor</th>
@@ -377,11 +374,10 @@ export const ProductionModule: React.FC = () => {
                       </td>
                       <td className="p-3 text-neutral-700">{po.supervisor}</td>
                       <td className="p-3">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${
-                          po.priority === 'Urgent' ? 'bg-rose-100 text-rose-800 font-bold' :
-                          po.priority === 'High' ? 'bg-amber-100 text-amber-800' :
-                          'bg-neutral-100 text-neutral-700'
-                        }`}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${po.priority === 'Urgent' ? 'bg-rose-100 text-rose-800 font-bold' :
+                            po.priority === 'High' ? 'bg-amber-100 text-amber-800' :
+                              'bg-neutral-100 text-neutral-700'
+                          }`}>
                           {po.priority}
                         </span>
                       </td>
@@ -397,11 +393,10 @@ export const ProductionModule: React.FC = () => {
                         )}
                       </td>
                       <td className="p-3">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
-                          po.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
-                          po.status === 'In Production' ? 'bg-amber-100 text-amber-800 animate-pulse' :
-                          'bg-neutral-100 text-neutral-700'
-                        }`}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${po.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
+                            po.status === 'In Production' ? 'bg-amber-100 text-amber-800 animate-pulse' :
+                              'bg-neutral-100 text-neutral-700'
+                          }`}>
                           {po.status}
                         </span>
                       </td>

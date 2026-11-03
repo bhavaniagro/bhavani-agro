@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Factory, 
-  Truck, 
-  FileText, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Search, 
+import {
+  Plus,
+  Factory,
+  Truck,
+  FileText,
+  AlertTriangle,
+  CheckCircle2,
+  Search,
   ArrowRight,
   Sparkles,
   Download,
@@ -22,16 +22,16 @@ import { ModuleHeader } from '../common/ModuleHeader';
 import { sortByLatest } from '../../utils/sortUtils';
 
 export const SalesOrdersModule: React.FC = () => {
-  const { 
-    salesOrders, 
+  const {
+    salesOrders,
     products,
     customers,
     updateSalesOrder,
     deleteSalesOrder,
-    createProductionOrderFromSO, 
-    createDispatchChallan, 
-    generateInvoiceFromDispatch, 
-    setIsQuickAddOpen, 
+    createProductionOrderFromSO,
+    createDispatchChallan,
+    generateInvoiceFromDispatch,
+    setIsQuickAddOpen,
     setQuickAddType,
     setActiveModule,
     setPrintableDoc
@@ -130,9 +130,8 @@ export const SalesOrdersModule: React.FC = () => {
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                    statusFilter === st ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
-                  }`}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${statusFilter === st ? 'bg-white text-neutral-900 shadow-xs font-semibold' : 'text-neutral-600 hover:text-neutral-900'
+                    }`}
                 >
                   {st}
                 </button>
@@ -143,7 +142,7 @@ export const SalesOrdersModule: React.FC = () => {
               <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
               <input
                 type="text"
-                placeholder="Search order #, customer, product..."
+                placeholder="Search order, customer, product..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="text-xs pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-md w-full outline-none text-neutral-800"
@@ -186,7 +185,7 @@ export const SalesOrdersModule: React.FC = () => {
           <table className="w-full text-xs text-left">
             <thead>
               <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600">
-                <th className="p-3">Order # &amp; Date</th>
+                <th className="p-3">Order &amp; Date</th>
                 <th className="p-3">Customer</th>
                 <th className="p-3">Product Ordered</th>
                 <th className="p-3 text-right">Quantity</th>
@@ -205,148 +204,147 @@ export const SalesOrdersModule: React.FC = () => {
 
                   return (
                     <tr key={so.id} className="hover:bg-neutral-50/70 transition-colors">
-                    <td className="p-3">
-                      <div className="font-mono font-bold text-neutral-900">{so.orderNumber}</div>
-                      <div className="text-[11px] text-neutral-400">{so.orderDate} · Due {so.deliveryDate}</div>
-                    </td>
-                    <td className="p-3">
-                      <div className="font-semibold text-neutral-900">{so.customerName}</div>
-                      <div className="text-[11px] text-neutral-500 truncate max-w-[200px]">{so.shippingAddress}</div>
-                    </td>
-                    <td className="p-3 font-medium text-neutral-900">
-                      <div>{so.productName}</div>
-                      <div className="text-[10px] text-neutral-400 font-mono">Tax: {so.taxPercent}% GST</div>
-                    </td>
-                    <td className="p-3 text-right font-mono tabular-nums font-semibold">
-                      {so.quantityMT} MT
-                    </td>
-                    <td className="p-3 text-right">
-                      <div className="font-mono tabular-nums font-bold text-neutral-900">
-                        ₹{so.totalAmount.toLocaleString('en-IN')}
-                      </div>
-                      <div className="text-[10px] text-neutral-400 font-mono">
-                        ₹{so.ratePerMT.toLocaleString('en-IN')}/MT
-                      </div>
-                    </td>
-                    <td className="p-3 text-center">
-                      {so.stockAvailable ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>In Stock ({freeStock.toFixed(1)} MT)</span>
+                      <td className="p-3">
+                        <div className="font-mono font-bold text-neutral-900">{so.orderNumber}</div>
+                        <div className="text-[11px] text-neutral-400">{so.orderDate} · Due {so.deliveryDate}</div>
+                      </td>
+                      <td className="p-3">
+                        <div className="font-semibold text-neutral-900">{so.customerName}</div>
+                        <div className="text-[11px] text-neutral-500 truncate max-w-[200px]">{so.shippingAddress}</div>
+                      </td>
+                      <td className="p-3 font-medium text-neutral-900">
+                        <div>{so.productName}</div>
+                        <div className="text-[10px] text-neutral-400 font-mono">Tax: {so.taxPercent}% GST</div>
+                      </td>
+                      <td className="p-3 text-right font-mono tabular-nums font-semibold">
+                        {so.quantityMT} MT
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="font-mono tabular-nums font-bold text-neutral-900">
+                          ₹{so.totalAmount.toLocaleString('en-IN')}
+                        </div>
+                        <div className="text-[10px] text-neutral-400 font-mono">
+                          ₹{so.ratePerMT.toLocaleString('en-IN')}/MT
+                        </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        {so.stockAvailable ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>In Stock ({freeStock.toFixed(1)} MT)</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded">
+                            <AlertTriangle className="w-3 h-3" />
+                            <span>Shortage ({so.quantityMT} MT needed)</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3">
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${so.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
+                          so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                            so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
+                              so.status === 'Production Required' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
+                                so.status === 'Rejected' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
+                                  'bg-neutral-100 text-neutral-800'
+                          }`}>
+                          {so.status}
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded">
-                          <AlertTriangle className="w-3 h-3" />
-                          <span>Shortage ({so.quantityMT} MT needed)</span>
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
-                        so.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
-                        so.status === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                        so.status === 'Dispatched' ? 'bg-blue-100 text-blue-800' :
-                        so.status === 'Production Required' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
-                        so.status === 'Rejected' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
-                        'bg-neutral-100 text-neutral-800'
-                      }`}>
-                        {so.status}
-                      </span>
-                    </td>
-                    <td className="p-3 text-right">
-                      {so.status === 'Production Required' && (
-                        <button
-                          onClick={() => {
-                            createProductionOrderFromSO(so.id);
-                            setActiveModule('Production');
-                          }}
-                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-[11px] font-semibold flex items-center gap-1 ml-auto cursor-pointer shadow-2xs"
-                          title="Generate Production Order with BOM calculation"
-                        >
-                          <Factory className="w-3 h-3" />
-                          <span>Create Prod Order</span>
-                        </button>
-                      )}
+                      </td>
+                      <td className="p-3 text-right">
+                        {so.status === 'Production Required' && (
+                          <button
+                            onClick={() => {
+                              createProductionOrderFromSO(so.id);
+                              setActiveModule('Production');
+                            }}
+                            className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-[11px] font-semibold flex items-center gap-1 ml-auto cursor-pointer shadow-2xs"
+                            title="Generate Production Order with BOM calculation"
+                          >
+                            <Factory className="w-3 h-3" />
+                            <span>Create Prod Order</span>
+                          </button>
+                        )}
 
-                      {so.status === 'Ready' && (
-                        <button
-                          onClick={() => {
-                            createDispatchChallan({
-                              salesOrderId: so.id,
-                              orderNumber: so.orderNumber,
-                              customerId: so.customerId,
-                              customerName: so.customerName,
-                              productName: so.productName,
-                              batchNumber: 'BNT-2609-088',
-                              quantityMT: so.quantityMT,
-                              bagsCount: so.quantityMT * 20,
-                              vehicleNumber: 'GJ-04-E-8419',
-                              driverName: 'Ramsinh Gohil',
-                              driverMobile: '+91 98259 88120',
-                              transporterName: 'Saurashtra Highway Logistics',
-                              dispatchDate: new Date().toISOString().split('T')[0],
-                              destination: so.shippingAddress,
-                              eWayBillNumber: '241088910482',
-                              lrNumber: 'SHL-2609-8812',
-                              freightAmountRs: 12500,
-                              freightPaidBy: 'Customer',
-                              remarks: 'Dispatched under delivery challan.'
-                            });
-                            setActiveModule('Dispatch & Logistics');
-                          }}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold flex items-center gap-1 ml-auto cursor-pointer shadow-2xs"
-                        >
-                          <Truck className="w-3 h-3" />
-                          <span>Dispatch Order</span>
-                        </button>
-                      )}
+                        {so.status === 'Ready' && (
+                          <button
+                            onClick={() => {
+                              createDispatchChallan({
+                                salesOrderId: so.id,
+                                orderNumber: so.orderNumber,
+                                customerId: so.customerId,
+                                customerName: so.customerName,
+                                productName: so.productName,
+                                batchNumber: 'BNT-2609-088',
+                                quantityMT: so.quantityMT,
+                                bagsCount: so.quantityMT * 20,
+                                vehicleNumber: 'GJ-04-E-8419',
+                                driverName: 'Ramsinh Gohil',
+                                driverMobile: '+91 98259 88120',
+                                transporterName: 'Saurashtra Highway Logistics',
+                                dispatchDate: new Date().toISOString().split('T')[0],
+                                destination: so.shippingAddress,
+                                eWayBillNumber: '241088910482',
+                                lrNumber: 'SHL-2609-8812',
+                                freightAmountRs: 12500,
+                                freightPaidBy: 'Customer',
+                                remarks: 'Dispatched under delivery challan.'
+                              });
+                              setActiveModule('Dispatch & Logistics');
+                            }}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-semibold flex items-center gap-1 ml-auto cursor-pointer shadow-2xs"
+                          >
+                            <Truck className="w-3 h-3" />
+                            <span>Dispatch Order</span>
+                          </button>
+                        )}
 
-                      {so.status === 'Dispatched' && (
-                        <button
-                          onClick={() => {
-                            setActiveModule('Finance & Accounts');
-                          }}
-                          className="px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-[11px] font-semibold flex items-center gap-1 ml-auto cursor-pointer"
-                        >
-                          <FileText className="w-3 h-3" />
-                          <span>View Invoice</span>
-                        </button>
-                      )}
+                        {so.status === 'Dispatched' && (
+                          <button
+                            onClick={() => {
+                              setActiveModule('Finance & Accounts');
+                            }}
+                            className="px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-[11px] font-semibold flex items-center gap-1 ml-auto cursor-pointer"
+                          >
+                            <FileText className="w-3 h-3" />
+                            <span>View Invoice</span>
+                          </button>
+                        )}
 
-                      {so.status === 'Completed' && (
-                        <span className="text-[11px] text-emerald-700 font-semibold font-mono">
-                          Completed ✓
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          onClick={() => openEditModal(so)}
-                          className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
-                          title="Edit Order"
-                        >
-                          <Edit className="w-3.5 h-3.5 text-neutral-600" />
-                        </button>
-                        <button
-                          onClick={() => setDeletingOrder(so)}
-                          className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
-                          title="Delete Order"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={9} className="p-8 text-center text-neutral-400 text-xs italic">
-                  No sales orders found in database.
-                </td>
-              </tr>
-            )}
+                        {so.status === 'Completed' && (
+                          <span className="text-[11px] text-emerald-700 font-semibold font-mono">
+                            Completed ✓
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => openEditModal(so)}
+                            className="p-1 bg-white border border-neutral-300 hover:bg-neutral-100 rounded text-neutral-700 cursor-pointer shadow-2xs"
+                            title="Edit Order"
+                          >
+                            <Edit className="w-3.5 h-3.5 text-neutral-600" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingOrder(so)}
+                            className="p-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded text-rose-700 cursor-pointer shadow-2xs"
+                            title="Delete Order"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={9} className="p-8 text-center text-neutral-400 text-xs italic">
+                    No sales orders found in database.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

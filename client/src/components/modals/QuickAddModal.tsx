@@ -204,13 +204,8 @@ export const QuickAddModal: React.FC = () => {
         resetFormState();
         setIsQuickAddOpen(false);
 
-        if (savedOrder.stockAvailable) {
-          setActiveModule('Dispatch & Logistics');
-          navigate('/dispatch');
-        } else {
-          setActiveModule('Production');
-          navigate('/production');
-        }
+        setActiveModule('CRM & Sales');
+        navigate('/sales?tab=analytics');
         return;
       } else if (currentType === 'Purchase Order') {
         const supp = suppliers.find(s => s.id === poSupplier);
