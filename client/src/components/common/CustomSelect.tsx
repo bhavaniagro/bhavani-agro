@@ -122,6 +122,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         setIsOpen(false);
         setSearchTerm('');
       }
@@ -138,13 +140,13 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keydown', handleKeyDown, true);
       window.addEventListener('scroll', handleScrollOrResize, true);
       window.addEventListener('resize', handleScrollOrResize);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown, true);
       window.removeEventListener('scroll', handleScrollOrResize, true);
       window.removeEventListener('resize', handleScrollOrResize);
     };
@@ -168,7 +170,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           type="button"
           id={id}
           disabled={disabled}
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             if (!disabled) {
               if (!isOpen) {
                 updateDropdownPosition();
@@ -205,6 +208,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         createPortal(
           <div
             ref={menuRef}
+            data-custom-select-menu="true"
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             className={`fixed bg-white border border-neutral-200 rounded-xl shadow-2xl z-[99999] p-1.5 text-xs animate-in fade-in duration-150 ${menuClassName}`}
             style={{
               top: openUpward ? 'auto' : `${menuCoords.top}px`,
@@ -229,6 +238,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()}
                     placeholder="Search..."
                     className="w-full bg-transparent outline-none text-xs text-neutral-800 placeholder-neutral-400"
                   />
@@ -251,7 +261,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         onChange(opt.value);
                         setIsOpen(false);
                         setSearchTerm('');

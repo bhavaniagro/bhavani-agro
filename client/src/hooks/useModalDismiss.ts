@@ -22,10 +22,20 @@ export function useModalDismiss(isOpen: boolean, onClose: () => void) {
   }, [isOpen, onClose]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest('[data-custom-select-menu]')) {
+      mouseDownInsideRef.current = true;
+      return;
+    }
     mouseDownInsideRef.current = !!(contentRef.current && contentRef.current.contains(e.target as Node));
   };
 
   const handleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest('[data-custom-select-menu]')) {
+      mouseDownInsideRef.current = false;
+      return;
+    }
     if (mouseDownInsideRef.current) {
       mouseDownInsideRef.current = false;
       return;
