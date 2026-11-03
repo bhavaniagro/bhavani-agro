@@ -196,6 +196,7 @@ export interface Quotation {
 export type SalesOrderStatus = 
   | 'Pending'
   | 'Confirmed'
+  | 'Partially Dispatched'
   | 'Production Required'
   | 'Ready'
   | 'Dispatched'
@@ -227,6 +228,8 @@ export interface SalesOrder {
   dispatchId?: string;
   invoiceId?: string;
   notes: string;
+  dispatchedQuantityMT?: number;
+  remainingQuantityMT?: number;
 }
 
 export type PurchaseOrderStatus = 
