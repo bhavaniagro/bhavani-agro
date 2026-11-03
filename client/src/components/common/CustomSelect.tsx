@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check, Search } from 'lucide-react';
 
 export interface SelectOption {
@@ -39,8 +40,23 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [openUpward, setOpenUpward] = useState(false);
-  const [menuMaxHeight, setMenuMaxHeight] = useState<number>(224);
+  const [menuMaxHeight, setMenuMaxHeight] = useState<number>(260);
+  const [menuCoords, setMenuCoords] = useState<{
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    width: number;
+  }>({
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: 0
+  });
+
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const normalizedOptions: SelectOption[] = options.map((opt) => {
@@ -59,35 +75,27 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
     if (!dropdownRef.current) return;
     const rect = dropdownRef.current.getBoundingClientRect();
 
-    let clipBottom = window.innerHeight;
-    let clipTop = 0;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
 
-    let parent = dropdownRef.current.parentElement;
-    while (parent && parent !== document.body) {
-      const style = window.getComputedStyle(parent);
-      const overflowY = style.overflowY;
-      if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') {
-        const parentRect = parent.getBoundingClientRect();
-        if (parentRect.height < window.innerHeight) {
-          clipBottom = Math.min(clipBottom, parentRect.bottom);
-          clipTop = Math.max(clipTop, parentRect.top);
-          break;
-        }
-      }
-      parent = parent.parentElement;
-    }
+    const chromeHeight = showSearch ? 55 : 16;
+    const estimatedHeight = Math.min(280, normalizedOptions.length * 36 + chromeHeight);
 
-    const spaceBelow = Math.max(0, clipBottom - rect.bottom);
-    const spaceAbove = Math.max(0, rect.top - clipTop);
-
-    // If space below is less than 240px and there is more space above, open upward
-    const shouldOpenUpward = spaceBelow < 240 && spaceAbove > spaceBelow;
+    // Open upward only if space below is too small (< 200px or estimatedHeight) AND space above has more room
+    const shouldOpenUpward = spaceBelow < Math.min(200, estimatedHeight) && spaceAbove > spaceBelow;
     setOpenUpward(shouldOpenUpward);
 
-    const availableSpace = shouldOpenUpward ? spaceAbove : spaceBelow;
-    const chromeHeight = showSearch ? 55 : 20;
-    const maxOptionsHeight = Math.max(90, Math.min(224, availableSpace - chromeHeight - 12));
+    const availableSpace = shouldOpenUpward ? spaceAbove - 16 : spaceBelow - 16;
+    const maxOptionsHeight = Math.max(140, Math.min(280, availableSpace - chromeHeight));
     setMenuMaxHeight(maxOptionsHeight);
+
+    setMenuCoords({
+      top: rect.bottom + 6,
+      bottom: window.innerHeight - rect.top + 6,
+      left: rect.left,
+      right: window.innerWidth - rect.right,
+      width: rect.width
+    });
   };
 
   useEffect(() => {
@@ -101,11 +109,17 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        (!menuRef.current || !menuRef.current.contains(target))
+      ) {
         setIsOpen(false);
         setSearchTerm('');
       }
     };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
         setIsOpen(false);
@@ -113,13 +127,26 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       }
     };
 
+    const handleScrollOrResize = (e: Event) => {
+      if (menuRef.current && menuRef.current.contains(e.target as Node)) {
+        // Do not close when scrolling inside the dropdown itself
+        return;
+      }
+      setIsOpen(false);
+      setSearchTerm('');
+    };
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('scroll', handleScrollOrResize, true);
+      window.addEventListener('resize', handleScrollOrResize);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
     };
   }, [isOpen]);
 
@@ -135,106 +162,126 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const hasCustomBorder = buttonClassName.includes('border-');
 
   return (
-    <div ref={dropdownRef} className={`relative ${isOpen ? 'z-30' : 'z-10'} ${className}`}>
-      <button
-        type="button"
-        id={id}
-        disabled={disabled}
-        onClick={() => {
-          if (!disabled) {
-            if (!isOpen) updateDropdownPosition();
-            setIsOpen(!isOpen);
-          }
-        }}
-        className={`w-full flex items-center justify-between gap-2 p-2 rounded text-xs transition-all text-left cursor-pointer outline-none border ${
-          disabled
-            ? 'bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed'
-            : error
-            ? 'border-rose-400 bg-rose-50/30 text-neutral-900 focus:border-rose-600 ring-2 ring-rose-500/10'
-            : isOpen
-            ? `${hasCustomBg ? '' : 'bg-white'} border-neutral-900 ring-2 ring-neutral-900/10 shadow-2xs`
-            : `${hasCustomBg ? '' : 'bg-neutral-50'} ${hasCustomBorder ? '' : 'border-neutral-200 hover:border-neutral-400'} text-neutral-800 focus:border-neutral-900`
-        } ${buttonClassName}`}
-        title={displayLabel}
-      >
-        <span className={`truncate font-medium ${!selectedOption && placeholder ? 'text-neutral-400' : 'text-neutral-800'}`}>
-          {displayLabel}
-        </span>
-        <ChevronDown
-          className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 shrink-0 ${
-            isOpen ? 'rotate-180 text-neutral-800' : ''
-          }`}
-        />
-      </button>
-
-      {isOpen && (
-        <div
-          className={`absolute ${
-            openUpward ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
-          } left-0 right-0 bg-white border border-neutral-200 rounded-xl shadow-2xl z-50 p-1.5 text-xs animate-in fade-in duration-150 ${menuClassName}`}
-          style={{ minWidth: '100%' }}
+    <>
+      <div ref={dropdownRef} className={`relative ${className}`}>
+        <button
+          type="button"
+          id={id}
+          disabled={disabled}
+          onClick={() => {
+            if (!disabled) {
+              if (!isOpen) {
+                updateDropdownPosition();
+                setIsOpen(true);
+              } else {
+                setIsOpen(false);
+                setSearchTerm('');
+              }
+            }
+          }}
+          className={`w-full flex items-center justify-between gap-2 p-2 rounded text-xs transition-all text-left cursor-pointer outline-none border ${
+            disabled
+              ? 'bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed'
+              : error
+              ? 'border-rose-400 bg-rose-50/30 text-neutral-900 focus:border-rose-600 ring-2 ring-rose-500/10'
+              : isOpen
+              ? `${hasCustomBg ? '' : 'bg-white'} border-neutral-900 ring-2 ring-neutral-900/10 shadow-2xs`
+              : `${hasCustomBg ? '' : 'bg-neutral-50'} ${hasCustomBorder ? '' : 'border-neutral-200 hover:border-neutral-400'} text-neutral-800 focus:border-neutral-900`
+          } ${buttonClassName}`}
+          title={displayLabel}
         >
-          {showSearch && (
-            <div className="p-1 mb-1 border-b border-neutral-100">
-              <div className="flex items-center gap-1.5 px-2 py-1.5 bg-neutral-50 rounded-lg border border-neutral-200">
-                <Search className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search..."
-                  className="w-full bg-transparent outline-none text-xs text-neutral-800 placeholder-neutral-400"
-                />
-              </div>
-            </div>
-          )}
+          <span className={`truncate font-medium ${!selectedOption && placeholder ? 'text-neutral-400' : 'text-neutral-800'}`}>
+            {displayLabel}
+          </span>
+          <ChevronDown
+            className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 shrink-0 ${
+              isOpen ? 'rotate-180 text-neutral-800' : ''
+            }`}
+          />
+        </button>
+      </div>
 
+      {isOpen && typeof document !== 'undefined' &&
+        createPortal(
           <div
-            className="overflow-y-auto space-y-0.5 overscroll-contain"
-            style={{ maxHeight: `${menuMaxHeight}px` }}
+            ref={menuRef}
+            className={`fixed bg-white border border-neutral-200 rounded-xl shadow-2xl z-[99999] p-1.5 text-xs animate-in fade-in duration-150 ${menuClassName}`}
+            style={{
+              top: openUpward ? 'auto' : `${menuCoords.top}px`,
+              bottom: openUpward ? `${menuCoords.bottom}px` : 'auto',
+              left:
+                menuCoords.left + Math.max(menuCoords.width, 144) > window.innerWidth - 10
+                  ? 'auto'
+                  : `${menuCoords.left}px`,
+              right:
+                menuCoords.left + Math.max(menuCoords.width, 144) > window.innerWidth - 10
+                  ? `${menuCoords.right}px`
+                  : 'auto',
+              minWidth: `${menuCoords.width}px`,
+            }}
           >
-            {filteredOptions.length === 0 ? (
-              <div className="py-3 px-2 text-center text-neutral-400 text-xs">
-                No matches found
+            {showSearch && (
+              <div className="p-1 mb-1 border-b border-neutral-100">
+                <div className="flex items-center gap-1.5 px-2 py-1.5 bg-neutral-50 rounded-lg border border-neutral-200">
+                  <Search className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search..."
+                    className="w-full bg-transparent outline-none text-xs text-neutral-800 placeholder-neutral-400"
+                  />
+                </div>
               </div>
-            ) : (
-              filteredOptions.map((opt) => {
-                const isSelected = opt.value === value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      onChange(opt.value);
-                      setIsOpen(false);
-                      setSearchTerm('');
-                    }}
-                    className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${
-                      isSelected
-                        ? 'font-semibold text-emerald-800 bg-emerald-50/90 shadow-2xs'
-                        : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0 pr-2">
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSelected ? 'bg-emerald-600' : 'bg-transparent'}`} />
-                      <span className="break-words text-left leading-snug">{opt.label}</span>
-                      {opt.badge && (
-                        <span className="text-[10px] bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded font-mono shrink-0">
-                          {opt.badge}
-                        </span>
-                      )}
-                    </div>
-                    {isSelected && (
-                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    )}
-                  </button>
-                );
-              })
             )}
-          </div>
-        </div>
-      )}
-    </div>
+
+            <div
+              className="overflow-y-auto space-y-0.5 overscroll-contain"
+              style={{ maxHeight: `${menuMaxHeight}px` }}
+            >
+              {filteredOptions.length === 0 ? (
+                <div className="py-3 px-2 text-center text-neutral-400 text-xs">
+                  No matches found
+                </div>
+              ) : (
+                filteredOptions.map((opt) => {
+                  const isSelected = opt.value === value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        onChange(opt.value);
+                        setIsOpen(false);
+                        setSearchTerm('');
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'font-semibold text-emerald-800 bg-emerald-50/90 shadow-2xs'
+                          : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 pr-2">
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSelected ? 'bg-emerald-600' : 'bg-transparent'}`} />
+                        <span className="break-words text-left leading-snug">{opt.label}</span>
+                        {opt.badge && (
+                          <span className="text-[10px] bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded font-mono shrink-0">
+                            {opt.badge}
+                          </span>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   );
 };
