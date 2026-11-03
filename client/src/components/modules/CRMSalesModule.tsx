@@ -557,7 +557,22 @@ export const CRMSalesModule: React.FC = () => {
 
       {/* LEADS TABLE VIEW */}
       {activeTab === 'leads' && (
-        <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
+              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Active Pipeline Value</div>
+              <div className="text-xl font-bold font-mono text-emerald-800 mt-1">₹{totalPipelineValue.toLocaleString('en-IN')}</div>
+              <div className="text-[10px] text-neutral-400 mt-1">{leads.filter(l => l.status !== 'Lost').length} Active Leads in Pipeline</div>
+            </div>
+
+            <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
+              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Lead Win Conversion Rate</div>
+              <div className="text-xl font-bold font-mono text-emerald-700 mt-1">{leadConversionRate}%</div>
+              <div className="text-[10px] text-neutral-400 mt-1">{wonLeadsCount} Won / {leads.length} Total Leads</div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
           {filteredLeads.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left min-w-[800px]">
@@ -724,18 +739,13 @@ export const CRMSalesModule: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
       )}
 
       {/* SALES ANALYTICS VIEW */}
       {activeTab === 'analytics' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
-              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Active Pipeline Value</div>
-              <div className="text-xl font-bold font-mono text-emerald-800 mt-1">₹{totalPipelineValue.toLocaleString('en-IN')}</div>
-              <div className="text-[10px] text-neutral-400 mt-1">{leads.filter(l => l.status !== 'Lost').length} Active Leads in Pipeline</div>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
               <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Booked Sales Orders</div>
               <div className="text-xl font-bold font-mono text-neutral-900 mt-1">₹{totalSalesOrdersVal.toLocaleString('en-IN')}</div>
@@ -746,12 +756,6 @@ export const CRMSalesModule: React.FC = () => {
               <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Invoiced Sales Revenue</div>
               <div className="text-xl font-bold font-mono text-blue-800 mt-1">₹{totalInvoicedVal.toLocaleString('en-IN')}</div>
               <div className="text-[10px] text-neutral-400 mt-1">{invoices.length} Sales Invoices Generated</div>
-            </div>
-
-            <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-2xs">
-              <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Lead Win Conversion Rate</div>
-              <div className="text-xl font-bold font-mono text-emerald-700 mt-1">{leadConversionRate}%</div>
-              <div className="text-[10px] text-neutral-400 mt-1">{wonLeadsCount} Won / {leads.length} Total Leads</div>
             </div>
           </div>
 
