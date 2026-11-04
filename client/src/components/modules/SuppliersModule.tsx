@@ -292,6 +292,13 @@ export const SuppliersModule: React.FC = () => {
                           </td>
                         </tr>
                       ))}
+                      {suppPOs.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="p-6 text-center text-neutral-500">
+                            <p className="text-xs">No purchase orders found for this supplier.</p>
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

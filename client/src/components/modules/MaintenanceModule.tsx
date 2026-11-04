@@ -289,76 +289,85 @@ export const MaintenanceModule: React.FC = () => {
               </div>
             );
           })}
+          {filteredMachinery.length === 0 && (
+            <div className="col-span-full p-8 text-center text-neutral-500 bg-white border border-neutral-200 rounded-xl shadow-2xs">
+              <p className="mb-2 text-xs">No Machinery registered.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  resetMachineForm();
+                  setShowAddModal(true);
+                }}
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add First Machine</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* HISTORY TAB */}
       {activeTab === 'history' && (
-        <div className="space-y-3">
-          {sortedHistory.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
-                <History className="w-5 h-5 text-neutral-400" />
+        <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
+          {/* Table Header */}
+          <div className="grid grid-cols-[1fr_1.2fr_1fr_1fr_1.4fr] gap-3 px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">
+            <div>Machine</div>
+            <div>Machine Name</div>
+            <div>From Status</div>
+            <div>To Status</div>
+            <div>Changed At</div>
+          </div>
+
+          {/* Timeline rows */}
+          <div className="divide-y divide-neutral-100">
+            {filteredHistory.map((h, idx) => {
+              const fromCfg = getStatusConfig(h.previousStatus);
+              const toCfg = getStatusConfig(h.newStatus);
+              return (
+                <div
+                  key={h.id}
+                  className="grid grid-cols-[1fr_1.2fr_1fr_1fr_1.4fr] gap-3 px-4 py-3 text-xs items-center hover:bg-neutral-50 transition-colors"
+                >
+                  {/* Machine Code */}
+                  <div className="font-mono font-bold text-emerald-800">{h.machineCode}</div>
+
+                  {/* Machine Name */}
+                  <div className="font-medium text-neutral-800 truncate">{h.machineName}</div>
+
+                  {/* From Status */}
+                  <div>
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${fromCfg.bg} ${fromCfg.text}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${fromCfg.dot}`} />
+                      {h.previousStatus}
+                    </span>
+                  </div>
+
+                  {/* To Status */}
+                  <div>
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${toCfg.bg} ${toCfg.text}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${toCfg.dot}`} />
+                      {h.newStatus}
+                    </span>
+                  </div>
+
+                  {/* Changed At */}
+                  <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+                    <Calendar className="w-3 h-3 shrink-0" />
+                    {formatDateTime(h.changedAt)}
+                  </div>
+                </div>
+              );
+            })}
+            {filteredHistory.length === 0 && (
+              <div className="p-8 text-center text-neutral-500">
+                <p className="text-xs">
+                  {searchTerm ? 'No maintenance history matches your search query.' : 'No status history recorded yet.'}
+                </p>
               </div>
-              <p className="text-sm font-semibold text-neutral-600">No status history yet</p>
-              <p className="text-xs text-neutral-400 mt-1">
-                When a machine's status is changed, it will be recorded here.
-              </p>
-            </div>
-          ) : (
-            <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xs">
-              {/* Table Header */}
-              <div className="grid grid-cols-[1fr_1.2fr_1fr_1fr_1.4fr] gap-3 px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">
-                <div>Machine</div>
-                <div>Machine Name</div>
-                <div>From Status</div>
-                <div>To Status</div>
-                <div>Changed At</div>
-              </div>
-
-              {/* Timeline rows */}
-              <div className="divide-y divide-neutral-100">
-                {filteredHistory.map((h, idx) => {
-                  const fromCfg = getStatusConfig(h.previousStatus);
-                  const toCfg = getStatusConfig(h.newStatus);
-                  return (
-                    <div
-                      key={h.id}
-                      className="grid grid-cols-[1fr_1.2fr_1fr_1fr_1.4fr] gap-3 px-4 py-3 text-xs items-center hover:bg-neutral-50 transition-colors"
-                    >
-                      {/* Machine Code */}
-                      <div className="font-mono font-bold text-emerald-800">{h.machineCode}</div>
-
-                      {/* Machine Name */}
-                      <div className="font-medium text-neutral-800 truncate">{h.machineName}</div>
-
-                      {/* From Status */}
-                      <div>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${fromCfg.bg} ${fromCfg.text}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${fromCfg.dot}`} />
-                          {h.previousStatus}
-                        </span>
-                      </div>
-
-                      {/* To Status */}
-                      <div>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded uppercase ${toCfg.bg} ${toCfg.text}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${toCfg.dot}`} />
-                          {h.newStatus}
-                        </span>
-                      </div>
-
-                      {/* Changed At */}
-                      <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
-                        <Calendar className="w-3 h-3 shrink-0" />
-                        {formatDateTime(h.changedAt)}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 

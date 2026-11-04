@@ -204,6 +204,13 @@ export const InventoryModule: React.FC = () => {
                     <td className="p-3 text-neutral-600">{r.storageLocation}</td>
                   </tr>
                 ))}
+                {products.length === 0 && rawMineralItems.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-neutral-500">
+                      <p className="text-xs">No inventory items found.</p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -252,6 +259,13 @@ export const InventoryModule: React.FC = () => {
                   </td>
                 </tr>
               ))}
+              {rawMineralItems.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-neutral-500">
+                    <p className="text-xs">No raw mineral inventory found.</p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -286,6 +300,13 @@ export const InventoryModule: React.FC = () => {
                   </td>
                 </tr>
               ))}
+              {products.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-neutral-500">
+                    <p className="text-xs">No finished goods inventory found.</p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -320,6 +341,13 @@ export const InventoryModule: React.FC = () => {
                   <td className="p-3 font-mono text-neutral-600">Min {p.minimumStock} {p.unit}</td>
                 </tr>
               ))}
+              {packagingItems.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-neutral-500">
+                    <p className="text-xs">No packaging material inventory found.</p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

@@ -340,8 +340,19 @@ export const SalesOrdersModule: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-neutral-400 text-xs italic">
-                    No sales orders found in database.
+                  <td colSpan={9} className="p-8 text-center text-neutral-500">
+                    <p className="mb-2 text-xs">No Sales Orders found.</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuickAddType('Sales Order');
+                        setIsQuickAddOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add First Sales Order</span>
+                    </button>
                   </td>
                 </tr>
               )}

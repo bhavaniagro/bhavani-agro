@@ -440,6 +440,24 @@ export const PurchaseModule: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+                {filteredPOs.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-neutral-500">
+                      <p className="mb-2 text-xs">No Purchase Orders found.</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuickAddType('Purchase Order');
+                          setIsQuickAddOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add First Purchase Order</span>
+                      </button>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

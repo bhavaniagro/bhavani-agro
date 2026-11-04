@@ -32,7 +32,8 @@ export const FinanceAccountsModule: React.FC = () => {
     deleteSalesInvoice,
     updatePayment,
     deletePayment,
-    setPrintableDoc 
+    setPrintableDoc,
+    setActiveModule 
   } = useERP();
 
   const [activeTab, setActiveTab] = useState<'receivables' | 'payables' | 'payments'>('receivables');
@@ -332,6 +333,21 @@ export const FinanceAccountsModule: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+                {filteredInvoices.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-neutral-500">
+                      <p className="mb-2 text-xs">No Sales Invoices found.</p>
+                      <button
+                        type="button"
+                        onClick={() => setActiveModule('Dispatch & Logistics')}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Create Invoice from Dispatch</span>
+                      </button>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -374,6 +390,13 @@ export const FinanceAccountsModule: React.FC = () => {
                   </td>
                 </tr>
               ))}
+              {suppliers.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-neutral-500">
+                    <p className="text-xs">No Supplier Payables found.</p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -429,8 +452,8 @@ export const FinanceAccountsModule: React.FC = () => {
               ))}
               {payments.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-neutral-400 italic">
-                    No payment vouchers recorded yet. Click "Record Payment" on any pending invoice.
+                  <td colSpan={7} className="p-8 text-center text-neutral-500">
+                    <p className="text-xs">No payment vouchers recorded yet.</p>
                   </td>
                 </tr>
               )}

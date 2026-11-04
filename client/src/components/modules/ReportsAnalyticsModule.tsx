@@ -223,6 +223,13 @@ export const ReportsAnalyticsModule: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+                {invoices.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-neutral-500">
+                      <p className="text-xs">No sales invoice records found.</p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           )}
@@ -254,6 +261,13 @@ export const ReportsAnalyticsModule: React.FC = () => {
                     <td className="p-3 text-neutral-600">{b.storageLocation}</td>
                   </tr>
                 ))}
+                {productionBatches.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-neutral-500">
+                      <p className="text-xs">No production batch records found.</p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           )}
@@ -285,6 +299,13 @@ export const ReportsAnalyticsModule: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+                {products.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-neutral-500">
+                      <p className="text-xs">No inventory records found.</p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           )}
@@ -314,6 +335,13 @@ export const ReportsAnalyticsModule: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+                {expenses.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-neutral-500">
+                      <p className="text-xs">No expense records found.</p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           )}
@@ -347,6 +375,13 @@ export const ReportsAnalyticsModule: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+                {dispatches.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-neutral-500">
+                      <p className="text-xs">No dispatch records found.</p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           )}
