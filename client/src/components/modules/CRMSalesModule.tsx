@@ -681,8 +681,7 @@ export const CRMSalesModule: React.FC = () => {
           </div>
 
           <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
-            {filteredLeads.length > 0 ? (
-              <div className="overflow-x-auto">
+            <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left min-w-[800px]">
                   <thead>
                     <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
@@ -811,42 +810,46 @@ export const CRMSalesModule: React.FC = () => {
                         </td>
                       </tr>
                     ))}
+                    {filteredLeads.length === 0 && (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-neutral-500">
+                          <p className="mb-2 text-xs">
+                            {selectedProduct !== 'All' || searchTerm || isFilterActive
+                              ? 'No leads matching the selected filter criteria.'
+                              : 'No leads found.'}
+                          </p>
+                          <div className="flex items-center justify-center gap-2">
+                            {(isFilterActive || searchTerm) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedProduct('All');
+                                  setStageFilter('All');
+                                  setSearchTerm('');
+                                }}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-900 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                                <span>Clear Filters</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setIsCreateLeadOpen(true)}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Add First Lead</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
-            ) : (
-              <div className="p-12 text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-neutral-100 text-neutral-400 mx-auto flex items-center justify-center">
-                  <Filter className="w-6 h-6" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-neutral-900 text-sm">No leads found</h3>
-                  <p className="text-neutral-500 text-xs max-w-sm mx-auto">
-                    {selectedProduct !== 'All'
-                      ? `There are no leads interested in "${selectedProductName}".`
-                      : searchTerm
-                        ? `No leads matched your search query "${searchTerm}".`
-                        : 'No leads found matching the selected filter criteria.'}
-                  </p>
-                </div>
-                {(isFilterActive || searchTerm) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedProduct('All');
-                      setStageFilter('All');
-                      setSearchTerm('');
-                    }}
-                    className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-xs font-semibold cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-2xs"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    <span>Clear Filter / View All Leads</span>
-                  </button>
-                )}
-              </div>
-            )}
+            </div>
           </div>
-        </div>
       )}
 
       {/* SALES ANALYTICS VIEW */}
@@ -916,9 +919,8 @@ export const CRMSalesModule: React.FC = () => {
 
             {/* Sales orders list table */}
             <div className="border border-neutral-200 rounded-lg overflow-hidden">
-              {salesOrders.length > 0 ? (
-                <div className="max-h-80 overflow-y-auto">
-                  <table className="w-full text-xs text-left min-w-[850px]">
+              <div className="max-h-80 overflow-y-auto">
+                <table className="w-full text-xs text-left min-w-[850px]">
                     <thead>
                       <tr className="bg-neutral-50 border-b border-neutral-200 font-semibold text-neutral-600 whitespace-nowrap">
                         <th className="p-2.5 sm:p-3">Order</th>
@@ -1050,14 +1052,27 @@ export const CRMSalesModule: React.FC = () => {
                           </tr>
                         );
                       })}
+                      {salesOrders.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="p-8 text-center text-neutral-500">
+                            <p className="mb-2 text-xs">No Sales Orders found.</p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setQuickAddType('Sales Order');
+                                setIsQuickAddOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Create First Sales Order</span>
+                            </button>
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <div className="p-6 text-center text-neutral-400 italic text-xs">
-                  No sales orders available. Persisted orders will appear here.
-                </div>
-              )}
             </div>
           </div>
         </div>

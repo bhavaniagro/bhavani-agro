@@ -125,6 +125,13 @@ export const CostingProfitabilityModule: React.FC = () => {
                   </tr>
                 );
               })}
+              {sortedProducts.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-neutral-500">
+                    <p className="text-xs">No product costing data found.</p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -222,6 +229,13 @@ export const CostingProfitabilityModule: React.FC = () => {
                   </tr>
                 );
               })}
+              {sortedCustomers.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-neutral-500">
+                    <p className="text-xs">No customer profit contribution data found.</p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

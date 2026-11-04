@@ -312,8 +312,8 @@ export const CustomersModule: React.FC = () => {
                       ))}
                       {custOrders.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="p-4 text-center text-neutral-400 italic">
-                            No orders found for this customer.
+                          <td colSpan={5} className="p-6 text-center text-neutral-500">
+                            <p className="text-xs">No orders found for this customer.</p>
                           </td>
                         </tr>
                       )}
@@ -368,6 +368,13 @@ export const CustomersModule: React.FC = () => {
                           </td>
                         </tr>
                       ))}
+                      {custInvoices.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-6 text-center text-neutral-500">
+                            <p className="text-xs">No invoices found for this customer.</p>
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

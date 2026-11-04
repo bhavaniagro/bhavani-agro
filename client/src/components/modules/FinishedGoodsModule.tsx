@@ -285,6 +285,21 @@ export const FinishedGoodsModule: React.FC = () => {
                   </tr>
                 );
               })}
+              {filteredProducts.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="p-8 text-center text-neutral-500">
+                    <p className="mb-2 text-xs">No Finished Products found.</p>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddOpen(true)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add First Finished Product</span>
+                    </button>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

@@ -349,6 +349,21 @@ export const DispatchLogisticsModule: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+                {filteredDispatches.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-neutral-500">
+                      <p className="mb-2 text-xs">No Delivery Challans found.</p>
+                      <button
+                        type="button"
+                        onClick={() => setActiveModule('CRM & Sales')}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Dispatch from Sales Order</span>
+                      </button>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -433,6 +448,27 @@ export const DispatchLogisticsModule: React.FC = () => {
                 </div>
               </div>
             ))}
+            {vehicles.length === 0 && (
+              <div className="col-span-full p-8 text-center text-neutral-500 bg-white border border-neutral-200 rounded-xl">
+                <p className="mb-2 text-xs">No Vehicles registered.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVehNumber('');
+                    setVehType('10-Wheeler Tipper');
+                    setVehTransporter('');
+                    setVehDriver('');
+                    setVehPhone('');
+                    setVehCapacity(30);
+                    setShowAddVehicleModal(true);
+                  }}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Register First Vehicle</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

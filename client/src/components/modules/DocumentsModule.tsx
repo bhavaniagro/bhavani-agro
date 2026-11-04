@@ -242,8 +242,19 @@ export const DocumentsModule: React.FC = () => {
           </div>
         ))}
         {filteredDocs.length === 0 && (
-          <div className="col-span-full py-12 text-center text-xs text-neutral-400 italic bg-white border border-neutral-200 rounded-xl">
-            No documents uploaded yet. Click "Upload Document" above to upload statutory or lab documents.
+          <div className="col-span-full p-8 text-center text-neutral-500 bg-white border border-neutral-200 rounded-xl shadow-2xs">
+            <p className="mb-2 text-xs">No documents found.</p>
+            <button
+              type="button"
+              onClick={() => {
+                resetDocForm();
+                setShowAddModal(true);
+              }}
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Upload First Document</span>
+            </button>
           </div>
         )}
       </div>
