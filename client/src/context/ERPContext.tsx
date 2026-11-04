@@ -417,7 +417,9 @@ interface ERPContextType {
   addRawMaterial: (rm: Omit<RawMaterial, 'id' | 'currentStock' | 'totalPurchases' | 'totalConsumption' | 'reservedStock'>) => void;
   markAlertRead: (alertId: string) => void;
   deleteAlert: (alertId: string) => void;
+  clearAllReadAlerts: () => void;
   markAllAlertsRead: () => void;
+  resetAlerts: () => void;
   resetAllData: () => void;
   runDemoStepAction: (step: number) => void;
   getCustomerCredit: (customer: Customer | null | undefined) => CustomerCreditSummary;
@@ -486,7 +488,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (raw !== null) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          if (key === 'alerts') return parsed as T;
+          if (key === 'alerts') {
+            return parsed as T;
+          }
           if (parsed.length > 0) return parsed as T;
         }
         if (parsed && typeof parsed === 'object') return parsed as T;
@@ -537,7 +541,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [machineHistory, setMachineHistory] = useState<MachineStatusHistory[]>(() => loadCached('machineHistory', []));
   const [employees, setEmployees] = useState<Employee[]>(() => loadCached('employees', sortByLatest(initialEmployees)));
   const [documents, setDocuments] = useState<ErpDocument[]>(() => loadCached('documents', sortByLatest(initialDocuments)));
-  const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadCached('alerts', sortByLatest(initialAlerts)));
+  const [alerts, setAlerts] = useState<ErpAlert[]>(() => loadCached<ErpAlert[]>('alerts', initialAlerts));
   const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => loadCached('stockMovements', []));
 
   // Sync state changes to localStorage
@@ -2320,17 +2324,44 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const markAlertRead = (alertId: string) => {
-    setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, read: true } : a));
+    setAlerts(prev => {
+      const next = prev.map(a => a.id === alertId ? { ...a, read: true } : a);
+      saveCached('alerts', next);
+      return next;
+    });
     notifyChange();
   };
 
   const deleteAlert = (alertId: string) => {
-    setAlerts(prev => prev.filter(a => a.id !== alertId));
+    setAlerts(prev => {
+      const next = prev.filter(a => a.id !== alertId);
+      saveCached('alerts', next);
+      return next;
+    });
+    notifyChange();
+  };
+
+  const clearAllReadAlerts = () => {
+    setAlerts(prev => {
+      const next = prev.filter(a => !a.read);
+      saveCached('alerts', next);
+      return next;
+    });
     notifyChange();
   };
 
   const markAllAlertsRead = () => {
-    setAlerts(prev => prev.map(a => ({ ...a, read: true })));
+    setAlerts(prev => {
+      const next = prev.map(a => ({ ...a, read: true }));
+      saveCached('alerts', next);
+      return next;
+    });
+    notifyChange();
+  };
+
+  const resetAlerts = () => {
+    setAlerts(initialAlerts);
+    saveCached('alerts', initialAlerts);
     notifyChange();
   };
 
@@ -2358,6 +2389,7 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setEmployees([]);
     setDocuments([]);
     setAlerts([]);
+    saveCached('alerts', []);
     setStockMovements([]);
   };
 
@@ -2603,7 +2635,9 @@ export const ERPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addRawMaterial,
         markAlertRead,
         deleteAlert,
+        clearAllReadAlerts,
         markAllAlertsRead,
+        resetAlerts,
         resetAllData,
         runDemoStepAction,
         refreshAllData: () => syncRealtimeData(false),

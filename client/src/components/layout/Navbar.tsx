@@ -10,7 +10,10 @@ import {
   Layers,
   ExternalLink,
   Menu,
-  ChevronDown
+  ChevronDown,
+  AlertTriangle,
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { UserRole } from '../../types/erp';
@@ -24,7 +27,9 @@ export const Navbar: React.FC = () => {
     alerts,
     markAlertRead,
     deleteAlert,
+    clearAllReadAlerts,
     markAllAlertsRead,
+    resetAlerts,
     setIsQuickAddOpen,
     setQuickAddType,
     setIsSearchOpen,
@@ -113,111 +118,174 @@ export const Navbar: React.FC = () => {
 
 
       {/* Zone 3: Primary Actions, Role Switcher, Quick Add, Alerts */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 h-full">
 
         {/* Notification Bell */}
-        <div ref={alertMenuRef} className="relative">
+        <div ref={alertMenuRef} className="relative flex items-center h-full">
           <button
+            type="button"
             onClick={() => setShowAlertMenu(!showAlertMenu)}
-            className="relative w-8 h-8 flex items-center justify-center bg-white text-neutral-900 hover:bg-neutral-100 rounded-full transition-colors cursor-pointer shadow-xs"
+            className={`relative w-8 h-8 flex items-center justify-center rounded-full transition-all cursor-pointer shadow-xs ${
+              showAlertMenu
+                ? 'bg-emerald-600 text-white ring-2 ring-emerald-400/40'
+                : 'bg-white text-neutral-900 hover:bg-neutral-100'
+            }`}
             title="Notifications & Alerts"
+            aria-label="Notifications"
           >
-            <Bell className="w-4 h-4 text-neutral-900" />
+            <Bell className="w-4 h-4" />
             {unreadAlerts.length > 0 && (
-              <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-neutral-900 font-mono">
+                {unreadAlerts.length}
+              </span>
             )}
           </button>
 
           {showAlertMenu && (
-            <div className="fixed inset-x-2 top-14 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 bg-white border border-neutral-200 rounded-xl shadow-2xl z-50 overflow-hidden text-xs">
-              <div className="flex items-center justify-between px-3 py-2.5 bg-neutral-50/80 border-b border-neutral-200">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-neutral-900">Manufacturing Alerts</span>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-neutral-200/70 text-neutral-600">
-                    {unreadAlerts.length} unread
-                  </span>
+            <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[410px] bg-white border border-neutral-200 rounded-2xl shadow-2xl z-50 overflow-hidden text-xs animate-in fade-in slide-in-from-top-1 duration-150">
+              {/* Dropdown Header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-neutral-50/90 border-b border-neutral-200">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200/80 shadow-2xs shrink-0">
+                    <Bell className="w-4 h-4 stroke-[2]" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-neutral-900 text-xs tracking-tight">Notifications &amp; Alerts</span>
+                      {unreadAlerts.length > 0 ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-mono">
+                          {unreadAlerts.length} new
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 font-mono">
+                          0 new
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-neutral-500 mt-0.5">Plant operations &amp; manufacturing updates</p>
+                  </div>
                 </div>
+
                 {unreadAlerts.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => markAllAlertsRead()}
-                    className="text-[11px] text-emerald-700 hover:text-emerald-800 font-medium hover:underline cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      markAllAlertsRead();
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 px-2 py-1 rounded-md transition-colors cursor-pointer shrink-0"
+                    title="Mark all notifications as read"
                   >
-                    Mark all as read
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Mark all read</span>
                   </button>
                 )}
               </div>
 
+              {/* Notification List */}
               <div className="max-h-80 sm:max-h-96 overflow-y-auto divide-y divide-neutral-100">
                 {alerts.length === 0 ? (
-                  <div className="py-8 px-4 text-center">
-                    <div className="w-9 h-9 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-2 text-neutral-400">
-                      <Bell className="w-4 h-4 text-neutral-400 stroke-[1.5]" />
+                  <div className="py-10 px-6 text-center">
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-3 text-emerald-700 shadow-2xs">
+                      <Bell className="w-5 h-5 stroke-[1.75]" />
                     </div>
-                    <p className="text-xs font-semibold text-neutral-700">No notifications</p>
-                    <p className="text-[11px] text-neutral-400 mt-0.5">All alerts have been cleared.</p>
+                    <h4 className="text-xs font-bold text-neutral-900">No Notifications</h4>
+                    <p className="text-[11px] text-neutral-500 mt-1 max-w-[240px] mx-auto leading-relaxed">
+                      All operational and manufacturing alerts have been cleared.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        resetAlerts();
+                      }}
+                      className="mt-3.5 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                      title="Load sample notifications to test"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Load Sample Notifications</span>
+                    </button>
                   </div>
                 ) : (
-                  alerts.map(alert => (
-                    <div
-                      key={alert.id}
-                      onClick={() => {
-                        if (!alert.read) markAlertRead(alert.id);
-                      }}
-                      className={`p-3 transition-colors ${
-                        !alert.read
-                          ? 'bg-amber-50/35 hover:bg-amber-50/55 cursor-pointer'
-                          : 'bg-white hover:bg-neutral-50/70'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                          {!alert.read && (
-                            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Unread" />
-                          )}
-                          <span
-                            className={`font-semibold text-xs leading-snug ${
-                              alert.type === 'critical'
-                                ? 'text-rose-700'
-                                : alert.type === 'warning'
-                                ? 'text-amber-800'
-                                : 'text-blue-700'
-                            }`}
-                          >
-                            {alert.title}
-                          </span>
+                  alerts.map(alert => {
+                    const isCritical = alert.type === 'critical';
+                    const isWarning = alert.type === 'warning';
+
+                    return (
+                      <div
+                        key={alert.id}
+                        onClick={() => {
+                          if (!alert.read) {
+                            markAlertRead(alert.id);
+                          }
+                        }}
+                        className={`p-3.5 transition-all cursor-pointer border-l-4 ${
+                          !alert.read
+                            ? isCritical
+                              ? 'bg-rose-50/30 hover:bg-rose-50/60 border-l-rose-500'
+                              : isWarning
+                              ? 'bg-amber-50/30 hover:bg-amber-50/60 border-l-amber-500'
+                              : 'bg-emerald-50/25 hover:bg-emerald-50/50 border-l-emerald-600'
+                            : 'bg-white hover:bg-neutral-50/80 border-l-transparent text-neutral-600'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2.5">
+                          <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                            <div className="mt-0.5 shrink-0">
+                              {isCritical ? (
+                                <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center shadow-2xs">
+                                  <AlertTriangle className="w-3 h-3" />
+                                </div>
+                              ) : isWarning ? (
+                                <div className="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shadow-2xs">
+                                  <AlertTriangle className="w-3 h-3" />
+                                </div>
+                              ) : (
+                                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center shadow-2xs">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`font-bold text-xs leading-snug ${
+                                  !alert.read ? 'text-neutral-900' : 'text-neutral-700'
+                                }`}
+                              >
+                                <span>{alert.title}</span>
+                              </div>
+
+                              <p className="text-neutral-600 mt-1 text-[11px] leading-relaxed break-words">
+                                {alert.description}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {!alert.read && (
+                              <span
+                                className="w-2 h-2 rounded-full bg-emerald-600 shrink-0"
+                                title="Unread"
+                              />
+                            )}
+                            <span className="text-[10px] font-mono text-neutral-400 whitespace-nowrap">
+                              {alert.timestamp}
+                            </span>
+                          </div>
                         </div>
-                        <span className="text-[10px] text-neutral-400 whitespace-nowrap shrink-0">
-                          {alert.timestamp}
-                        </span>
-                      </div>
 
-                      <p className="text-neutral-600 mt-1 text-[11px] leading-relaxed">
-                        {alert.description}
-                      </p>
+                        <div className="flex items-center justify-between gap-2 mt-2.5 pt-2 border-t border-neutral-100">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-neutral-400">Module:</span>
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-700 font-mono">
+                              {alert.module}
+                            </span>
+                          </div>
 
-                      <div className="flex items-center justify-between gap-2 mt-2 pt-1.5 border-t border-neutral-100">
-                        <div className="text-[10px] text-neutral-400 truncate">
-                          Module: <span className="text-neutral-600 font-medium">{alert.module}</span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {!alert.read ? (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                markAlertRead(alert.id);
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 border border-emerald-200/80 rounded transition-colors cursor-pointer shadow-2xs"
-                              title="Mark as Read"
-                            >
-                              <Check className="w-3 h-3 text-emerald-600" />
-                              <span>Mark as Read</span>
-                            </button>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-neutral-400">
+                          {alert.read && (
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60 font-mono">
                                 <Check className="w-3 h-3 text-emerald-600" />
                                 <span>Read</span>
                               </span>
@@ -227,26 +295,49 @@ export const Navbar: React.FC = () => {
                                   e.stopPropagation();
                                   deleteAlert(alert.id);
                                 }}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 border border-rose-200/70 rounded transition-colors cursor-pointer shadow-2xs"
-                                title="Delete Notification"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 border border-rose-200 rounded-md transition-colors cursor-pointer shadow-2xs"
+                                title="Delete this notification"
                               >
-                                <Trash2 className="w-3 h-3" />
+                                <Trash2 className="w-3 h-3 text-rose-600" />
                                 <span>Delete</span>
                               </button>
                             </div>
                           )}
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
+
+              {/* Dropdown Footer */}
+              {alerts.length > 0 && (
+                <div className="px-4 py-2.5 bg-neutral-50/90 border-t border-neutral-200 flex items-center justify-between text-[11px] text-neutral-500">
+                  <span className="font-mono">
+                    {alerts.length} total notification{alerts.length === 1 ? '' : 's'}
+                  </span>
+                  {alerts.some(a => a.read) && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearAllReadAlerts();
+                      }}
+                      className="text-neutral-500 hover:text-rose-600 font-semibold transition-colors cursor-pointer inline-flex items-center gap-1"
+                      title="Clear all read notifications"
+                    >
+                      <Trash2 className="w-3 h-3 text-neutral-400 group-hover:text-rose-600" />
+                      <span>Clear all read</span>
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Role Selector Dropdown */}
-        <div ref={roleMenuRef} className="relative">
+        <div ref={roleMenuRef} className="relative flex items-center h-full">
           <button
             onClick={() => setShowRoleMenu(!showRoleMenu)}
             className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer shadow-2xs shrink-0 ${
@@ -261,7 +352,7 @@ export const Navbar: React.FC = () => {
           </button>
 
           {showRoleMenu && (
-            <div className="absolute right-0 mt-2 w-52 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 p-1.5 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 p-1.5 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
               <div className="px-2.5 py-2 text-[11px] font-semibold text-neutral-400 border-b border-neutral-100 flex items-center justify-between">
                 <span>Switch Role View</span>
                 <span className="text-[10px] bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded font-mono font-medium">Role</span>
