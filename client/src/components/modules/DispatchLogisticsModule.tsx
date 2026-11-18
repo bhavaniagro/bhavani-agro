@@ -494,7 +494,9 @@ export const DispatchLogisticsModule: React.FC = () => {
 
             <form onSubmit={handleSaveDispatchEdit} className="space-y-3">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Transporter Name</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Transporter Name <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={editTransporterName}
@@ -506,7 +508,9 @@ export const DispatchLogisticsModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Driver Name</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Driver Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={editDriverName}
@@ -516,7 +520,9 @@ export const DispatchLogisticsModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Driver Mobile</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Driver Mobile <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={editDriverMobile}
@@ -528,7 +534,9 @@ export const DispatchLogisticsModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Vehicle Truck No.</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Vehicle Truck No. <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={editVehicleNumber}
@@ -539,7 +547,9 @@ export const DispatchLogisticsModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Destination Address</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Destination Address <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={editDestination}
@@ -622,7 +632,9 @@ export const DispatchLogisticsModule: React.FC = () => {
 
             <form onSubmit={editingVehicle ? handleSaveVehicleEdit : handleCreateVehicle} className="space-y-3">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Vehicle Truck No.</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Vehicle Truck No. <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={vehNumber}
@@ -635,7 +647,9 @@ export const DispatchLogisticsModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Vehicle Type</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Vehicle Type <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={vehType}
@@ -646,7 +660,9 @@ export const DispatchLogisticsModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Payload Capacity (MT)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Payload Capacity (MT) <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     value={vehCapacity}
@@ -658,7 +674,9 @@ export const DispatchLogisticsModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Transporter Agency</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Transporter Agency <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={vehTransporter}
@@ -670,7 +688,9 @@ export const DispatchLogisticsModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Driver Name</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Driver Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={vehDriver}
@@ -680,7 +700,9 @@ export const DispatchLogisticsModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Driver Phone</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Driver Phone <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={vehPhone}

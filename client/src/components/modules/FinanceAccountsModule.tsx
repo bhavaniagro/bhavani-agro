@@ -481,7 +481,9 @@ export const FinanceAccountsModule: React.FC = () => {
 
             <form onSubmit={submitPayment} className="space-y-3">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Payment Amount Received (₹)</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Payment Amount Received (₹) <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="number"
                   value={paymentAmount}

@@ -397,7 +397,9 @@ export const QuickAddModal: React.FC = () => {
           {currentType === 'Sales Order' && (
             <>
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Select Customer</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Select Customer <span className="text-red-500 font-bold">*</span>
+                </label>
                 <CustomSelect
                   value={soCustomer}
                   onChange={setSoCustomer}
@@ -438,7 +440,9 @@ export const QuickAddModal: React.FC = () => {
                 </div>
               )}
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Finished Product</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Finished Product <span className="text-red-500 font-bold">*</span>
+                </label>
                 <CustomSelect
                   value={soProduct}
                   onChange={(val) => {
@@ -464,7 +468,9 @@ export const QuickAddModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Quantity (MT)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Quantity (MT) <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     min="1"
@@ -477,7 +483,9 @@ export const QuickAddModal: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Selling Rate (₹ / MT)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Selling Rate (₹ / MT) <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     value={soRate}
@@ -499,7 +507,9 @@ export const QuickAddModal: React.FC = () => {
           {currentType === 'Purchase Order' && (
             <>
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Select Supplier</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Select Supplier <span className="text-red-500 font-bold">*</span>
+                </label>
                 <CustomSelect
                   value={poSupplier}
                   onChange={setPoSupplier}
@@ -509,7 +519,9 @@ export const QuickAddModal: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Raw Material</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Raw Material <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <CustomSelect
                     value={poMaterial}
                     onChange={(val) => {
@@ -522,7 +534,9 @@ export const QuickAddModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Quantity</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Quantity <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     min="1"
@@ -535,7 +549,9 @@ export const QuickAddModal: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Purchase Rate (₹)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Purchase Rate (₹) <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     value={poRate}
@@ -558,7 +574,9 @@ export const QuickAddModal: React.FC = () => {
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Expense Category</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Expense Category <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <CustomSelect
                     value={expCategory}
                     onChange={setExpCategory}
@@ -577,7 +595,9 @@ export const QuickAddModal: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Amount (₹)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Amount (₹) <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     value={expAmount}
@@ -637,7 +657,9 @@ export const QuickAddModal: React.FC = () => {
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Customer / Agency Name</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Customer / Agency Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required

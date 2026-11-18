@@ -353,7 +353,9 @@ export const FinishedGoodsModule: React.FC = () => {
             >
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">SKU Code</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    SKU Code <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -363,7 +365,9 @@ export const FinishedGoodsModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Product Name</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Product Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -495,7 +499,9 @@ export const FinishedGoodsModule: React.FC = () => {
             >
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Product Name</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Product Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required

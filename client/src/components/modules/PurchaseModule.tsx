@@ -652,7 +652,7 @@ export const PurchaseModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">
-                    Weighbridge Received Qty ({isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')})
+                    Weighbridge Received Qty ({isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')}) <span className="text-red-500 font-bold">*</span>
                   </label>
                   <input
                     type="number"
@@ -675,7 +675,7 @@ export const PurchaseModule: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-neutral-700 font-medium mb-1">
-                    Ordered Quantity ({isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')})
+                    Ordered Quantity ({isManualGRN ? (rawMaterials.find(rm => rm.id === manualMaterialId)?.unit || 'MT') : (selectedPO?.unit || 'MT')}) <span className="text-red-500 font-bold">*</span>
                   </label>
                   <input
                     type="number"
@@ -700,7 +700,9 @@ export const PurchaseModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Vehicle Truck No.</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Vehicle Truck No. <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -711,7 +713,9 @@ export const PurchaseModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Supplier Mine Batch No.</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Supplier Mine Batch No. <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -854,7 +858,9 @@ export const PurchaseModule: React.FC = () => {
 
             <form onSubmit={handleSavePOEdit} className="space-y-3">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Supplier Name</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Supplier Name <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={editPOSupplierName}
@@ -865,7 +871,9 @@ export const PurchaseModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Material Name</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Material Name <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={editPOMaterialName}
@@ -877,7 +885,9 @@ export const PurchaseModule: React.FC = () => {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Quantity</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Quantity <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     step="0.1"
@@ -888,7 +898,9 @@ export const PurchaseModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Rate (₹)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Rate (₹) <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     value={editPORate}
@@ -898,7 +910,9 @@ export const PurchaseModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Unit</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Unit <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={editPOUnit}
@@ -911,7 +925,9 @@ export const PurchaseModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Expected Delivery</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Expected Delivery <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="date"
                     value={editPOExpectedDelivery}
@@ -989,7 +1005,9 @@ export const PurchaseModule: React.FC = () => {
             <form onSubmit={handleSaveGRNEdit} className="space-y-3">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Received Qty</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Received Qty <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     step="0.1"
@@ -1000,7 +1018,9 @@ export const PurchaseModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Accepted Qty</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Accepted Qty <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     step="0.1"
@@ -1011,7 +1031,9 @@ export const PurchaseModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Rejected Qty</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Rejected Qty <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     step="0.1"
@@ -1025,7 +1047,9 @@ export const PurchaseModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Vehicle Truck No.</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Vehicle Truck No. <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={editGRNVehicleNo}
@@ -1035,7 +1059,9 @@ export const PurchaseModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Supplier Batch</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Supplier Batch <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={editGRNSupplierBatch}

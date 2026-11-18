@@ -390,7 +390,9 @@ export const MaintenanceModule: React.FC = () => {
             <form onSubmit={handleCreateMachinery} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Machine Code</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Machine Code <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={code}
@@ -400,7 +402,9 @@ export const MaintenanceModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Machine Name</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Machine Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={name}

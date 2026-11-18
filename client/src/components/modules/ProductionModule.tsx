@@ -696,7 +696,9 @@ export const ProductionModule: React.FC = () => {
                   <>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-neutral-700 font-medium mb-1">Finished Goods Output (MT)</label>
+                        <label className="block text-neutral-700 font-medium mb-1">
+                          Finished Goods Output (MT) <span className="text-red-500 font-bold">*</span>
+                        </label>
                         <input
                           type="number"
                           step="any"
@@ -794,7 +796,9 @@ export const ProductionModule: React.FC = () => {
 
             <form onSubmit={handleSaveOrderEdit} className="space-y-3">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Supervisor</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Supervisor <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={editOrderSupervisor}
@@ -805,7 +809,9 @@ export const ProductionModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Production Line</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Production Line <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={editOrderLine}
@@ -875,7 +881,9 @@ export const ProductionModule: React.FC = () => {
 
             <form onSubmit={handleSaveBatchEdit} className="space-y-3">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Quantity Produced (MT)</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Quantity Produced (MT) <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="number"
                   step="0.1"
@@ -887,7 +895,9 @@ export const ProductionModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Storage Location Bay</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Storage Location Bay <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={editBatchStorage}
@@ -951,7 +961,9 @@ export const ProductionModule: React.FC = () => {
 
             <form onSubmit={editingBOM ? handleSaveBOMEdit : handleCreateBOM} className="space-y-3 max-h-[75vh] overflow-y-auto pr-1">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Output Product</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Output Product <span className="text-red-500 font-bold">*</span>
+                </label>
                 {products.length > 0 ? (
                   <CustomSelect
                     value={bomProductId}
@@ -977,7 +989,9 @@ export const ProductionModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Recipe Version</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Recipe Version <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={bomVersion}
