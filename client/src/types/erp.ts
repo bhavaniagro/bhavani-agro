@@ -129,7 +129,7 @@ export interface FinishedProduct {
   sku: string;
   productName: string;
   category: 'Granules' | 'Bio-Fertilizer' | 'Organic' | 'Powder' | 'Mineral';
-  unit: 'MT' | 'Bags';
+  unit: 'MT' | 'KG' | 'Bags' | 'Liters' | 'Units';
   sellingPricePerMT: number;
   standardCostPerMT: number;
   currentStockMT: number;
