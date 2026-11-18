@@ -370,11 +370,10 @@ export const SuppliersModule: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-                    Contact Person <span className="text-red-500 font-bold">*</span>
+                    Contact Person
                   </label>
                   <input
                     type="text"
-                    required
                     value={newSupp.contactPerson}
                     onChange={(e) => setNewSupp({ ...newSupp, contactPerson: e.target.value })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
@@ -385,11 +384,10 @@ export const SuppliersModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-                    Mobile <span className="text-red-500 font-bold">*</span>
+                    Mobile
                   </label>
                   <input
                     type="text"
-                    required
                     value={newSupp.mobile}
                     onChange={(e) => setNewSupp({ ...newSupp, mobile: e.target.value })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
@@ -527,11 +525,10 @@ export const SuppliersModule: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-                    Contact Person <span className="text-red-500 font-bold">*</span>
+                    Contact Person
                   </label>
                   <input
                     type="text"
-                    required
                     value={editingSupplier.contactPerson}
                     onChange={(e) => setEditingSupplier({ ...editingSupplier, contactPerson: e.target.value })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
@@ -542,11 +539,10 @@ export const SuppliersModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-                    Mobile <span className="text-red-500 font-bold">*</span>
+                    Mobile
                   </label>
                   <input
                     type="text"
-                    required
                     value={editingSupplier.mobile}
                     onChange={(e) => setEditingSupplier({ ...editingSupplier, mobile: e.target.value })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
