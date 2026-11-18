@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Users,
   Plus,
@@ -9,10 +9,13 @@ import {
   ArrowRight,
   ExternalLink,
   ChevronRight,
+  ChevronDown,
+  Filter,
   Edit,
   Trash2,
   X,
-  Check
+  Check,
+  RotateCcw
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { ConfirmModal } from '../modals/ConfirmModal';
@@ -38,33 +41,153 @@ export const CustomersModule: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
+  // Filter states
+  const [typeFilter, setTypeFilter] = useState<string>('All');
+  const [stateFilter, setStateFilter] = useState<string>('All');
+  const [balanceFilter, setBalanceFilter] = useState<string>('All'); // 'All', 'has_due', 'zero_due'
+  const [sortBy, setSortBy] = useState<string>('name-asc'); // 'name-asc', 'name-desc', 'code-asc', 'code-desc', 'balance-desc', 'sales-desc'
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+
   // Edit & Delete modal states
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Click outside to close filter popover
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    };
+    if (isFilterOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isFilterOpen]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (isFilterOpen) setIsFilterOpen(false);
         if (editingCustomer) setEditingCustomer(null);
         if (deletingCustomerId) setDeletingCustomerId(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editingCustomer, deletingCustomerId]);
+  }, [editingCustomer, deletingCustomerId, isFilterOpen]);
+
+  // Unique dynamic states and customer types from data
+  const uniqueStates = useMemo(() => {
+    const states = new Set<string>();
+    customers.forEach(c => {
+      if (c.state && c.state.trim()) {
+        states.add(c.state.trim());
+      }
+    });
+    return Array.from(states).sort();
+  }, [customers]);
+
+  const uniqueTypes = useMemo(() => {
+    const types = new Set<string>([
+      'Dealer',
+      'Distributor',
+      'Fertilizer',
+      'Fertilizer Blender',
+      'End User',
+      'Cooperative',
+      'Institutional Buyer',
+      'Supplier',
+      'Vendor'
+    ]);
+    customers.forEach(c => {
+      if (c.customerType && c.customerType.trim()) {
+        types.add(c.customerType.trim());
+      }
+    });
+    return Array.from(types);
+  }, [customers]);
+
+  const isFilterActive = typeFilter !== 'All' || stateFilter !== 'All' || balanceFilter !== 'All' || sortBy !== 'name-asc';
+
+  const activeFilterCount = [
+    typeFilter !== 'All',
+    stateFilter !== 'All',
+    balanceFilter !== 'All',
+    sortBy !== 'name-asc'
+  ].filter(Boolean).length;
+
+  const resetAllFilters = () => {
+    setTypeFilter('All');
+    setStateFilter('All');
+    setBalanceFilter('All');
+    setSortBy('name-asc');
+    setSearchTerm('');
+  };
 
   const filteredCustomers = customers
-    .filter(c =>
-      c.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.state.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => a.customerName.localeCompare(b.customerName, undefined, { sensitivity: 'base' }));
+    .filter(c => {
+      const searchLower = searchTerm.trim().toLowerCase();
+      if (searchLower) {
+        const matchesSearch =
+          (c.customerName || '').toLowerCase().includes(searchLower) ||
+          (c.companyName || '').toLowerCase().includes(searchLower) ||
+          (c.code || '').toLowerCase().includes(searchLower) ||
+          (c.gstin || '').toLowerCase().includes(searchLower) ||
+          (c.state || '').toLowerCase().includes(searchLower);
 
-  const activeCustomer = selectedCustomer || filteredCustomers[0];
+        if (!matchesSearch) return false;
+      }
+
+      // Customer type filter
+      if (typeFilter !== 'All' && c.customerType !== typeFilter) {
+        return false;
+      }
+
+      // State filter
+      if (stateFilter !== 'All' && (c.state || '').toLowerCase() !== stateFilter.toLowerCase()) {
+        return false;
+      }
+
+      // Outstanding balance filter
+      if (balanceFilter === 'has_due' && (Number(c.outstandingBalance) || 0) <= 0) {
+        return false;
+      }
+      if (balanceFilter === 'zero_due' && (Number(c.outstandingBalance) || 0) > 0) {
+        return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name-asc') {
+        return (a.customerName || '').localeCompare(b.customerName || '', undefined, { sensitivity: 'base' });
+      }
+      if (sortBy === 'name-desc') {
+        return (b.customerName || '').localeCompare(a.customerName || '', undefined, { sensitivity: 'base' });
+      }
+      if (sortBy === 'code-asc') {
+        return (a.code || '').localeCompare(b.code || '', undefined, { numeric: true });
+      }
+      if (sortBy === 'code-desc') {
+        return (b.code || '').localeCompare(a.code || '', undefined, { numeric: true });
+      }
+      if (sortBy === 'balance-desc') {
+        return (Number(b.outstandingBalance) || 0) - (Number(a.outstandingBalance) || 0);
+      }
+      if (sortBy === 'sales-desc') {
+        return (Number(b.totalSales) || 0) - (Number(a.totalSales) || 0);
+      }
+      return (a.customerName || '').localeCompare(b.customerName || '', undefined, { sensitivity: 'base' });
+    });
+
+  const activeCustomer = (selectedCustomer && filteredCustomers.some(c => c.id === selectedCustomer.id))
+    ? selectedCustomer
+    : filteredCustomers[0];
 
   const isCustomerMatch = (recordCustomerId?: string, recordCustomerName?: string, customer?: Customer) => {
     if (!customer) return false;
@@ -105,7 +228,11 @@ export const CustomersModule: React.FC = () => {
               Customer Master &amp; 360° Account Profiles
             </h1>
             <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">
-              {customers.length} Verified Distributors &amp; Dealers
+              {isFilterActive || searchTerm ? (
+                `${filteredCustomers.length} of ${customers.length} Customers`
+              ) : (
+                `${customers.length} Verified Distributors & Dealers`
+              )}
             </span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
@@ -114,6 +241,144 @@ export const CustomersModule: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Filters Popover Button */}
+          <div className="relative" ref={filterRef}>
+            <button
+              type="button"
+              id="customer-filter-btn"
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 border transition-all cursor-pointer whitespace-nowrap ${
+                isFilterActive
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs font-semibold'
+                  : 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 shadow-2xs'
+              }`}
+              title="More customer filters"
+            >
+              <Filter className={`w-3.5 h-3.5 ${isFilterActive ? 'text-emerald-700' : 'text-neutral-500'}`} />
+              <span>Filter</span>
+              <ChevronDown className={`w-3 h-3 text-neutral-400 transition-transform duration-200 ${isFilterOpen ? 'rotate-180 text-neutral-700' : ''}`} />
+              {activeFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-emerald-700 text-white text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            {/* Dropdown Popover */}
+            {isFilterOpen && (
+              <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-xl border border-neutral-200 p-4 z-40 space-y-3.5 text-xs">
+                <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
+                  <div className="flex items-center gap-1.5 font-semibold text-neutral-900">
+                    <Filter className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Customer Filters</span>
+                  </div>
+                  {isFilterActive && (
+                    <button
+                      type="button"
+                      onClick={resetAllFilters}
+                      className="text-[11px] text-neutral-500 hover:text-rose-600 cursor-pointer transition-colors"
+                    >
+                      Reset All
+                    </button>
+                  )}
+                </div>
+
+                {/* State filter inside popover */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-medium text-neutral-700">
+                    State / Region
+                  </label>
+                  <CustomSelect
+                    value={stateFilter}
+                    onChange={setStateFilter}
+                    options={[
+                      { value: 'All', label: 'All States' },
+                      ...uniqueStates.map(s => ({ value: s, label: s }))
+                    ]}
+                  />
+                </div>
+
+                {/* Customer Type inside popover */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-medium text-neutral-700">
+                    Customer Type
+                  </label>
+                  <CustomSelect
+                    value={typeFilter}
+                    onChange={setTypeFilter}
+                    options={[
+                      { value: 'All', label: 'All Customer Types' },
+                      ...uniqueTypes.map(t => ({ value: t, label: t }))
+                    ]}
+                  />
+                </div>
+
+                {/* Outstanding Dues */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-medium text-neutral-700">
+                    Outstanding Dues
+                  </label>
+                  <CustomSelect
+                    value={balanceFilter}
+                    onChange={setBalanceFilter}
+                    options={[
+                      { value: 'All', label: 'All Balances' },
+                      { value: 'has_due', label: 'With Outstanding Dues (> ₹0)' },
+                      { value: 'zero_due', label: 'No Dues / Zero Balance (₹0)' }
+                    ]}
+                  />
+                </div>
+
+                {/* Sort Order */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-medium text-neutral-700">
+                    Sort Order
+                  </label>
+                  <CustomSelect
+                    value={sortBy}
+                    onChange={setSortBy}
+                    options={[
+                      { value: 'name-asc', label: 'Customer Name (A to Z)' },
+                      { value: 'name-desc', label: 'Customer Name (Z to A)' },
+                      { value: 'code-asc', label: 'Customer Code (Ascending: CUST-001...)' },
+                      { value: 'code-desc', label: 'Customer Code (Descending: CUST-202...)' },
+                      { value: 'balance-desc', label: 'Highest Outstanding Dues' },
+                      { value: 'sales-desc', label: 'Highest Lifetime Sales' }
+                    ]}
+                  />
+                </div>
+
+                {/* Popover footer */}
+                <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+                  <span className="text-[10px] text-neutral-500">
+                    Showing {filteredCustomers.length} of {customers.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsFilterOpen(false)}
+                    className="px-3 py-1 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-xs font-semibold cursor-pointer"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Reset button if active */}
+          {isFilterActive && (
+            <button
+              type="button"
+              onClick={resetAllFilters}
+              className="px-2.5 py-1.5 text-xs text-neutral-600 hover:text-rose-600 border border-neutral-200 hover:border-rose-200 rounded-md bg-white hover:bg-rose-50 transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-2xs"
+              title="Reset all filters"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset</span>
+            </button>
+          )}
+
+          {/* Add Customer Button */}
           <button
             onClick={() => {
               setQuickAddType('Customer');
@@ -140,6 +405,16 @@ export const CustomersModule: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="text-xs bg-transparent outline-none w-full text-neutral-900 placeholder:text-neutral-400"
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
 
           <div className="divide-y divide-neutral-100 max-h-[650px] overflow-y-auto">
@@ -157,18 +432,29 @@ export const CustomersModule: React.FC = () => {
                     <span>{c.customerName}</span>
                     <span className="font-mono text-neutral-500 font-semibold">{c.code}</span>
                   </div>
-                  <div className="text-[11px] text-neutral-500">{c.contactPerson} · {c.state}</div>
+                  <div className="text-[11px] text-neutral-500">
+                    {c.contactPerson ? `${c.contactPerson} · ${c.state || ''}` : (c.state || 'Gujarat')}
+                  </div>
                   <div className="text-[10px] text-neutral-400 font-mono flex items-center justify-between pt-1">
-                    <span>Sales: ₹{c.totalSales.toLocaleString('en-IN')}</span>
-                    <span className={c.outstandingBalance > 0 ? 'text-amber-800 font-bold' : 'text-emerald-700'}>
-                      Due: ₹{c.outstandingBalance.toLocaleString('en-IN')}
+                    <span>Sales: ₹{(Number(c.totalSales) || 0).toLocaleString('en-IN')}</span>
+                    <span className={(Number(c.outstandingBalance) || 0) > 0 ? 'text-amber-800 font-bold' : 'text-emerald-700'}>
+                      Due: ₹{(Number(c.outstandingBalance) || 0).toLocaleString('en-IN')}
                     </span>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="p-6 text-center text-neutral-400 text-xs italic">
-                No customers found. Click "Add Customer" to create a record.
+              <div className="p-6 text-center text-neutral-400 text-xs italic space-y-2">
+                <div>No customers found matching your criteria.</div>
+                {(isFilterActive || searchTerm) && (
+                  <button
+                    type="button"
+                    onClick={resetAllFilters}
+                    className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold underline cursor-pointer not-italic"
+                  >
+                    Reset all filters
+                  </button>
+                )}
               </div>
             )}
           </div>
