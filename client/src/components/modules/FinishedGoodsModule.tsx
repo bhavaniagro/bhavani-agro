@@ -420,6 +420,17 @@ export const FinishedGoodsModule: React.FC = () => {
                   />
                 </div>
                 <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Unit</label>
+                  <CustomSelect
+                    value={newProd.unit}
+                    onChange={(val) => setNewProd({ ...newProd, unit: val as FinishedProduct['unit'] })}
+                    options={['MT', 'KG', 'Bags', 'Liters', 'Units']}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">Selling Price / MT (₹)</label>
                   <input
                     type="number"
@@ -429,9 +440,6 @@ export const FinishedGoodsModule: React.FC = () => {
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">HSN Code</label>
                   <input
@@ -441,15 +449,16 @@ export const FinishedGoodsModule: React.FC = () => {
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Storage Location</label>
-                  <input
-                    type="text"
-                    value={newProd.storageLocation}
-                    onChange={(e) => setNewProd({ ...newProd, storageLocation: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Storage Location</label>
+                <input
+                  type="text"
+                  value={newProd.storageLocation}
+                  onChange={(e) => setNewProd({ ...newProd, storageLocation: e.target.value })}
+                  className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -552,6 +561,25 @@ export const FinishedGoodsModule: React.FC = () => {
                     value={editingProduct.productName}
                     onChange={(e) => setEditingProduct({ ...editingProduct, productName: e.target.value })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Category</label>
+                  <CustomSelect
+                    value={editingProduct.category}
+                    onChange={(val) => setEditingProduct({ ...editingProduct, category: val as any })}
+                    options={['Granules', 'Bio-Fertilizer', 'Organic', 'Powder', 'Mineral']}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Unit</label>
+                  <CustomSelect
+                    value={editingProduct.unit || 'MT'}
+                    onChange={(val) => setEditingProduct({ ...editingProduct, unit: val as FinishedProduct['unit'] })}
+                    options={['MT', 'KG', 'Bags', 'Liters', 'Units']}
                   />
                 </div>
               </div>
