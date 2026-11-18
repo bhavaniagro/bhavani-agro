@@ -404,7 +404,9 @@ export const QuickAddModal: React.FC = () => {
                   value={soCustomer}
                   onChange={setSoCustomer}
                   placeholder="Select Customer"
-                  options={customers.map(c => ({ value: c.id, label: `${c.customerName} (${c.state})` }))}
+                  options={[...customers]
+                    .sort((a, b) => a.customerName.localeCompare(b.customerName, undefined, { sensitivity: 'base' }))
+                    .map(c => ({ value: c.id, label: `${c.customerName}${c.state ? ` (${c.state})` : ''}` }))}
                 />
               </div>
 

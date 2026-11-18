@@ -54,12 +54,15 @@ export const CustomersModule: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [editingCustomer, deletingCustomerId]);
 
-  const filteredCustomers = sortByLatest(customers.filter(c =>
-    c.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.state.toLowerCase().includes(searchTerm.toLowerCase())
-  ));
+  const filteredCustomers = customers
+    .filter(c =>
+      c.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.state.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => a.customerName.localeCompare(b.customerName, undefined, { sensitivity: 'base' }));
 
   const activeCustomer = selectedCustomer || filteredCustomers[0];
 
@@ -132,7 +135,7 @@ export const CustomersModule: React.FC = () => {
             <Search className="w-3.5 h-3.5 text-neutral-400" />
             <input
               type="text"
-              placeholder="Search customer, state, GST..."
+              placeholder="Search customer, code, state, GST..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="text-xs bg-transparent outline-none w-full text-neutral-900 placeholder:text-neutral-400"
