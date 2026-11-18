@@ -424,7 +424,7 @@ export const FinishedGoodsModule: React.FC = () => {
                   <CustomSelect
                     value={newProd.unit}
                     onChange={(val) => setNewProd({ ...newProd, unit: val as FinishedProduct['unit'] })}
-                    options={['MT', 'KG', 'Bags', 'Liters', 'Units']}
+                    options={['MT', 'KG', 'Bags', 'Liters', 'Units', 'NOS']}
                   />
                 </div>
               </div>
@@ -579,7 +579,7 @@ export const FinishedGoodsModule: React.FC = () => {
                   <CustomSelect
                     value={editingProduct.unit || 'MT'}
                     onChange={(val) => setEditingProduct({ ...editingProduct, unit: val as FinishedProduct['unit'] })}
-                    options={['MT', 'KG', 'Bags', 'Liters', 'Units']}
+                    options={['MT', 'KG', 'Bags', 'Liters', 'Units', 'NOS']}
                   />
                 </div>
               </div>

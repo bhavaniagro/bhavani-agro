@@ -110,7 +110,7 @@ export interface RawMaterial {
   sku: string;
   materialName: string;
   category: 'Mineral Ore' | 'Organic Input' | 'Microbial' | 'Chemical & Additive' | 'Packaging' | 'Consumable';
-  unit: 'KG' | 'MT' | 'Bags' | 'Liters' | 'Units';
+  unit: 'KG' | 'MT' | 'Bags' | 'Liters' | 'Units' | 'NOS';
   minimumStock: number;
   maximumStock: number;
   currentStock: number; // Opening + Purchases + Production Returns - Consumption - Other Issues
@@ -129,7 +129,7 @@ export interface FinishedProduct {
   sku: string;
   productName: string;
   category: 'Granules' | 'Bio-Fertilizer' | 'Organic' | 'Powder' | 'Mineral';
-  unit: 'MT' | 'KG' | 'Bags' | 'Liters' | 'Units';
+  unit: 'MT' | 'KG' | 'Bags' | 'Liters' | 'Units' | 'NOS';
   sellingPricePerMT: number;
   standardCostPerMT: number;
   currentStockMT: number;
