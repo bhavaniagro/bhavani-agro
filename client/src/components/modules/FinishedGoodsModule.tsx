@@ -51,6 +51,28 @@ export const FinishedGoodsModule: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAddOpen, editingProduct, deletingProductId]);
 
+  // Helper to compute next auto-incremented SKU code starting from FG-1
+  const getNextFGSku = (items: FinishedProduct[]): string => {
+    const existingSkus = new Set(items.map(p => (p.sku || '').trim().toUpperCase()));
+    let maxNum = 0;
+    for (const item of items) {
+      if (item.sku) {
+        const match = item.sku.trim().match(/^FG-(\d+)$/i);
+        if (match) {
+          const val = parseInt(match[1], 10);
+          if (!isNaN(val) && val < 1000 && val > maxNum) {
+            maxNum = val;
+          }
+        }
+      }
+    }
+    let nextNum = maxNum + 1;
+    while (existingSkus.has(`FG-${nextNum}`)) {
+      nextNum++;
+    }
+    return `FG-${nextNum}`;
+  };
+
   // New product state
   const [newProd, setNewProd] = useState<{
     sku: string;
@@ -68,8 +90,8 @@ export const FinishedGoodsModule: React.FC = () => {
     description: string;
     physicalStockMT: number | string;
     reservedStockMT: number | string;
-  }>({
-    sku: `FG-${Date.now().toString().slice(-4)}`,
+  }>(() => ({
+    sku: getNextFGSku(products),
     productName: '',
     category: 'Granules',
     unit: 'MT',
@@ -84,11 +106,11 @@ export const FinishedGoodsModule: React.FC = () => {
     description: '',
     physicalStockMT: '',
     reservedStockMT: ''
-  });
+  }));
 
   const resetNewProdForm = () => {
     setNewProd({
-      sku: `FG-${Date.now().toString().slice(-4)}`,
+      sku: getNextFGSku(products),
       productName: '',
       category: 'Granules',
       unit: 'MT',
@@ -105,6 +127,16 @@ export const FinishedGoodsModule: React.FC = () => {
       reservedStockMT: ''
     });
   };
+
+  // Auto-generate fresh auto-incremented SKU when modal opens
+  useEffect(() => {
+    if (isAddOpen) {
+      setNewProd(prev => ({
+        ...prev,
+        sku: getNextFGSku(products)
+      }));
+    }
+  }, [isAddOpen, products]);
 
   const filteredProducts = sortByLatest(products.filter(p => 
     p.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -291,7 +323,7 @@ export const FinishedGoodsModule: React.FC = () => {
                     <p className="mb-2 text-xs">No Finished Products found.</p>
                     <button
                       type="button"
-                      onClick={() => setIsAddOpen(true)}
+                      onClick={() => { resetNewProdForm(); setIsAddOpen(true); }}
                       className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-xs"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -353,7 +385,9 @@ export const FinishedGoodsModule: React.FC = () => {
             >
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">SKU Code</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    SKU Code <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -363,7 +397,9 @@ export const FinishedGoodsModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Product Name</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Product Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -495,7 +531,21 @@ export const FinishedGoodsModule: React.FC = () => {
             >
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Product Name</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    SKU Code <span className="text-red-500 font-bold">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingProduct.sku}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })}
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Product Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -504,6 +554,9 @@ export const FinishedGoodsModule: React.FC = () => {
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">Selling Price / MT (₹)</label>
                   <input
@@ -513,9 +566,6 @@ export const FinishedGoodsModule: React.FC = () => {
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">Standard Cost / MT (₹)</label>
                   <input
@@ -525,15 +575,16 @@ export const FinishedGoodsModule: React.FC = () => {
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Storage Location</label>
-                  <input
-                    type="text"
-                    value={editingProduct.storageLocation}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, storageLocation: e.target.value })}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-600 mb-1">Storage Location</label>
+                <input
+                  type="text"
+                  value={editingProduct.storageLocation}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, storageLocation: e.target.value })}
+                  className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">

@@ -382,7 +382,9 @@ export const SalesOrdersModule: React.FC = () => {
 
             <form onSubmit={handleSaveEdit} className="space-y-3">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Customer Name</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Customer Name <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={editCustomerName}
@@ -393,7 +395,9 @@ export const SalesOrdersModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Product Name</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Product Name <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={editProductName}
@@ -405,7 +409,9 @@ export const SalesOrdersModule: React.FC = () => {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Quantity (MT)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Quantity (MT) <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     step="0.1"
@@ -416,7 +422,9 @@ export const SalesOrdersModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Rate (₹/MT)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Rate (₹/MT) <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     value={editRatePerMT}
@@ -439,7 +447,9 @@ export const SalesOrdersModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Delivery Date</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Delivery Date <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="date"
                     value={editDeliveryDate}

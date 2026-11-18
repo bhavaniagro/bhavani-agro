@@ -423,7 +423,9 @@ export const CustomersModule: React.FC = () => {
             >
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Customer Name</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Customer Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -433,7 +435,9 @@ export const CustomersModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Company Name</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Company Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -446,7 +450,9 @@ export const CustomersModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Contact Person</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Contact Person <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -456,7 +462,9 @@ export const CustomersModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Mobile</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Mobile <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     required

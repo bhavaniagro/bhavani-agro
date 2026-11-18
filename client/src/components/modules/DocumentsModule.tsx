@@ -284,7 +284,9 @@ export const DocumentsModule: React.FC = () => {
 
             <form onSubmit={handleCreateDocument} className="space-y-3">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Select File (PDF, Images, Office Docs)</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Select File (PDF, Images, Office Docs) <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -299,7 +301,9 @@ export const DocumentsModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Document Title</label>
+                <label className="block text-neutral-700 font-medium mb-1">
+                  Document Title <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   value={title}

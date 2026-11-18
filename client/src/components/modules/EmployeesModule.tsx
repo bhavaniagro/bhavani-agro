@@ -240,7 +240,9 @@ export const EmployeesModule: React.FC = () => {
             <form onSubmit={handleCreateEmployee} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Emp Code</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Emp Code <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={empCode}
@@ -250,7 +252,9 @@ export const EmployeesModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Full Name</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Full Name <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={empName}
@@ -271,7 +275,9 @@ export const EmployeesModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Role / Designation</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Role / Designation <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={empRole}
@@ -284,7 +290,9 @@ export const EmployeesModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Mobile</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Mobile <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="text"
                     value={empMobile}
@@ -294,7 +302,9 @@ export const EmployeesModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Monthly Salary (₹)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">
+                    Monthly Salary (₹) <span className="text-red-500 font-bold">*</span>
+                  </label>
                   <input
                     type="number"
                     value={empSalary}
