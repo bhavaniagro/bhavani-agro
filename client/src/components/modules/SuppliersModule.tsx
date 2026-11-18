@@ -421,7 +421,7 @@ export const SuppliersModule: React.FC = () => {
                 ) : (
                   <input
                     type="text"
-                    placeholder="e.g. Bentonite Ore"
+                    placeholder="Enter material supplied"
                     value={newSupp.materialSupplied}
                     onChange={(e) => setNewSupp({ ...newSupp, materialSupplied: e.target.value })}
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
@@ -436,7 +436,7 @@ export const SuppliersModule: React.FC = () => {
                     type="text"
                     value={newSupp.bankName}
                     onChange={(e) => setNewSupp({ ...newSupp, bankName: e.target.value })}
-                    placeholder="e.g. State Bank of India"
+                    placeholder="Enter bank name"
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                   />
                 </div>
@@ -446,7 +446,7 @@ export const SuppliersModule: React.FC = () => {
                     type="text"
                     value={newSupp.accountNo}
                     onChange={(e) => setNewSupp({ ...newSupp, accountNo: e.target.value })}
-                    placeholder="e.g. 38291048571"
+                    placeholder="Enter account number"
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono"
                   />
                 </div>
@@ -456,7 +456,7 @@ export const SuppliersModule: React.FC = () => {
                     type="text"
                     value={newSupp.ifscCode}
                     onChange={(e) => setNewSupp({ ...newSupp, ifscCode: e.target.value })}
-                    placeholder="e.g. SBIN0001234"
+                    placeholder="Enter IFSC code"
                     className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 font-mono uppercase"
                   />
                 </div>

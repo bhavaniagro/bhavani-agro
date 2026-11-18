@@ -708,7 +708,7 @@ export const PurchaseModule: React.FC = () => {
                     required
                     value={vehicleNo}
                     onChange={(e) => setVehicleNo(e.target.value)}
-                    placeholder="GJ-12-BW-8910"
+                    placeholder="Enter vehicle number"
                     className="w-full border border-neutral-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
@@ -721,7 +721,7 @@ export const PurchaseModule: React.FC = () => {
                     required
                     value={supplierBatch}
                     onChange={(e) => setSupplierBatch(e.target.value)}
-                    placeholder="KBM-2609-B8"
+                    placeholder="Enter supplier batch number"
                     className="w-full border border-neutral-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
