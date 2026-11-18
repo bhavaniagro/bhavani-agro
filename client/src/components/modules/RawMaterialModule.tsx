@@ -401,7 +401,7 @@ export const RawMaterialModule: React.FC = () => {
                   <CustomSelect
                     value={newRM.unit}
                     onChange={(val) => setNewRM({ ...newRM, unit: val as any })}
-                    options={['MT', 'KG', 'Bags', 'Liters', 'Units']}
+                    options={['MT', 'KG', 'Bags', 'Liters', 'Units', 'NOS']}
                   />
                 </div>
               </div>
