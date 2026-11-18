@@ -199,16 +199,16 @@ export const DashboardModule: React.FC = () => {
                     <div className="flex-1 truncate">
                       <div className="font-semibold text-neutral-900 truncate">{prod.productName}</div>
                       <div className="text-[11px] text-neutral-500">
-                        Price: ₹{prod.sellingPricePerMT.toLocaleString('en-IN')}/MT · Cost: ₹{prod.standardCostPerMT.toLocaleString('en-IN')}/MT
+                        Price: ₹{prod.sellingPricePerMT.toLocaleString('en-IN')}/{prod.unit || 'MT'} · Cost: ₹{prod.standardCostPerMT.toLocaleString('en-IN')}/{prod.unit || 'MT'}
                       </div>
                     </div>
 
                     <div className="text-right shrink-0">
                       <div className="font-mono tabular-nums font-semibold text-neutral-900">
-                        {prod.currentStockMT.toFixed(1)} MT
+                        {prod.currentStockMT.toFixed(1)} {prod.unit || 'MT'}
                       </div>
                       <div className={`text-[10px] font-medium ${isLow ? 'text-rose-600' : 'text-emerald-700'}`}>
-                        {isLow ? `Low stock (Min: ${prod.minimumStockMT} MT)` : 'Buffer optimal'}
+                        {isLow ? `Low stock (Min: ${prod.minimumStockMT} ${prod.unit || 'MT'})` : 'Buffer optimal'}
                       </div>
                     </div>
                   </div>
