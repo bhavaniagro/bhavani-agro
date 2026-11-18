@@ -575,7 +575,7 @@ export const CustomersModule: React.FC = () => {
                   type="text"
                   value={editingCustomer.assignedSalesperson || ''}
                   onChange={(e) => setEditingCustomer({ ...editingCustomer, assignedSalesperson: e.target.value })}
-                  placeholder="e.g. Sales Executive"
+                  placeholder="Enter assigned salesperson"
                   className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900"
                 />
               </div>

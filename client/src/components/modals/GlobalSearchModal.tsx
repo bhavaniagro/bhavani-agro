@@ -92,7 +92,7 @@ export const GlobalSearchModal: React.FC = () => {
           <Search className="w-5 h-5 text-neutral-400 shrink-0" />
           <input
             type="text"
-            placeholder="Search Batch (e.g. BNT-2609-088), Customer, Invoice, Vehicle, Product..."
+            placeholder="Search batch, customer, invoice, vehicle, product..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             autoFocus

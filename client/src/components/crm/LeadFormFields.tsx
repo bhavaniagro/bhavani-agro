@@ -126,7 +126,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               type="text"
               value={formData.leadName}
               onChange={(e) => handleChange('leadName', e.target.value)}
-              placeholder="e.g. Anand Sharma"
+              placeholder="Enter contact name"
               className={`w-full p-2 bg-neutral-50 border rounded text-xs outline-none transition-colors ${errors.leadName
                   ? 'border-rose-400 focus:border-rose-600 bg-rose-50/30'
                   : 'border-neutral-200 focus:border-neutral-900 focus:bg-white'
@@ -145,7 +145,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               type="text"
               value={formData.company}
               onChange={(e) => handleChange('company', e.target.value)}
-              placeholder="e.g. Gujarat Crop Sciences Pvt Ltd"
+              placeholder="Enter company name"
               className={`w-full p-2 bg-neutral-50 border rounded text-xs outline-none transition-colors ${errors.company
                   ? 'border-rose-400 focus:border-rose-600 bg-rose-50/30'
                   : 'border-neutral-200 focus:border-neutral-900 focus:bg-white'
@@ -166,7 +166,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               type="text"
               value={formData.mobile}
               onChange={(e) => handleChange('mobile', e.target.value)}
-              placeholder="+91 98250 12345"
+              placeholder="Enter mobile number"
               className={`w-full p-2 bg-neutral-50 border rounded text-xs outline-none transition-colors ${errors.mobile
                   ? 'border-rose-400 focus:border-rose-600 bg-rose-50/30'
                   : 'border-neutral-200 focus:border-neutral-900 focus:bg-white'
@@ -185,7 +185,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               type="email"
               value={formData.email}
               onChange={(e) => handleChange('email', e.target.value)}
-              placeholder="sales@company.com"
+              placeholder="Enter email address"
               className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 focus:bg-white"
             />
           </div>
@@ -198,7 +198,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               type="text"
               value={formData.contactPerson}
               onChange={(e) => handleChange('contactPerson', e.target.value)}
-              placeholder="e.g. Ramesh Patel"
+              placeholder="Enter contact person"
               className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 focus:bg-white"
             />
           </div>
@@ -212,7 +212,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             type="text"
             value={formData.address}
             onChange={(e) => handleChange('address', e.target.value)}
-            placeholder="e.g. GIDC Metoda, Rajkot, Gujarat"
+            placeholder="Enter address or location"
             className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 focus:bg-white"
           />
         </div>
@@ -232,7 +232,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             <CustomSelect
               value={formData.productInterested}
               onChange={(val) => handleChange('productInterested', val)}
-              placeholder="-- Select Product --"
+              placeholder="Select Product"
               error={!!errors.productInterested}
               options={[
                 ...products.map((p) => ({ value: p.productName, label: p.productName })),
@@ -341,7 +341,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               rows={2}
               value={formData.lostReason}
               onChange={(e) => handleChange('lostReason', e.target.value)}
-              placeholder="e.g. Price too high compared to local vendor, client delayed purchase indefinitely..."
+              placeholder="Enter reason for lost lead..."
               className={`w-full p-2 bg-white border rounded text-xs outline-none transition-colors ${errors.lostReason
                   ? 'border-rose-400 focus:border-rose-600'
                   : 'border-rose-300 focus:border-rose-700'
@@ -366,7 +366,7 @@ export const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             rows={2}
             value={formData.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
-            placeholder="Special requirements, packing preference, terms discussed..."
+            placeholder="Enter requirements, packing preference, terms discussed..."
             className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded text-xs outline-none focus:border-neutral-900 focus:bg-white"
           />
         </div>

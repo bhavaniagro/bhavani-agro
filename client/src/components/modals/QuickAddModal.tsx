@@ -616,7 +616,7 @@ export const QuickAddModal: React.FC = () => {
                     type="text"
                     value={expVendor}
                     onChange={(e) => setExpVendor(e.target.value)}
-                    placeholder="e.g. PGVCL / IOCL Petrol Pump"
+                    placeholder="Enter payee / vendor name"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -626,7 +626,7 @@ export const QuickAddModal: React.FC = () => {
                     type="text"
                     value={expPaidFrom}
                     onChange={(e) => setExpPaidFrom(e.target.value)}
-                    placeholder="e.g. SBI Industrial Current A/c"
+                    placeholder="Enter payment account or mode"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -637,7 +637,7 @@ export const QuickAddModal: React.FC = () => {
                   rows={2}
                   value={expDesc}
                   onChange={(e) => setExpDesc(e.target.value)}
-                  placeholder="Details of expense..."
+                  placeholder="Enter expense details..."
                   className="w-full border border-neutral-300 rounded p-2"
                 />
               </div>
@@ -667,7 +667,7 @@ export const QuickAddModal: React.FC = () => {
                     required
                     value={custName}
                     onChange={(e) => setCustName(e.target.value)}
-                    placeholder="e.g. Shree Ram Agro Center"
+                    placeholder="Enter customer / agency name"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -677,7 +677,7 @@ export const QuickAddModal: React.FC = () => {
                     type="text"
                     value={custCompany}
                     onChange={(e) => setCustCompany(e.target.value)}
-                    placeholder="e.g. Shree Ram Agro Center LLP"
+                    placeholder="Enter company / firm name"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -689,7 +689,7 @@ export const QuickAddModal: React.FC = () => {
                     type="text"
                     value={custMobile}
                     onChange={(e) => setCustMobile(e.target.value)}
-                    placeholder="+91 98250 99881"
+                    placeholder="Enter mobile number"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -699,7 +699,7 @@ export const QuickAddModal: React.FC = () => {
                     type="email"
                     value={custEmail}
                     onChange={(e) => setCustEmail(e.target.value)}
-                    placeholder="contact@firm.com"
+                    placeholder="Enter email address"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -709,7 +709,7 @@ export const QuickAddModal: React.FC = () => {
                     type="text"
                     value={custGstin}
                     onChange={(e) => setCustGstin(e.target.value)}
-                    placeholder="24AAAAA0000A1Z5"
+                    placeholder="Enter GSTIN number"
                     className="w-full border border-neutral-300 rounded p-2 font-mono uppercase"
                   />
                 </div>
@@ -721,7 +721,7 @@ export const QuickAddModal: React.FC = () => {
                     type="text"
                     value={custCity}
                     onChange={(e) => setCustCity(e.target.value)}
-                    placeholder="Rajkot"
+                    placeholder="Enter city"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -731,7 +731,7 @@ export const QuickAddModal: React.FC = () => {
                     type="text"
                     value={custState}
                     onChange={(e) => setCustState(e.target.value)}
-                    placeholder="Gujarat"
+                    placeholder="Enter state"
                     className="w-full border border-neutral-300 rounded p-2"
                   />
                 </div>
@@ -762,7 +762,7 @@ export const QuickAddModal: React.FC = () => {
                   rows={2}
                   value={custBillingAddress}
                   onChange={(e) => setCustBillingAddress(e.target.value)}
-                  placeholder="Plot #, GIDC Estate, City, State, Pincode"
+                  placeholder="Enter full billing address"
                   className="w-full border border-neutral-300 rounded p-2 text-xs"
                 />
               </div>
@@ -773,7 +773,7 @@ export const QuickAddModal: React.FC = () => {
                   rows={2}
                   value={custShippingAddress}
                   onChange={(e) => setCustShippingAddress(e.target.value)}
-                  placeholder="Destination warehouse or factory address"
+                  placeholder="Enter shipping address"
                   className="w-full border border-neutral-300 rounded p-2 text-xs"
                 />
               </div>

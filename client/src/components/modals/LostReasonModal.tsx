@@ -99,7 +99,7 @@ export const LostReasonModal: React.FC<LostReasonModalProps> = ({
                 setLostReason(e.target.value);
                 if (error) setError('');
               }}
-              placeholder="e.g., Price too high, chosen competitor (specify), project cancelled, no response to follow-ups..."
+              placeholder="Enter reason for lost lead..."
               className={`w-full p-2.5 bg-neutral-50 border rounded-lg text-xs outline-none transition-colors ${
                 error
                   ? 'border-rose-400 focus:border-rose-600 bg-rose-50/30'

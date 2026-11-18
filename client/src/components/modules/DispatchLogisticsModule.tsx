@@ -640,7 +640,7 @@ export const DispatchLogisticsModule: React.FC = () => {
                   value={vehNumber}
                   onChange={(e) => setVehNumber(e.target.value)}
                   required
-                  placeholder="GJ-04-E-8819"
+                  placeholder="Enter vehicle number"
                   className="w-full border border-neutral-300 rounded p-2 text-xs"
                 />
               </div>
@@ -655,7 +655,7 @@ export const DispatchLogisticsModule: React.FC = () => {
                     value={vehType}
                     onChange={(e) => setVehType(e.target.value)}
                     required
-                    placeholder="10-Wheeler Tipper"
+                    placeholder="Enter vehicle type"
                     className="w-full border border-neutral-300 rounded p-2 text-xs"
                   />
                 </div>

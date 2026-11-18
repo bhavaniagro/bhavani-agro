@@ -309,7 +309,7 @@ export const DocumentsModule: React.FC = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full border border-neutral-300 rounded p-2"
-                  placeholder="e.g. APEDA NPOP Organic Certificate 2026"
+                  placeholder="Enter document title"
                   required
                 />
               </div>
@@ -330,7 +330,7 @@ export const DocumentsModule: React.FC = () => {
                     value={relatedEntity}
                     onChange={(e) => setRelatedEntity(e.target.value)}
                     className="w-full border border-neutral-300 rounded p-2"
-                    placeholder="e.g. Company Statutory"
+                    placeholder="Enter related entity"
                   />
                 </div>
               </div>

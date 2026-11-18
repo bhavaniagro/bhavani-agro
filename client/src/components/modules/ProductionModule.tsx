@@ -981,7 +981,7 @@ export const ProductionModule: React.FC = () => {
                     value={bomProductName}
                     onChange={(e) => setBomProductName(e.target.value)}
                     required
-                    placeholder="e.g. Granulated Bentonite 16-30 Mesh"
+                    placeholder="Enter product name"
                     className="w-full border border-neutral-300 rounded p-2 text-xs"
                   />
                 )}
