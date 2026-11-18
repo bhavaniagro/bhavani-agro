@@ -270,16 +270,16 @@ export const FinishedGoodsModule: React.FC = () => {
                     <td className="p-3 text-neutral-700 whitespace-nowrap">{p.category}</td>
                     <td className="p-3 text-neutral-700 font-medium whitespace-nowrap">{p.storageLocation}</td>
                     <td className="p-3 text-right font-mono tabular-nums font-bold text-neutral-900 whitespace-nowrap">
-                      {currentStock.toFixed(1)} MT
+                      {currentStock.toFixed(1)} {p.unit || 'MT'}
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums text-neutral-500 whitespace-nowrap">
-                      {reservedStock.toFixed(1)} MT
+                      {reservedStock.toFixed(1)} {p.unit || 'MT'}
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums font-bold text-sm text-emerald-700 whitespace-nowrap">
-                      {freeStock.toFixed(1)} MT
+                      {freeStock.toFixed(1)} {p.unit || 'MT'}
                     </td>
                     <td className="p-3 text-right font-mono tabular-nums whitespace-nowrap">
-                      ₹{p.sellingPricePerMT.toLocaleString('en-IN')}/MT
+                      ₹{p.sellingPricePerMT.toLocaleString('en-IN')}/{p.unit || 'MT'}
                     </td>
                     <td className="p-3 whitespace-nowrap">
                       {isLow ? (
@@ -431,7 +431,9 @@ export const FinishedGoodsModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Selling Price / MT (₹)</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Selling Price / {newProd.unit || 'MT'} (₹)
+                  </label>
                   <input
                     type="number"
                     value={newProd.sellingPricePerMT}
@@ -464,7 +466,7 @@ export const FinishedGoodsModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-                    Physical Stock (MT) <span className="text-neutral-400 font-normal">optional</span>
+                    Physical Stock ({newProd.unit || 'MT'}) <span className="text-neutral-400 font-normal">optional</span>
                   </label>
                   <input
                     type="number"
@@ -479,7 +481,7 @@ export const FinishedGoodsModule: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-                    Reserved Stock (MT) <span className="text-neutral-400 font-normal">optional</span>
+                    Reserved Stock ({newProd.unit || 'MT'}) <span className="text-neutral-400 font-normal">optional</span>
                   </label>
                   <input
                     type="number"
@@ -586,7 +588,9 @@ export const FinishedGoodsModule: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Selling Price / MT (₹)</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Selling Price / {editingProduct.unit || 'MT'} (₹)
+                  </label>
                   <input
                     type="number"
                     value={editingProduct.sellingPricePerMT}
@@ -595,7 +599,9 @@ export const FinishedGoodsModule: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">Standard Cost / MT (₹)</label>
+                  <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                    Standard Cost / {editingProduct.unit || 'MT'} (₹)
+                  </label>
                   <input
                     type="number"
                     value={editingProduct.standardCostPerMT}
@@ -618,7 +624,7 @@ export const FinishedGoodsModule: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-                    Physical Stock (MT) <span className="text-neutral-400 font-normal">optional</span>
+                    Physical Stock ({editingProduct.unit || 'MT'}) <span className="text-neutral-400 font-normal">optional</span>
                   </label>
                   <input
                     type="number"
@@ -633,7 +639,7 @@ export const FinishedGoodsModule: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-                    Reserved Stock (MT) <span className="text-neutral-400 font-normal">optional</span>
+                    Reserved Stock ({editingProduct.unit || 'MT'}) <span className="text-neutral-400 font-normal">optional</span>
                   </label>
                   <input
                     type="number"
