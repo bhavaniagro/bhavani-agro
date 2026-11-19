@@ -174,19 +174,9 @@ export const RawMaterialModule: React.FC = () => {
         }
       >
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-neutral-900">
-              Raw Material Inventory &amp; Stock Ledger
-            </h1>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">
-              ₹{totalRawStockValue.toLocaleString('en-IN')} Inventory Valuation
-            </span>
-            {lowStockCount > 0 && (
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-mono">
-                {lowStockCount} Items Below Reorder Level
-              </span>
-            )}
-          </div>
+          <h1 className="text-xl font-bold tracking-tight text-neutral-900">
+            Raw Material Inventory &amp; Stock Ledger
+          </h1>
           <p className="text-xs text-neutral-500 mt-0.5">
             Stock ledger tracking opening stock, purchases, production consumption, and current available balance.
           </p>
