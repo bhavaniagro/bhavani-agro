@@ -108,21 +108,33 @@ export const Sidebar: React.FC = () => {
             : 'w-64 fixed inset-y-0 left-0 md:static md:w-60 shadow-xl md:shadow-none'
         }`}
       >
-      {/* Sidebar Collapse Toggle */}
-      <div className={`p-2 border-b border-neutral-100 flex items-center shrink-0 ${!isSidebarCollapsed ? 'justify-end' : 'justify-center'}`}>
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded cursor-pointer transition-colors"
-          title={!isSidebarCollapsed ? "Collapse sidebar" : "Expand sidebar"}
-        >
-          {!isSidebarCollapsed ? (
+      {/* Sidebar Header & Collapse Toggle */}
+      {!isSidebarCollapsed ? (
+        <div className="p-3 border-b border-neutral-100 flex items-center justify-between shrink-0">
+          <div className="font-bold text-sm tracking-wider text-neutral-900 font-mono">
+            AMCI
+          </div>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="p-1 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded cursor-pointer transition-colors"
+            title="Collapse sidebar"
+          >
             <ChevronLeft className="w-4 h-4" />
-          ) : (
+          </button>
+        </div>
+      ) : (
+        <div className="p-2.5 border-b border-neutral-100 flex items-center justify-center shrink-0">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-md cursor-pointer transition-colors"
+            title="Expand sidebar"
+          >
             <ChevronRight className="w-4 h-4" />
-          )}
-        </button>
-      </div>
+          </button>
+        </div>
+      )}
 
       {/* Navigation List */}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto min-h-0">
