@@ -4,7 +4,6 @@ import {
   Plus, 
   Search, 
   ShoppingCart, 
-  Star, 
   CreditCard,
   Phone,
   Mail,
@@ -151,12 +150,8 @@ export const SuppliersModule: React.FC = () => {
                       : 'hover:bg-neutral-50/70'
                   }`}
                 >
-                  <div className="flex items-center justify-between font-bold text-neutral-900">
+                  <div className="font-bold text-neutral-900">
                     <span>{s.supplierName}</span>
-                    <div className="flex items-center gap-1 text-[11px] text-amber-500 font-mono">
-                      <Star className="w-3 h-3 fill-current" />
-                      <span>{s.rating}</span>
-                    </div>
                   </div>
                   <div className="text-[11px] text-neutral-500">{s.contactPerson} · {s.mobile}</div>
                   <div className="text-[10px] text-neutral-600 truncate">
